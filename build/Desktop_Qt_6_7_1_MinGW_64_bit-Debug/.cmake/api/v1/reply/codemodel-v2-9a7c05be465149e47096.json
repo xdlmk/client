@@ -1,0 +1,169 @@
+{
+	"configurations" : 
+	[
+		{
+			"directories" : 
+			[
+				{
+					"build" : ".",
+					"hasInstallRule" : true,
+					"jsonFile" : "directory-.-Debug-b18c6f7a0aecbf224e1f.json",
+					"minimumCMakeVersion" : 
+					{
+						"string" : "3.16"
+					},
+					"projectIndex" : 0,
+					"source" : ".",
+					"targetIndexes" : 
+					[
+						0,
+						1,
+						2,
+						3,
+						4,
+						5,
+						6,
+						7,
+						8,
+						9,
+						10,
+						11,
+						12
+					]
+				}
+			],
+			"name" : "Debug",
+			"projects" : 
+			[
+				{
+					"directoryIndexes" : 
+					[
+						0
+					],
+					"name" : "clientDes",
+					"targetIndexes" : 
+					[
+						0,
+						1,
+						2,
+						3,
+						4,
+						5,
+						6,
+						7,
+						8,
+						9,
+						10,
+						11,
+						12
+					]
+				}
+			],
+			"targets" : 
+			[
+				{
+					"directoryIndex" : 0,
+					"id" : "all_qmllint::@6890427a1f51a3e7e1df",
+					"jsonFile" : "target-all_qmllint-Debug-21fbcf84f7fef58199db.json",
+					"name" : "all_qmllint",
+					"projectIndex" : 0
+				},
+				{
+					"directoryIndex" : 0,
+					"id" : "all_qmllint_json::@6890427a1f51a3e7e1df",
+					"jsonFile" : "target-all_qmllint_json-Debug-846384b24082392879aa.json",
+					"name" : "all_qmllint_json",
+					"projectIndex" : 0
+				},
+				{
+					"directoryIndex" : 0,
+					"id" : "all_qmllint_module::@6890427a1f51a3e7e1df",
+					"jsonFile" : "target-all_qmllint_module-Debug-ed3725b26cbee1821023.json",
+					"name" : "all_qmllint_module",
+					"projectIndex" : 0
+				},
+				{
+					"directoryIndex" : 0,
+					"id" : "all_qmltyperegistrations::@6890427a1f51a3e7e1df",
+					"jsonFile" : "target-all_qmltyperegistrations-Debug-b9d5f4455f44309c892f.json",
+					"name" : "all_qmltyperegistrations",
+					"projectIndex" : 0
+				},
+				{
+					"directoryIndex" : 0,
+					"id" : "appqmlqtdesign::@6890427a1f51a3e7e1df",
+					"jsonFile" : "target-appqmlqtdesign-Debug-4110a8d8f5a40d28c6f0.json",
+					"name" : "appqmlqtdesign",
+					"projectIndex" : 0
+				},
+				{
+					"directoryIndex" : 0,
+					"id" : "appqmlqtdesign_autogen::@6890427a1f51a3e7e1df",
+					"jsonFile" : "target-appqmlqtdesign_autogen-Debug-6d981f6e4a0d0d3ea1f4.json",
+					"name" : "appqmlqtdesign_autogen",
+					"projectIndex" : 0
+				},
+				{
+					"directoryIndex" : 0,
+					"id" : "appqmlqtdesign_autogen_timestamp_deps::@6890427a1f51a3e7e1df",
+					"jsonFile" : "target-appqmlqtdesign_autogen_timestamp_deps-Debug-0270e42a371177ec10be.json",
+					"name" : "appqmlqtdesign_autogen_timestamp_deps",
+					"projectIndex" : 0
+				},
+				{
+					"directoryIndex" : 0,
+					"id" : "appqmlqtdesign_qmlimportscan::@6890427a1f51a3e7e1df",
+					"jsonFile" : "target-appqmlqtdesign_qmlimportscan-Debug-f1645e65f8659730f0b4.json",
+					"name" : "appqmlqtdesign_qmlimportscan",
+					"projectIndex" : 0
+				},
+				{
+					"directoryIndex" : 0,
+					"id" : "appqmlqtdesign_qmllint::@6890427a1f51a3e7e1df",
+					"jsonFile" : "target-appqmlqtdesign_qmllint-Debug-eb2b2aa98216bd03a943.json",
+					"name" : "appqmlqtdesign_qmllint",
+					"projectIndex" : 0
+				},
+				{
+					"directoryIndex" : 0,
+					"id" : "appqmlqtdesign_qmllint_json::@6890427a1f51a3e7e1df",
+					"jsonFile" : "target-appqmlqtdesign_qmllint_json-Debug-6f0c11ba376ffa7823ab.json",
+					"name" : "appqmlqtdesign_qmllint_json",
+					"projectIndex" : 0
+				},
+				{
+					"directoryIndex" : 0,
+					"id" : "appqmlqtdesign_qmllint_module::@6890427a1f51a3e7e1df",
+					"jsonFile" : "target-appqmlqtdesign_qmllint_module-Debug-1949ec8c8d29d5bfd4d4.json",
+					"name" : "appqmlqtdesign_qmllint_module",
+					"projectIndex" : 0
+				},
+				{
+					"directoryIndex" : 0,
+					"id" : "appqmlqtdesign_qmltyperegistration::@6890427a1f51a3e7e1df",
+					"jsonFile" : "target-appqmlqtdesign_qmltyperegistration-Debug-584a53131f8dd4487713.json",
+					"name" : "appqmlqtdesign_qmltyperegistration",
+					"projectIndex" : 0
+				},
+				{
+					"directoryIndex" : 0,
+					"id" : "appqmlqtdesign_tooling::@6890427a1f51a3e7e1df",
+					"jsonFile" : "target-appqmlqtdesign_tooling-Debug-7db1248b47c96499adf7.json",
+					"name" : "appqmlqtdesign_tooling",
+					"projectIndex" : 0
+				}
+			]
+		}
+	],
+	"kind" : "codemodel",
+	"paths" : 
+	{
+		"build" : "C:/c++/qt/clientDes/build/Desktop_Qt_6_7_1_MinGW_64_bit-Debug",
+		"source" : "C:/c++/qt/clientDes"
+	},
+	"version" : 
+	{
+		"major" : 2,
+		"minor" : 6
+	}
+}

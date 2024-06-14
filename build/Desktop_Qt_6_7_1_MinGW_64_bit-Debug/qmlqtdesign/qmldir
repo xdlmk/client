@@ -1,0 +1,9 @@
+module qmlqtdesign
+typeinfo appqmlqtdesign.qmltypes
+prefer :/qmlqtdesign/
+Main 1.0 Main.qml
+ChatBubbleOut 1.0 ChatBubbleOut.qml
+ChatBubbleIn 1.0 ChatBubbleIn.qml
+MessageLine 1.0 MessageLine.qml
+LoginPage 1.0 LoginPage.qml
+

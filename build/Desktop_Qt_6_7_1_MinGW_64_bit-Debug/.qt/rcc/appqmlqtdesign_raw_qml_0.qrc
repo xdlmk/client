@@ -1,0 +1,10 @@
+<RCC>
+  <qresource prefix="/qmlqtdesign/">
+    <file alias="Main.qml">C:/c++/qt/clientDes/Main.qml</file>
+    <file alias="ChatBubbleOut.qml">C:/c++/qt/clientDes/ChatBubbleOut.qml</file>
+    <file alias="ChatBubbleIn.qml">C:/c++/qt/clientDes/ChatBubbleIn.qml</file>
+    <file alias="MessageLine.qml">C:/c++/qt/clientDes/MessageLine.qml</file>
+    <file alias="LoginPage.qml">C:/c++/qt/clientDes/LoginPage.qml</file>
+  </qresource>
+</RCC>
+
