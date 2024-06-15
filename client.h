@@ -4,6 +4,8 @@
 #include <QObject>
 #include <QTcpSocket>
 #include <QByteArray>
+#include <QJsonDocument>
+#include <QJsonObject>
 
 class Client : public QObject
 {
@@ -13,6 +15,7 @@ public:
     explicit Client(QObject *parent = nullptr);
     QString messageFrom();
     void setMessageFrom(QString value);
+    void connectToServer(QString host,quint16 port);
 
 signals:
     void newInMessage();
@@ -27,7 +30,7 @@ protected:
 public slots:
     void login(QString login,QString password);
     void slotReadyRead();
-        void sendToServer(QString str);
+    void sendToServer(QString str);
 };
 
 #endif // CLIENT_H

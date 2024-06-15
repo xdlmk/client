@@ -10,13 +10,13 @@ int main(int argc, char *argv[])
     QGuiApplication app(argc, argv);
 
     QQmlApplicationEngine engine;
+
+    const QUrl mainUrl(QStringLiteral("qrc:/qmlqtdesign/Main.qml"));
+    const QUrl loginUrl(QStringLiteral("qrc:/qmlqtdesign/LoginPage.qml"));
     Client client;
 
     engine.rootContext()->setContextObject(&client);
     engine.rootContext()->setContextProperty("client",&client);
-
-    const QUrl mainUrl(QStringLiteral("qrc:/qmlqtdesign/Main.qml"));
-    const QUrl loginUrl(QStringLiteral("qrc:/qmlqtdesign/LoginPage.qml"));
     QObject::connect(
         &engine,
         &QQmlApplicationEngine::objectCreationFailed,

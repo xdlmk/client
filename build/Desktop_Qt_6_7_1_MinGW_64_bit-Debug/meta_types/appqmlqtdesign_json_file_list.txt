@@ -1,1 +1,0 @@
-C:/c++/qt/clientDes/build/Desktop_Qt_6_7_1_MinGW_64_bit-Debug/appqmlqtdesign_autogen/include/../EWIEGA46WW/moc_client.cpp.json
