@@ -2,8 +2,11 @@
 #include <QQmlApplicationEngine>
 #include <QQmlEngine>
 #include <QQmlContext>
+#include <QSettings>
 #include "client.h"
 
+// add processing emit loginFail when using config.ini and the corresponding ones there
+// add config.ini creation and update
 
 int main(int argc, char *argv[])
 {
@@ -25,19 +28,42 @@ int main(int argc, char *argv[])
         []() { QCoreApplication::exit(-1); },
         Qt::QueuedConnection);
 
-        engine.load(loginUrl);
+    QObject::connect(&client, &Client::loginSuccess, [&engine, mainUrl](QString name) {
+        QList<QObject*> rootObjects = engine.rootObjects();
+        if (!rootObjects.isEmpty()) {
+            QObject *rootObject = rootObjects.first();
+            rootObject->deleteLater();
+        }
+        engine.rootContext()->setContextProperty("username",name);
+        engine.load(mainUrl);
+    });
 
-        QObject *rootObject = engine.rootObjects().first();
-        QObject::connect(&client, &Client::loginSuccess, [&engine, mainUrl](QString name) {
-            engine.rootObjects().first()->deleteLater();
-            engine.rootContext()->setContextProperty("username",name);
-            engine.load(mainUrl);
-        });
-        QObject::connect(&client, &Client::regSuccess, [&engine, mainUrl](QString name) {
-            engine.rootObjects().first()->deleteLater();
-            engine.rootContext()->setContextProperty("username",name);
-            engine.load(mainUrl);
-        });
+    QObject::connect(&client, &Client::regSuccess, [&engine, mainUrl](QString name) {
+        QList<QObject*> rootObjects = engine.rootObjects();
+        if (!rootObjects.isEmpty()) {
+            QObject *rootObject = rootObjects.first();
+            rootObject->deleteLater();
+        }
+        engine.rootContext()->setContextProperty("username",name);
+        engine.load(mainUrl);
+    });
+
+    //init file (add its creation and update)
+    QString configFilePath = "config.ini";
+    QSettings settings(configFilePath,QSettings::IniFormat);
+    QString success = settings.value("success","").toString();
+    qDebug() << success;
+    if(success == "ok")
+    {
+        QString login = settings.value("login", "").toString();
+        QString password = settings.value("password", "").toString();
+
+        client.login(login,password);
+    }
+    else
+    {
+        engine.load(loginUrl);    
+    }
 
     return app.exec();
 }

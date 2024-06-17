@@ -31,31 +31,32 @@ Item {
             color: Qt.rgba(Math.random(),Math.random(),Math.random(),255)
             wrapMode: Text.WrapAnywhere
         }
-            Text {
-                anchors.left: parent.left
-                anchors.leftMargin: 5
-                anchors.top: nameText.top
-                anchors.topMargin: 15
-                id: lblText
-                text: model.text
-                width: parent.width - 20
-                font.pointSize: 10
-                color: "white"
-                wrapMode: Text.WrapAnywhere
-            }
+        Text{
+            anchors.left: parent.left
+            anchors.leftMargin: 5
+            anchors.top: nameText.top
+            anchors.topMargin: 15
+            id: lblText
+            text: model.text
+            width: parent.width - 20
+            font.pointSize: 10
+            color: "white"
+            wrapMode: Text.WrapAnywhere
 
-            Text {
-                id: lblTime
-                anchors.right: parent.right
-                anchors.bottom: parent.bottom
-                anchors.rightMargin: 5
-                anchors.bottomMargin: 5
-                text: model.time
-                width: parent.width - 20
-                font.pointSize: 8
-                color: "#488dd3"
-                horizontalAlignment: Text.AlignRight
-            }
+            padding: 0
+        }
+
+        Text {
+            id: lblTime
+            anchors.right: parent.right
+            anchors.bottom: parent.bottom
+            anchors.rightMargin: 5
+            anchors.bottomMargin: 5
+            text: model.time
+            width: parent.width - 20
+            font.pointSize: 8
+            color: "#488dd3"
+            horizontalAlignment: Text.AlignRight
         }
     }
-
+}

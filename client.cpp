@@ -5,16 +5,16 @@ Client::Client(QObject *parent)
 {
     socket = new QTcpSocket(this);
     QObject::connect(socket, &QTcpSocket::connected, [&]() {
-        qInfo() <<  "Success connect to server 172.20.10.2 on port 2020";
+        qInfo() <<  "Success connect to server 192.168.100.233 on port 2020";
         emit connectionSuccess();
     });
     connect(socket, QOverload<QAbstractSocket::SocketError>::of(&QTcpSocket::errorOccurred), [&](QAbstractSocket::SocketError socketError) {
         Q_UNUSED(socketError)
         qInfo() << "Failed to connect to server:";
-        connectToServer("172.20.10.2",2020);
+        connectToServer("192.168.100.233",2020);
         emit errorWithConnect();
     });
-    connectToServer("172.20.10.2",2020);
+    connectToServer("192.168.100.233",2020);
 
     connect(socket,&QTcpSocket::readyRead,this,&Client::slotReadyRead);
     connect(socket,&QTcpSocket::disconnected,socket,&QTcpSocket::deleteLater);
