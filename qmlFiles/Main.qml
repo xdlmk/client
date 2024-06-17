@@ -11,9 +11,6 @@ Window {
     color: "#0e1621"
     title: qsTr("Blockgram")
 
-
-
-
     Rectangle
     {
         id: leftLine
@@ -74,6 +71,7 @@ Window {
          sourceComponent: model.isOutgoing ? outgoingDelegate : incomingDelegate
          property string textload: model.text
          property string timeload: model.time
+         property string nameload: model.name
         }
          Component{
              id: outgoingDelegate
@@ -81,6 +79,7 @@ Window {
             anchors.right: parent.right
             text: textload
             time: timeload
+            name: nameload
         }
          }
          Component {
@@ -89,6 +88,7 @@ Window {
                 anchors.left: parent.left
                 text:textload
                 time:timeload
+                name:nameload
              }
          }
     }
@@ -98,6 +98,7 @@ Window {
         ListElement {
             text: "Wassaaa, are you here?"
             time: "no:time"
+            name: "xdlmk"
             isOutgoing: false
         }
     }
@@ -143,18 +144,20 @@ Window {
             var newMsg = {};
             newMsg.text = msg;
             newMsg.time = Qt.formatTime(new Date(), "hh:mm");
+            newMsg.name = username;
             newMsg.isOutgoing = true;
             listModel.append(newMsg);
-            client.sendToServer(msg);
+            client.sendToServer(msg,newMsg.name);
             listView.positionViewAtIndex(listModel.count - 1, ListView.End);
         }
     }
 
-    function onInMessage()
+    function onInMessage(name)
     {
         var newMsg = {};
         newMsg.text = messageFrom;
         newMsg.time = Qt.formatTime(new Date(), "hh:mm");
+        newMsg.name = name;
         newMsg.isOutgoing = false;
         listModel.append(newMsg);
         listView.positionViewAtIndex(listModel.count - 1, ListView.End);

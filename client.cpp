@@ -5,16 +5,16 @@ Client::Client(QObject *parent)
 {
     socket = new QTcpSocket(this);
     QObject::connect(socket, &QTcpSocket::connected, [&]() {
-        qInfo() <<  "Success connect to server 192.168.100.232 on port 2020";
+        qInfo() <<  "Success connect to server 172.20.10.2 on port 2020";
         emit connectionSuccess();
     });
     connect(socket, QOverload<QAbstractSocket::SocketError>::of(&QTcpSocket::errorOccurred), [&](QAbstractSocket::SocketError socketError) {
         Q_UNUSED(socketError)
         qInfo() << "Failed to connect to server:";
-        connectToServer("192.168.100.232",2020);
+        connectToServer("172.20.10.2",2020);
         emit errorWithConnect();
     });
-    connectToServer("192.168.100.232",2020);
+    connectToServer("172.20.10.2",2020);
 
     connect(socket,&QTcpSocket::readyRead,this,&Client::slotReadyRead);
     connect(socket,&QTcpSocket::disconnected,socket,&QTcpSocket::deleteLater);
@@ -65,11 +65,12 @@ void Client::login(QString login, QString password)
     socket->write(data);
 }
 
-void Client::sendToServer(QString str)
+void Client::sendToServer(QString str,QString name)
 {
     QJsonObject json;
     json["flag"] = "message";
     json["str"] = str;
+    json["name"] = name;
     QJsonDocument doc(json);
     data.clear();
     QDataStream out(&data,QIODevice::WriteOnly);
@@ -97,16 +98,18 @@ void Client::slotReadyRead()
         {
             qInfo() << "flag message";
             QString str1 = json["str"].toString();
+            QString name = json["name"].toString();
             mesFrom = str1;
-            emit newInMessage();
+            emit newInMessage(name);
         }
         else if(flag == "login")
         {
             qInfo() << "flag login";
             QString success = json["success"].toString();
+            QString name = json["name"].toString();
             if(success == "ok")
             {
-                emit loginSuccess();
+                emit loginSuccess(name);
             }
             else if(success == "poor")
             {
@@ -116,9 +119,10 @@ void Client::slotReadyRead()
         else if(flag == "reg")
         {
             QString success = json["success"].toString();
+            QString name = json["name"].toString();
             if(success == "ok")
             {
-                emit regSuccess() ;
+                emit regSuccess(name) ;
             }
             else if (success == "poor")
             {

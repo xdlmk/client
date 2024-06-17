@@ -25,15 +25,17 @@ int main(int argc, char *argv[])
         []() { QCoreApplication::exit(-1); },
         Qt::QueuedConnection);
 
-        engine.load(mainUrl);
+        engine.load(loginUrl);
 
         QObject *rootObject = engine.rootObjects().first();
-        QObject::connect(&client, &Client::loginSuccess, [&engine, mainUrl]() {
+        QObject::connect(&client, &Client::loginSuccess, [&engine, mainUrl](QString name) {
             engine.rootObjects().first()->deleteLater();
+            engine.rootContext()->setContextProperty("username",name);
             engine.load(mainUrl);
         });
-        QObject::connect(&client, &Client::regSuccess, [&engine, mainUrl]() {
+        QObject::connect(&client, &Client::regSuccess, [&engine, mainUrl](QString name) {
             engine.rootObjects().first()->deleteLater();
+            engine.rootContext()->setContextProperty("username",name);
             engine.load(mainUrl);
         });
 

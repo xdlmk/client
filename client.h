@@ -18,15 +18,15 @@ public:
     void connectToServer(QString host,quint16 port);
 
 signals:
-    void newInMessage();
+    void newInMessage(QString name);
 
     void errorWithConnect();
     void connectionSuccess();
 
-    void loginSuccess();
+    void loginSuccess(QString name);
     void loginFail();
 
-    void regSuccess();
+    void regSuccess(QString name);
     void regFail(QString error);
 private:
     QTcpSocket* socket;
@@ -37,7 +37,7 @@ public slots:
     void reg(QString login,QString password);
     void login(QString login,QString password);
     void slotReadyRead();
-    void sendToServer(QString str);
+    void sendToServer(QString str,QString name);
 };
 
 #endif // CLIENT_H
