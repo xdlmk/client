@@ -11,6 +11,9 @@ Window {
     color: "#0e1621"
     title: qsTr("Blockgram")
 
+
+
+
     Rectangle
     {
         id: leftLine
@@ -156,10 +159,43 @@ Window {
         listModel.append(newMsg);
         listView.positionViewAtIndex(listModel.count - 1, ListView.End);
     }
+
+    Rectangle
+    {
+        id:connectRect
+        visible:false
+        anchors.left: parent.left
+        anchors.top:parent.top
+        anchors.right: parent.right
+        color:"#9945464f"
+        height: 25
+
+        Text{
+            id:textConnect
+            anchors.centerIn: parent
+            color:"#99FFFFFF"
+            font.pointSize: 10
+            text: "Connection unsuccessful, try connecting again"
+        }
+    }
+
+    function connectError()
+    {
+        connectRect.visible = true;
+    }
+
+    function connectSuccess()
+    {
+        connectRect.visible = false;
+    }
+
     Component.onCompleted:
     {
         newInMessage.connect(onInMessage);
+        errorWithConnect.connect(connectError);
+        connectionSuccess.connect(connectSuccess)
     }
+
 
 }
 

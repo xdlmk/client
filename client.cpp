@@ -4,16 +4,17 @@ Client::Client(QObject *parent)
     : QObject{parent}
 {
     socket = new QTcpSocket(this);
-     qInfo() <<  "Start connected";
     QObject::connect(socket, &QTcpSocket::connected, [&]() {
-        qInfo() <<  "Success connect to server 37.45.6.169 on port 2020";
+        qInfo() <<  "Success connect to server 192.168.100.232 on port 2020";
+        emit connectionSuccess();
     });
     connect(socket, QOverload<QAbstractSocket::SocketError>::of(&QTcpSocket::errorOccurred), [&](QAbstractSocket::SocketError socketError) {
         Q_UNUSED(socketError)
         qInfo() << "Failed to connect to server:";
+        connectToServer("192.168.100.232",2020);
+        emit errorWithConnect();
     });
-     qInfo() <<  "end connected";
-    connectToServer("192.168.100.21",2020);
+    connectToServer("192.168.100.232",2020);
 
     connect(socket,&QTcpSocket::readyRead,this,&Client::slotReadyRead);
     connect(socket,&QTcpSocket::disconnected,socket,&QTcpSocket::deleteLater);
@@ -32,6 +33,22 @@ void Client::setMessageFrom(QString value)
 void Client::connectToServer(QString host, quint16 port)
 {
     socket->connectToHost(host,port);
+}
+
+void Client::reg(QString login, QString password)
+{
+    qDebug() << "reg function open";
+    QJsonObject json;
+    json["flag"] = "reg";
+    json["login"] = login;
+    json["password"] = password;
+    QJsonDocument doc(json);
+    data.clear();
+    QDataStream out(&data,QIODevice::WriteOnly);
+    out.setVersion(QDataStream::Qt_6_7);
+    out << doc.toJson();
+    socket->write(data);
+    qDebug() << "reg function close";
 }
 
 void Client::login(QString login, QString password)
@@ -72,7 +89,7 @@ void Client::slotReadyRead()
         QByteArray str;
         in >> str;
         QJsonDocument doc = QJsonDocument::fromJson(str);
-        qDebug() << "JSON to read:" << doc.toJson(QJsonDocument::Indented); // Вывод JSON с отступами для читаемости
+        qDebug() << "JSON to read:" << doc.toJson(QJsonDocument::Indented);
         QJsonObject json = doc.object();
         QString flag = json["flag"].toString();
         qInfo() << "next check flags";
@@ -94,6 +111,19 @@ void Client::slotReadyRead()
             else if(success == "poor")
             {
                 emit loginFail();
+            }
+        }
+        else if(flag == "reg")
+        {
+            QString success = json["success"].toString();
+            if(success == "ok")
+            {
+                emit regSuccess() ;
+            }
+            else if (success == "poor")
+            {
+                QString error = json["errorMes"].toString();
+                emit regFail(error);
             }
         }
         qDebug() << "Leave read message from server";

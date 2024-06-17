@@ -19,15 +19,22 @@ public:
 
 signals:
     void newInMessage();
+
     void errorWithConnect();
+    void connectionSuccess();
+
     void loginSuccess();
     void loginFail();
+
+    void regSuccess();
+    void regFail(QString error);
 private:
     QTcpSocket* socket;
     QByteArray data;
 protected:
     QString mesFrom;
 public slots:
+    void reg(QString login,QString password);
     void login(QString login,QString password);
     void slotReadyRead();
     void sendToServer(QString str);

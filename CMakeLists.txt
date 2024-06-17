@@ -16,12 +16,14 @@ qt_add_qml_module(appqmlqtdesign
     URI qmlqtdesign
     VERSION 1.0
     QML_FILES
-        Main.qml
-        QML_FILES ChatBubbleOut.qml
-        QML_FILES ChatBubbleIn.qml
-        QML_FILES MessageLine.qml
+        qmlFiles/Main.qml
+        QML_FILES qmlFiles/ChatBubbleOut.qml
+        QML_FILES qmlFiles/ChatBubbleIn.qml
+        QML_FILES qmlFiles/MessageLine.qml
         SOURCES client.h client.cpp
-        QML_FILES LoginPage.qml
+        QML_FILES qmlFiles/LoginPage.qml
+        QML_FILES qmlFiles/RegPage.qml
+        QML_FILES qmlFiles/pageSwitch.qml
 )
 
 # Qt for iOS sets MACOSX_BUNDLE_GUI_IDENTIFIER automatically since Qt 6.1.

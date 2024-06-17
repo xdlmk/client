@@ -11,12 +11,13 @@ int main(int argc, char *argv[])
 
     QQmlApplicationEngine engine;
 
-    const QUrl mainUrl(QStringLiteral("qrc:/qmlqtdesign/Main.qml"));
-    const QUrl loginUrl(QStringLiteral("qrc:/qmlqtdesign/LoginPage.qml"));
-    Client client;
+    const QUrl mainUrl(QStringLiteral("qrc:/qmlqtdesign/qmlFiles/Main.qml"));
+    const QUrl loginUrl(QStringLiteral("qrc:/qmlqtdesign/qmlFiles/pageSwitch.qml"));
 
+    Client client;
     engine.rootContext()->setContextObject(&client);
     engine.rootContext()->setContextProperty("client",&client);
+
     QObject::connect(
         &engine,
         &QQmlApplicationEngine::objectCreationFailed,
@@ -24,9 +25,14 @@ int main(int argc, char *argv[])
         []() { QCoreApplication::exit(-1); },
         Qt::QueuedConnection);
 
-        engine.load(loginUrl);
+        engine.load(mainUrl);
 
+        QObject *rootObject = engine.rootObjects().first();
         QObject::connect(&client, &Client::loginSuccess, [&engine, mainUrl]() {
+            engine.rootObjects().first()->deleteLater();
+            engine.load(mainUrl);
+        });
+        QObject::connect(&client, &Client::regSuccess, [&engine, mainUrl]() {
             engine.rootObjects().first()->deleteLater();
             engine.load(mainUrl);
         });
