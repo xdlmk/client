@@ -15,7 +15,8 @@ int main(int argc, char *argv[])
     QQmlApplicationEngine engine;
 
     const QUrl mainUrl(QStringLiteral("qrc:/qmlqtdesign/qmlFiles/Main.qml"));
-    const QUrl loginUrl(QStringLiteral("qrc:/qmlqtdesign/qmlFiles/pageSwitch.qml"));
+    const QUrl switchUrl(QStringLiteral("qrc:/qmlqtdesign/qmlFiles/pageSwitch.qml"));
+    const QUrl loginUrl(QStringLiteral("qrc:/qmlqtdesign/qmlFiles/LoginPage.qml"));
 
     Client client;
     engine.rootContext()->setContextObject(&client);
@@ -27,7 +28,7 @@ int main(int argc, char *argv[])
         &app,
         []() { QCoreApplication::exit(-1); },
         Qt::QueuedConnection);
-
+    // connection for the case with successful login and loading of the main page
     QObject::connect(&client, &Client::loginSuccess, [&engine, mainUrl](QString name) {
         QList<QObject*> rootObjects = engine.rootObjects();
         if (!rootObjects.isEmpty()) {
@@ -37,19 +38,29 @@ int main(int argc, char *argv[])
         engine.rootContext()->setContextProperty("username",name);
         engine.load(mainUrl);
     });
-
-    QObject::connect(&client, &Client::regSuccess, [&engine, mainUrl](QString name) {
+    // connection for the case with successful registration and loading of the login page
+    QObject::connect(&client, &Client::regSuccess, [&engine, switchUrl]() {
         QList<QObject*> rootObjects = engine.rootObjects();
         if (!rootObjects.isEmpty()) {
             QObject *rootObject = rootObjects.first();
             rootObject->deleteLater();
         }
-        engine.rootContext()->setContextProperty("username",name);
-        engine.load(mainUrl);
+        engine.load(switchUrl);
+    });
+    // connection in case the configuration file is damaged
+    QObject::connect(&client, &Client::loginFail, [&engine, switchUrl]() {
+        QList<QObject*> rootObjects = engine.rootObjects();
+        if (rootObjects.isEmpty()) {
+            engine.load(switchUrl);
+        }
+
     });
 
-    //init file (add its creation and update)
-    QString configFilePath = "config.ini";
+
+    //connfig file check
+    QString configFilePath = QStandardPaths::writableLocation(QStandardPaths::AppConfigLocation);
+    configFilePath = configFilePath + "/config.ini";
+
     QSettings settings(configFilePath,QSettings::IniFormat);
     QString success = settings.value("success","").toString();
     qDebug() << success;
@@ -62,7 +73,7 @@ int main(int argc, char *argv[])
     }
     else
     {
-        engine.load(loginUrl);    
+        engine.load(switchUrl);
     }
 
     return app.exec();

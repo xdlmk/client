@@ -4,18 +4,28 @@
 #include <QObject>
 #include <QTcpSocket>
 #include <QByteArray>
+#include <QTimer>
+
 #include <QJsonDocument>
 #include <QJsonObject>
+
+#include <QFile>
+#include <QStandardPaths>
+#include <QSettings>
 
 class Client : public QObject
 {
     Q_OBJECT
     Q_PROPERTY(QString messageFrom READ messageFrom WRITE setMessageFrom)
+
 public:
     explicit Client(QObject *parent = nullptr);
     QString messageFrom();
     void setMessageFrom(QString value);
-    void connectToServer(QString host,quint16 port);
+
+private:
+    void connectToServer();
+    void createConfigFile(QString userLogin,QString userPassword);
 
 signals:
     void newInMessage(QString name);
@@ -26,13 +36,21 @@ signals:
     void loginSuccess(QString name);
     void loginFail();
 
-    void regSuccess(QString name);
+    void regSuccess();
     void regFail(QString error);
+
 private:
+    QTimer reconnectTimer;
     QTcpSocket* socket;
     QByteArray data;
+
 protected:
     QString mesFrom;
+
+private slots:
+    void onDisconnected();
+    void attemptReconnect();
+
 public slots:
     void reg(QString login,QString password);
     void login(QString login,QString password);

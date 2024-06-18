@@ -48,4 +48,4 @@ install(TARGETS appqmlqtdesign
     RUNTIME DESTINATION ${CMAKE_INSTALL_BINDIR}
 )
 
-configure_file(config.ini ${CMAKE_CURRENT_BINARY_DIR}/config.ini COPYONLY)
+# configure_file(config.ini ${CMAKE_CURRENT_BINARY_DIR}/config.ini COPYONLY)

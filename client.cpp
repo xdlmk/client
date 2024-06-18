@@ -5,19 +5,15 @@ Client::Client(QObject *parent)
 {
     socket = new QTcpSocket(this);
     QObject::connect(socket, &QTcpSocket::connected, [&]() {
-        qInfo() <<  "Success connect to server 192.168.100.233 on port 2020";
+        qInfo() <<  "Success connect to server on port 2020";
+        reconnectTimer.stop();
         emit connectionSuccess();
     });
-    connect(socket, QOverload<QAbstractSocket::SocketError>::of(&QTcpSocket::errorOccurred), [&](QAbstractSocket::SocketError socketError) {
-        Q_UNUSED(socketError)
-        qInfo() << "Failed to connect to server:";
-        connectToServer("192.168.100.233",2020);
-        emit errorWithConnect();
-    });
-    connectToServer("192.168.100.233",2020);
+    connectToServer();
 
     connect(socket,&QTcpSocket::readyRead,this,&Client::slotReadyRead);
-    connect(socket,&QTcpSocket::disconnected,socket,&QTcpSocket::deleteLater);
+    connect(socket,&QTcpSocket::disconnected,this,&Client::onDisconnected);
+    connect(&reconnectTimer, &QTimer::timeout, this, &Client::attemptReconnect);
 }
 
 QString Client::messageFrom()
@@ -30,9 +26,39 @@ void Client::setMessageFrom(QString value)
     mesFrom = value;
 }
 
-void Client::connectToServer(QString host, quint16 port)
+void Client::connectToServer()
 {
-    socket->connectToHost(host,port);
+    socket->connectToHost("192.168.100.234",2020);
+}
+
+void Client::createConfigFile(QString userLogin,QString userPassword)
+{
+    QString configFilePath = QStandardPaths::writableLocation(QStandardPaths::AppConfigLocation);
+    configFilePath = configFilePath + "/config.ini";
+    QSettings settings(configFilePath,QSettings::IniFormat);
+        settings.setValue("success","ok");
+        settings.setValue("login", userLogin);
+        settings.setValue("password", userPassword);
+        qDebug()<<"Config file created!";
+}
+
+void Client::onDisconnected()
+{
+    qDebug() << "Disconnected from server.";
+    if (!reconnectTimer.isActive()) {
+        reconnectTimer.start(5000);
+    }
+}
+
+void Client::attemptReconnect()
+{
+    emit errorWithConnect();
+    if(socket->state() == QAbstractSocket::UnconnectedState)
+    {
+        qDebug() << "Attempting to reconnect...";
+        socket->abort();
+        connectToServer();
+    }
 }
 
 void Client::reg(QString login, QString password)
@@ -94,7 +120,8 @@ void Client::slotReadyRead()
         QJsonObject json = doc.object();
         QString flag = json["flag"].toString();
         qInfo() << "next check flags";
-        if(flag == "message")
+
+        if(flag =="message")
         {
             qInfo() << "flag message";
             QString str1 = json["str"].toString();
@@ -107,22 +134,24 @@ void Client::slotReadyRead()
             qInfo() << "flag login";
             QString success = json["success"].toString();
             QString name = json["name"].toString();
+            QString password = json["password"].toString();
             if(success == "ok")
             {
                 emit loginSuccess(name);
+                createConfigFile(name,password);
             }
             else if(success == "poor")
             {
                 emit loginFail();
             }
         }
-        else if(flag == "reg")
+        else if (flag == "reg")
         {
+            qDebug() << "flag reg";
             QString success = json["success"].toString();
-            QString name = json["name"].toString();
             if(success == "ok")
             {
-                emit regSuccess(name) ;
+                emit regSuccess() ;
             }
             else if (success == "poor")
             {
