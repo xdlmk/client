@@ -9,8 +9,15 @@ Client::Client(QObject *parent)
         reconnectTimer.stop();
         emit connectionSuccess();
     });
+    QObject::connect(socket, &QAbstractSocket::errorOccurred, [&](QAbstractSocket::SocketError socketError) {
+        if (!reconnectTimer.isActive()) {
+            reconnectTimer.start(2000);
+        }
+        qDebug() << "Connection error: " << socket->errorString();
+    });
+    qDebug() << "Client constructor";
     connectToServer();
-
+    qDebug() << "Client constructor1";
     connect(socket,&QTcpSocket::readyRead,this,&Client::slotReadyRead);
     connect(socket,&QTcpSocket::disconnected,this,&Client::onDisconnected);
     connect(&reconnectTimer, &QTimer::timeout, this, &Client::attemptReconnect);
@@ -28,7 +35,8 @@ void Client::setMessageFrom(QString value)
 
 void Client::connectToServer()
 {
-    socket->connectToHost("192.168.100.234",2020);
+    qDebug() << "connectToServer";
+    socket->connectToHost("192.168.100.235",2020);
 }
 
 void Client::createConfigFile(QString userLogin,QString userPassword)
@@ -46,13 +54,14 @@ void Client::onDisconnected()
 {
     qDebug() << "Disconnected from server.";
     if (!reconnectTimer.isActive()) {
-        reconnectTimer.start(5000);
+        reconnectTimer.start(2000);
     }
 }
 
 void Client::attemptReconnect()
 {
     emit errorWithConnect();
+    qDebug() << socket->state();
     if(socket->state() == QAbstractSocket::UnconnectedState)
     {
         qDebug() << "Attempting to reconnect...";
