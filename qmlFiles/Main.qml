@@ -144,11 +144,9 @@ Window {
             var newMsg = {};
             newMsg.text = msg;
             newMsg.time = Qt.formatTime(new Date(), "hh:mm");
-            newMsg.name = username;
+            newMsg.name = userlogin;
             newMsg.isOutgoing = true;
-            listModel.append(newMsg);
             client.sendToServer(msg,newMsg.name);
-            listView.positionViewAtIndex(listModel.count - 1, ListView.End);
         }
     }
 
@@ -159,6 +157,17 @@ Window {
         newMsg.time = Qt.formatTime(new Date(), "hh:mm");
         newMsg.name = name;
         newMsg.isOutgoing = false;
+        listModel.append(newMsg);
+        listView.positionViewAtIndex(listModel.count - 1, ListView.End);
+    }
+
+    function onOutMessage(name)
+    {
+        var newMsg = {};
+        newMsg.text = messageFrom;
+        newMsg.time = Qt.formatTime(new Date(), "hh:mm");
+        newMsg.name = name;
+        newMsg.isOutgoing = true;
         listModel.append(newMsg);
         listView.positionViewAtIndex(listModel.count - 1, ListView.End);
     }
@@ -195,6 +204,7 @@ Window {
     Component.onCompleted:
     {
         newInMessage.connect(onInMessage);
+        newOutMessage.connect(onOutMessage);
         errorWithConnect.connect(connectError);
         connectionSuccess.connect(connectSuccess)
     }

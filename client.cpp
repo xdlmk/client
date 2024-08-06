@@ -36,7 +36,7 @@ void Client::setMessageFrom(QString value)
 void Client::connectToServer()
 {
     qDebug() << "connectToServer";
-    socket->connectToHost("192.168.100.235",2020);
+    socket->connectToHost("192.168.100.232",2020);
 }
 
 void Client::createConfigFile(QString userLogin,QString userPassword)
@@ -100,12 +100,12 @@ void Client::login(QString login, QString password)
     socket->write(data);
 }
 
-void Client::sendToServer(QString str,QString name)
+void Client::sendToServer(QString str,QString userLogin)
 {
     QJsonObject json;
     json["flag"] = "message";
     json["str"] = str;
-    json["name"] = name;
+    json["login"] = userLogin;
     QJsonDocument doc(json);
     data.clear();
     QDataStream out(&data,QIODevice::WriteOnly);
@@ -134,9 +134,17 @@ void Client::slotReadyRead()
         {
             qInfo() << "flag message";
             QString str1 = json["str"].toString();
-            QString name = json["name"].toString();
+            QString userLogin = json["login"].toString();
             mesFrom = str1;
-            emit newInMessage(name);
+            QString out = json["Out"].toString();
+            if(out == "out")
+            {
+                emit newOutMessage(userLogin);
+            }
+            else
+            {
+                emit newInMessage(userLogin);
+            }
         }
         else if(flag == "login")
         {

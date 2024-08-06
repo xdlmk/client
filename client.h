@@ -29,6 +29,7 @@ private:
 
 signals:
     void newInMessage(QString name);
+    void newOutMessage(QString name);
 
     void errorWithConnect();
     void connectionSuccess();

@@ -1,0 +1,11 @@
+<RCC>
+    <qresource prefix="/">
+        <file>qmlFiles/Main.qml</file>
+        <file>qmlFiles/ChatBubbleOut.qml</file>
+        <file>qmlFiles/ChatBubbleIn.qml</file>
+        <file>qmlFiles/MessageLine.qml</file>
+        <file>qmlFiles/LoginPage.qml</file>
+        <file>qmlFiles/RegPage.qml</file>
+        <file>qmlFiles/pageSwitch.qml</file>
+    </qresource>
+</RCC>

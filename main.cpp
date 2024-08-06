@@ -17,9 +17,9 @@ int main(int argc, char *argv[])
 
     QEventLoop loop;
 
-    const QUrl mainUrl(QStringLiteral("qrc:/qmlqtdesign/qmlFiles/Main.qml"));
-    const QUrl switchUrl(QStringLiteral("qrc:/qmlqtdesign/qmlFiles/pageSwitch.qml"));
-    const QUrl loginUrl(QStringLiteral("qrc:/qmlqtdesign/qmlFiles/LoginPage.qml"));
+    const QUrl mainUrl(QStringLiteral("regagramMod/qmlFiles/Main.qml"));
+    const QUrl switchUrl(QStringLiteral("regagramMod/qmlFiles/pageSwitch.qml"));
+    const QUrl loginUrl(QStringLiteral("regagramMod/qmlFiles/LoginPage.qml"));
 
     Client client;
     engine.rootContext()->setContextObject(&client);
@@ -32,13 +32,13 @@ int main(int argc, char *argv[])
         []() { QCoreApplication::exit(-1); },
         Qt::QueuedConnection);
     // connection for the case with successful login and loading of the main page
-    QObject::connect(&client, &Client::loginSuccess, [&engine, mainUrl](QString name) {
+    QObject::connect(&client, &Client::loginSuccess, [&engine, mainUrl](QString userLogin) {
         QList<QObject*> rootObjects = engine.rootObjects();
         if (!rootObjects.isEmpty()) {
             QObject *rootObject = rootObjects.first();
             rootObject->deleteLater();
         }
-        engine.rootContext()->setContextProperty("username",name);
+        engine.rootContext()->setContextProperty("userlogin",userLogin);
         engine.load(mainUrl);
     });
     // connection for the case with successful registration and loading of the login page
