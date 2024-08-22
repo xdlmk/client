@@ -40,6 +40,8 @@ signals:
     void regSuccess();
     void regFail(QString error);
 
+    void clientLogout();
+
 private:
     QTimer reconnectTimer;
     QTcpSocket* socket;
@@ -57,6 +59,7 @@ public slots:
     void login(QString login,QString password);
     void slotReadyRead();
     void sendToServer(QString str,QString name);
+    void logout();
 };
 
 #endif // CLIENT_H

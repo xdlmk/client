@@ -36,7 +36,7 @@ void Client::setMessageFrom(QString value)
 void Client::connectToServer()
 {
     qDebug() << "connectToServer";
-    socket->connectToHost("192.168.100.232",2020);
+    socket->connectToHost("192.168.100.242",2020);
 }
 
 void Client::createConfigFile(QString userLogin,QString userPassword)
@@ -112,6 +112,19 @@ void Client::sendToServer(QString str,QString userLogin)
     out.setVersion(QDataStream::Qt_6_7);
     out << doc.toJson();
     socket->write(data);
+}
+
+void Client::logout()
+{
+    QJsonObject json;
+    json["flag"]= "logout";
+    QJsonDocument doc(json);
+    data.clear();
+    QDataStream out(&data,QIODevice::WriteOnly);
+    out.setVersion(QDataStream::Qt_6_7);
+    out << doc.toJson();
+    socket->write(data);
+    emit clientLogout();
 }
 
 void Client::slotReadyRead()

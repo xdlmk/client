@@ -4,7 +4,7 @@ project(clientDes VERSION 0.1 LANGUAGES CXX)
 
 set(CMAKE_CXX_STANDARD_REQUIRED ON)
 
-find_package(Qt6 6.4 REQUIRED COMPONENTS Quick)
+find_package(Qt6 6.4 REQUIRED COMPONENTS Quick Core Network)
 
 qt_standard_project_setup()
 
@@ -15,7 +15,7 @@ qt_add_executable(regagram
 qt_policy(SET QTP0001 NEW)
 
 qt_add_qml_module(regagram
-    URI regagramMod
+    URI resources
     VERSION 1.0
     QML_FILES
         qmlFiles/Main.qml
@@ -28,8 +28,8 @@ qt_add_qml_module(regagram
     SOURCES
         client.h client.cpp
     RESOURCES
-        resources.qrc
-
+        images/logo.png
+        images/logo2.png
 )
 
 # Qt for iOS sets MACOSX_BUNDLE_GUI_IDENTIFIER automatically since Qt 6.1.
@@ -45,6 +45,7 @@ set_target_properties(regagram PROPERTIES
 
 target_link_libraries(regagram
     PRIVATE Qt6::Quick
+    Qt${QT_VERSION_MAJOR}::Core Qt${QT_VERSION_MAJOR}::Network
 )
 
 include(GNUInstallDirs)
@@ -53,5 +54,6 @@ install(TARGETS regagram
     LIBRARY DESTINATION ${CMAKE_INSTALL_LIBDIR}
     RUNTIME DESTINATION ${CMAKE_INSTALL_BINDIR}
 )
+
 
 # configure_file(config.ini ${CMAKE_CURRENT_BINARY_DIR}/config.ini COPYONLY)

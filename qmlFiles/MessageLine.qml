@@ -2,7 +2,6 @@ import QtQuick 2.15
 import QtQuick.Controls 2.15
 import QtQuick.Layouts
 
-
 Rectangle {
 
     readonly property int defMargin: 10
@@ -19,39 +18,59 @@ Rectangle {
 
         RowLayout {
             anchors.fill: parent
-            anchors.margins: defMargin
+            spacing: defMargin
+
+            Layout.leftMargin: defMargin
+            Layout.topMargin: defMargin
 
             TextField {
-                id: edtText
-                selectByMouse: true
-                Layout.fillWidth: true
-                Layout.alignment: Qt.AlignVCenter
-                placeholderText: "Написать сообщение..."
-                placeholderTextColor: "grey"
-                font.pointSize: 10
-                color: "white"
-                background: Rectangle {
-                    color: downLine.color
-                }
-            }
-
-            Button {
-                id: btnAddItem
-                width: 55
-                Layout.alignment: Qt.AlignVCenter
-                text: ">"
-
-                background: Rectangle
-                {
-                    color:downLine.color
-                }
-
-                onClicked: {
-                    if (edtText.text.trim() !== "") {
-                        newMessage(edtText.text);
-                        edtText.clear();
+                        id: edtText
+                        selectByMouse: true
+                        Layout.fillWidth: true
+                        Layout.alignment: Qt.AlignVCenter
+                        placeholderText: "Написать сообщение..."
+                        placeholderTextColor: "grey"
+                        font.pointSize: 10
+                        color: "white"
+                        background: Rectangle {
+                            color: downLine.color
+                        }
+                        Layout.leftMargin: defMargin
                     }
-                }
-            }
+
+                    Rectangle {
+                        id: btnAddItem
+                        width: 50
+                        height: 50
+                        color: downLine.color
+
+                        Image {
+                            id: buttonImage
+                            source: "../images/logo.png"
+                            anchors.centerIn: parent
+                            fillMode: Image.PreserveAspectFit
+                        }
+
+                        MouseArea {
+                            id: buttonMouseArea
+                            anchors.fill: parent
+                            cursorShape: Qt.PointingHandCursor
+
+                            onClicked: {
+                                if (edtText.text.trim() !== "") {
+                                    newMessage(edtText.text);
+                                    edtText.clear();
+                                }
+                            }
+
+                            onPressed: {
+                                buttonImage.source = "../images/logo2.png"
+                            }
+
+                            onReleased: {
+                                buttonImage.source = "../images/logo.png"
+                            }
+                        }
+                    }
         }
     }

@@ -1,5 +1,5 @@
 <RCC>
-    <qresource prefix="/">
+    <qresource prefix="/qml">
         <file>qmlFiles/Main.qml</file>
         <file>qmlFiles/ChatBubbleOut.qml</file>
         <file>qmlFiles/ChatBubbleIn.qml</file>
@@ -7,5 +7,9 @@
         <file>qmlFiles/LoginPage.qml</file>
         <file>qmlFiles/RegPage.qml</file>
         <file>qmlFiles/pageSwitch.qml</file>
+    </qresource>
+    <qresource prefix="/images">
+        <file>images/logo.png</file>
+        <file>images/logo2.png</file>
     </qresource>
 </RCC>

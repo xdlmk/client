@@ -1,9 +1,12 @@
 #include <QGuiApplication>
 #include <QQmlApplicationEngine>
+
 #include <QQmlEngine>
 #include <QQmlContext>
+
 #include <QSettings>
 #include <QEventLoop>
+#include <QDir>
 #include "client.h"
 
 // add processing emit loginFail when using config.ini and the corresponding ones there
@@ -17,9 +20,9 @@ int main(int argc, char *argv[])
 
     QEventLoop loop;
 
-    const QUrl mainUrl(QStringLiteral("regagramMod/qmlFiles/Main.qml"));
-    const QUrl switchUrl(QStringLiteral("regagramMod/qmlFiles/pageSwitch.qml"));
-    const QUrl loginUrl(QStringLiteral("regagramMod/qmlFiles/LoginPage.qml"));
+    const QUrl mainUrl(QStringLiteral("resources/qmlFiles/Main.qml"));
+    const QUrl switchUrl(QStringLiteral("resources/qmlFiles/pageSwitch.qml"));
+    const QUrl loginUrl(QStringLiteral("resources/qmlFiles/LoginPage.qml"));
 
     Client client;
     engine.rootContext()->setContextObject(&client);
@@ -60,6 +63,15 @@ int main(int argc, char *argv[])
         engine.load(switchUrl);
 
     });
+    QObject::connect(&client, &Client::clientLogout, [&engine, switchUrl]() {
+        QList<QObject*> rootObjects = engine.rootObjects();
+        if (!rootObjects.isEmpty()) {
+            QObject *rootObject = rootObjects.first();
+            rootObject->deleteLater();
+        }
+        engine.load(switchUrl);
+
+    });
     // connection
     QObject::connect(&client, &Client::errorWithConnect, [&engine, switchUrl]() {
         QList<QObject*> rootObjects = engine.rootObjects();
@@ -78,7 +90,6 @@ int main(int argc, char *argv[])
     QObject::connect(&client, &Client::connectionSuccess,&loop,&QEventLoop::quit);
     loop.exec();
 
-    //connfig file check
     QString configFilePath = QStandardPaths::writableLocation(QStandardPaths::AppConfigLocation);
     configFilePath = configFilePath + "/config.ini";
 
