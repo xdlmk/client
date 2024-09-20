@@ -36,7 +36,7 @@ void Client::setMessageFrom(QString value)
 void Client::connectToServer()
 {
     qDebug() << "connectToServer";
-    socket->connectToHost("192.168.100.242",2020);
+    socket->connectToHost("127.0.0.1",2020);
 }
 
 void Client::createConfigFile(QString userLogin,QString userPassword)
@@ -132,12 +132,46 @@ void Client::slotReadyRead()
     QDataStream in(socket);
     qInfo() << "data reads";
     in.setVersion(QDataStream::Qt_6_7);
+
+    static quint32 blockSize = 0;
+
     if(in.status() == QDataStream::Ok)
     {
         qInfo() << "status data stream ok";
-        QByteArray str;
-        in >> str;
-        QJsonDocument doc = QJsonDocument::fromJson(str);
+
+        if (blockSize == 0) {
+            if (socket->bytesAvailable() < sizeof(quint32))
+            {
+                qDebug() << "Ожидание данных для размера блока...";
+                return;
+            }
+            in >> blockSize;
+            qDebug() << "Размер блока данных:" << blockSize;
+        }
+
+        if (socket->bytesAvailable() < blockSize)
+        {
+            qDebug() << "Ожидание оставшихся данных...";
+            return;
+        }
+
+        //QByteArray jsonData = socket->readAll();
+
+        QByteArray jsonData;
+        jsonData.resize(blockSize);
+        in.readRawData(jsonData.data(), blockSize);
+
+        qDebug() << "Принятые данные в байтах:" << jsonData;
+
+        //in >> jsonData;
+        QJsonDocument doc = QJsonDocument::fromJson(jsonData);
+
+        if (doc.isNull()) {
+            qDebug() << "Ошибка при разборе JSON, получен пустой JSON.";
+            blockSize = 0;
+            return;
+        }
+
         qDebug() << "JSON to read:" << doc.toJson(QJsonDocument::Indented);
         QJsonObject json = doc.object();
         QString flag = json["flag"].toString();
@@ -165,8 +199,20 @@ void Client::slotReadyRead()
             QString success = json["success"].toString();
             QString name = json["name"].toString();
             QString password = json["password"].toString();
+
+            QString imageString = json["profileImage"].toString();
+            QByteArray imageData = QByteArray::fromBase64(imageString.toLatin1());
+
             if(success == "ok")
             {
+                QImage image;
+                image.loadFromData(imageData);
+                QString filePath(QCoreApplication::applicationDirPath() + "/resources/images/avatar.png");
+                qDebug() <<"File path: " <<filePath;
+                if (!image.save(filePath)) {
+                    qDebug() << "Ошибка: не удалось сохранить изображение";
+                }
+
                 emit loginSuccess(name);
                 createConfigFile(name,password);
             }
@@ -189,11 +235,12 @@ void Client::slotReadyRead()
                 emit regFail(error);
             }
         }
+
+        blockSize = 0;
         qDebug() << "Leave read message from server";
     }
     else
     {
         qDebug() << "Error DataStream status (client.cpp::26)";
     }
-
 }

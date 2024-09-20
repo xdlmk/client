@@ -12,6 +12,9 @@
 #include <QFile>
 #include <QStandardPaths>
 #include <QSettings>
+#include <QCoreApplication>
+
+#include <QImage>
 
 class Client : public QObject
 {

@@ -15,8 +15,6 @@ Window {
     Rectangle {
         id: leftLine
         color: "#0e1621"
-        border.color: "black"
-        border.width: 0.5
         height: root.height
         width: 54
         anchors.left:  parent.left
@@ -26,12 +24,33 @@ Window {
         Rectangle {
             id: profile
             color: "#0e1621"
-            border.color: "green"
-            border.width: 0.5
             height: 54
             anchors.left:  parent.left
             anchors.right: parent.right
-            anchors.top: parent.top
+            anchors.top: parent.top 
+
+            Rectangle {
+                    id: colorOverlayProfile
+                    anchors.fill: parent
+                    anchors.margins: 1
+                    color: "#262d37"
+                    opacity: 0
+
+                    visible: false
+
+                    Behavior on opacity {
+                        NumberAnimation {
+                            duration: 300
+                            easing.type: Easing.OutQuad
+                        }
+                    }
+                }
+            Image {
+                id: listImage
+                source: "../images/profile.png"
+                anchors.centerIn: parent
+                fillMode: Image.PreserveAspectFit
+            }
 
             MouseArea {
                 id: profileMouseArea
@@ -44,11 +63,12 @@ Window {
                 }
 
                 onPressed: {
-                    profile.color = "gray"
+                    colorOverlayProfile.visible = true
+                    colorOverlayProfile.opacity = 1
                 }
 
                 onReleased: {
-                    profile.color = "#0e1621"
+                    colorOverlayProfile.opacity = 0
                 }
             }
         }
@@ -126,7 +146,7 @@ Window {
     ListModel {
         id: listModel
         ListElement {
-            text: "Wassaaa, are you here?"
+            text: "FFFFFflsq12"
             time: "no:time"
             name: "xdlmk"
             isOutgoing: false
@@ -257,7 +277,7 @@ Window {
 
                 Image {
                     id: profileImage
-                    source: "../images/logo.png"
+                    source: "../images/avatar.png"
                     width: parent.width
                     height: parent.height
                     anchors.left: parent.left
