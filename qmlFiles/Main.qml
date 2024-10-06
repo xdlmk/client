@@ -27,24 +27,24 @@ Window {
             height: 54
             anchors.left:  parent.left
             anchors.right: parent.right
-            anchors.top: parent.top 
+            anchors.top: parent.top
 
             Rectangle {
-                    id: colorOverlayProfile
-                    anchors.fill: parent
-                    anchors.margins: 1
-                    color: "#262d37"
-                    opacity: 0
+                id: colorOverlayProfile
+                anchors.fill: parent
+                anchors.margins: 1
+                color: "#262d37"
+                opacity: 0
 
-                    visible: false
+                visible: false
 
-                    Behavior on opacity {
-                        NumberAnimation {
-                            duration: 300
-                            easing.type: Easing.OutQuad
-                        }
+                Behavior on opacity {
+                    NumberAnimation {
+                        duration: 300
+                        easing.type: Easing.OutQuad
                     }
                 }
+            }
             Image {
                 id: listImage
                 source: "../images/profile.png"
@@ -238,105 +238,16 @@ Window {
         }
     }
 
-    Rectangle {
-        id: profileWindow
-        width: 250
-        height: root.height
-        color: "#1e2a36"
-        border.color: "black"
-        border.width: 0.5
-        x: isProfileExtended ? 0 : -width  // Используем свойство x для управления позицией окна
+    ProfilePanel{
+        id:profileWindow
         anchors.top: parent.top
         anchors.bottom: parent.bottom
 
+        x: isProfileExtended ? 0 : -width
         Behavior on x {
             NumberAnimation {
                 duration: 500
                 easing.type: Easing.InOutQuad
-            }
-        }
-
-        Column {
-            anchors.top: parent.top
-            anchors.topMargin: 20
-            anchors.left: parent.left
-            anchors.right: parent.right
-            anchors.margins: 2
-            spacing: 10
-
-            Rectangle {
-                id: profileImageContainer
-                width: 50
-                height: 50
-                radius: 25
-                border.color: "green"
-                border.width: 0.5
-                color: "transparent"
-                anchors.left: parent.left
-                anchors.leftMargin: 10
-
-                Image {
-                    id: profileImage
-                    source: "../images/avatar.png"
-                    width: parent.width
-                    height: parent.height
-                    anchors.left: parent.left
-                    anchors.top: parent.top
-                    fillMode: Image.PreserveAspectCrop
-                    clip: true
-                }
-            }
-
-            Text {
-                id: userLoginText
-                text: userlogin
-                color: "white"
-                font.pointSize: 10
-                font.bold: true
-                anchors.left: parent.left
-                anchors.leftMargin: 10
-                visible: true
-            }
-
-            Rectangle {
-                id: buttonLeave
-                color: "#1e2a36"
-                height: 40
-                anchors.left:  parent.left
-                anchors.right: parent.right
-
-                Text {
-                    id: leaveText
-                    text: "Выйти"
-                    color: "#cc353e"
-                    font.pointSize: 10
-                    font.bold: true
-                    anchors.left: parent.left
-                    anchors.top: parent.top
-                    anchors.topMargin: 10
-                    anchors.leftMargin: 10
-                    visible: true
-                }
-
-                MouseArea {
-                    id: buttonLeaveMouseArea
-                    anchors.fill: parent
-                    cursorShape: Qt.PointingHandCursor
-                    hoverEnabled: true
-
-                    onClicked: {
-                        console.log("Mouse clicked");
-                        client.logout();
-                    }
-
-                    onEntered: {
-                        buttonLeave.color = "#626a72";
-                    }
-
-                    onExited: {
-                        buttonLeave.color = "#1e2a36";
-                    }
-                }
             }
         }
     }

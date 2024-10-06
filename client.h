@@ -45,6 +45,9 @@ signals:
 
     void clientLogout();
 
+    void newUser(QString username);
+    void changeAccount(QString username,QString password);
+
 private:
     QTimer reconnectTimer;
     QTcpSocket* socket;
@@ -58,11 +61,13 @@ private slots:
     void attemptReconnect();
 
 public slots:
+    void changeActiveAccount(const QString username);
     void reg(QString login,QString password);
     void login(QString login,QString password);
     void slotReadyRead();
     void sendToServer(QString str,QString name);
     void logout();
+    void clientChangeAccount();
 };
 
 #endif // CLIENT_H

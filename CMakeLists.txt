@@ -31,6 +31,7 @@ qt_add_qml_module(regagram
         images/logo.png
         images/logo2.png
         images/profile.png
+        QML_FILES qmlFiles/ProfilePanel.qml
 )
 
 # Qt for iOS sets MACOSX_BUNDLE_GUI_IDENTIFIER automatically since Qt 6.1.

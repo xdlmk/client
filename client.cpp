@@ -44,10 +44,53 @@ void Client::createConfigFile(QString userLogin,QString userPassword)
     QString configFilePath = QStandardPaths::writableLocation(QStandardPaths::AppConfigLocation);
     configFilePath = configFilePath + "/config.ini";
     QSettings settings(configFilePath,QSettings::IniFormat);
-        settings.setValue("success","ok");
-        settings.setValue("login", userLogin);
-        settings.setValue("password", userPassword);
-        qDebug()<<"Config file created!";
+    int total = settings.value("total",0).toInt();
+    bool already_exists = false;
+    for( int i = 1; i<=total; i++ )
+    {
+        if (userLogin == settings.value("login"+ QString::number(i)))
+        {
+            already_exists = true;
+            break;
+        }
+    }
+    if (!already_exists)
+    {
+        if(settings.value("total",0).toInt() == 0)
+        {
+            settings.setValue("total", 1);
+            settings.setValue("active_account",1);
+            settings.setValue("success1","ok");
+            settings.setValue("login1", userLogin);
+            settings.setValue("password1", userPassword);
+            qDebug()<<"Config file created! 1 user";
+        }
+        else if(settings.value("total",0).toInt() == 1)
+        {
+            settings.setValue("total", 2);
+            settings.setValue("active_account",2);
+            settings.setValue("success2","ok");
+            settings.setValue("login2", userLogin);
+            settings.setValue("password2", userPassword);
+            qDebug()<<"Config file created! 2 users";
+        }
+        else if(settings.value("total",0).toInt() == 2)
+        {
+            settings.setValue("total", 3);
+            settings.setValue("active_account",3);
+            settings.setValue("success3","ok");
+            settings.setValue("login3", userLogin);
+            settings.setValue("password3", userPassword);
+            qDebug()<<"Config file created! 3 users";
+        }
+    }
+    else qDebug() << "Already exists: " << already_exists;
+    total = settings.value("total",0).toInt();
+    for( int i = 1; i<=total;i++)
+    {
+        emit newUser(settings.value("login"+QString::number(i), "").toString());
+        qDebug()<< settings.value("login"+QString::number(i), "").toString();
+    }
 }
 
 void Client::onDisconnected()
@@ -68,6 +111,30 @@ void Client::attemptReconnect()
         socket->abort();
         connectToServer();
     }
+}
+
+void Client::changeActiveAccount(const QString username)
+{
+    QString configFilePath = QStandardPaths::writableLocation(QStandardPaths::AppConfigLocation);
+    configFilePath = configFilePath + "/config.ini";
+    QSettings configFile(configFilePath, QSettings::IniFormat);
+
+    int total = configFile.value("total", 0).toInt();
+
+    for (int i = 1; i <= total; ++i) {
+        QString currentLogin = configFile.value("login"+ QString::number(i), "").toString();
+
+        if (currentLogin == username) {
+            configFile.setValue("active_account", i);
+            qDebug() << "Active account changed to:" << i;
+            QString password = configFile.value("password"+ QString::number(i),"").toString();
+            emit changeAccount(username,password);
+
+            return;
+        }
+    }
+
+    qDebug() << "User not found:" << username;
 }
 
 void Client::reg(QString login, QString password)
@@ -124,7 +191,75 @@ void Client::logout()
     out.setVersion(QDataStream::Qt_6_7);
     out << doc.toJson();
     socket->write(data);
+    socket->flush();
+    qDebug() << "Emitting clientLogout";
     emit clientLogout();
+    QString configFilePath = QStandardPaths::writableLocation(QStandardPaths::AppConfigLocation);
+    configFilePath = configFilePath + "/config.ini";
+    QSettings configFile(configFilePath, QSettings::IniFormat);
+    int active_account = configFile.value("active_account",0).toInt();
+    configFile.remove("success"+QString::number(active_account));
+    configFile.remove("login"+QString::number(active_account));
+    configFile.remove("password"+QString::number(active_account));
+
+    for (int i = active_account + 1; i <= configFile.value("total",0).toInt(); ++i) {
+        QString success = configFile.value("success" + QString::number(i), "").toString();
+        QString login = configFile.value("login" + QString::number(i), "").toString();
+        QString password = configFile.value("password" + QString::number(i), "").toString();
+
+        configFile.setValue("success" + QString::number(i - 1), success);
+        configFile.setValue("login" + QString::number(i - 1), login);
+        configFile.setValue("password" + QString::number(i - 1), password);
+
+        configFile.remove("success" + QString::number(i));
+        configFile.remove("login" + QString::number(i));
+        configFile.remove("password" + QString::number(i));
+    }
+
+
+
+    if(configFile.value("total",0).toInt()>=2)
+    {
+        configFile.setValue("total",configFile.value("total",0).toInt()-1);
+        configFile.setValue("active_account",1);
+        active_account = configFile.value("active_account",0).toInt();
+
+        QString success = configFile.value("success"+QString::number(active_account),"").toString();
+        qDebug() << success;
+        if(success == "ok")
+        {
+            QString login = configFile.value("login"+QString::number(active_account), "").toString();
+            QString password = configFile.value("password"+QString::number(active_account), "").toString();
+
+            this->login(login,password);
+        }
+    }
+    else
+    {
+        QFile confFile(configFilePath);
+        if (confFile.exists()) {
+            if (confFile.remove()) {
+                qDebug() << "Config file removed successfully";
+            } else {
+                qDebug() << "Failed to remove config file";
+            }
+        } else {
+            qDebug() << "Config file does not exist";
+        }
+    }
+}
+
+void Client::clientChangeAccount()
+{
+    QJsonObject json;
+    json["flag"]= "logout";
+    QJsonDocument doc(json);
+    data.clear();
+    QDataStream out(&data,QIODevice::WriteOnly);
+    out.setVersion(QDataStream::Qt_6_7);
+    out << doc.toJson();
+    socket->write(data);
+    socket->flush();
 }
 
 void Client::slotReadyRead()
@@ -161,7 +296,7 @@ void Client::slotReadyRead()
         jsonData.resize(blockSize);
         in.readRawData(jsonData.data(), blockSize);
 
-        qDebug() << "Принятые данные в байтах:" << jsonData;
+        //qDebug() << "Принятые данные в байтах:" << jsonData;
 
         //in >> jsonData;
         QJsonDocument doc = QJsonDocument::fromJson(jsonData);
@@ -172,7 +307,11 @@ void Client::slotReadyRead()
             return;
         }
 
-        qDebug() << "JSON to read:" << doc.toJson(QJsonDocument::Indented);
+        QJsonObject jsonToRead = doc.object();
+        jsonToRead.remove("profileImage");
+        QJsonDocument toReadDoc(jsonToRead);
+        qDebug() << "(without profileImage)JSON to read:" << toReadDoc.toJson(QJsonDocument::Indented);
+
         QJsonObject json = doc.object();
         QString flag = json["flag"].toString();
         qInfo() << "next check flags";
