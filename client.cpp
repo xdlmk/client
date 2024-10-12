@@ -33,6 +33,79 @@ void Client::setMessageFrom(QString value)
     mesFrom = value;
 }
 
+void Client::loadMessageToQml(const QString username, const QString message, const QString out, const QString time)
+{
+    if(out == "out")
+    {
+        emit newOutMessage(username,message,time);
+    }
+    else
+    {
+        emit newInMessage(username,message,time);
+    }
+}
+
+void Client::loadMessageFromJson()
+{
+    QFile file(QCoreApplication::applicationDirPath() + "/resources/messages/message_" + activeUserName + ".json");
+
+    if (!file.open(QIODevice::ReadWrite)) {
+        qDebug() << "File not open client.cpp::saveMessageToJson::41";
+        return;
+    }
+
+    QByteArray fileData = file.readAll();
+    if (!fileData.isEmpty()) {
+        QJsonDocument doc = QJsonDocument::fromJson(fileData);
+        QJsonArray chatHistory = doc.array();
+
+        for (const QJsonValue &value : chatHistory) {
+            QJsonObject messageObject = value.toObject();
+            QString user = messageObject["login"].toString();
+            QString message = messageObject["str"].toString();
+            QString out = messageObject["Out"].toString();
+            QString time = messageObject["time"].toString();
+
+            qDebug() << time <<" "<< user << ": " << message;
+            loadMessageToQml(user,message,out,time);
+        }
+    }
+    file.close();
+
+}
+
+void Client::saveMessageToJson(const QString username, const QString message, const QString out)
+{
+    QFile file(QCoreApplication::applicationDirPath() + "/resources/messages/message_" + activeUserName + ".json");
+
+    if (!file.open(QIODevice::ReadWrite)) {
+        qDebug() << "File not open client.cpp::saveMessageToJson::41";
+        return;
+    }
+
+    QJsonArray chatHistory;
+    QByteArray fileData = file.readAll();
+    if (!fileData.isEmpty()) {
+        QJsonDocument doc = QJsonDocument::fromJson(fileData);
+        chatHistory = doc.array();
+    }
+
+    QJsonObject messageObject;
+    messageObject["login"] = username;
+    messageObject["str"] = message;
+    messageObject["Out"] = out;
+    messageObject["FullDate"] = QDateTime::currentDateTime().toString(Qt::ISODate);
+    messageObject["time"] = QDateTime::currentDateTime().toString("HH:mm");
+
+    chatHistory.append(messageObject);
+
+    file.resize(0);
+    QJsonDocument updatedDoc(chatHistory);
+    file.write(updatedDoc.toJson());
+    file.close();
+
+}
+
 void Client::connectToServer()
 {
     qDebug() << "connectToServer";
@@ -321,15 +394,17 @@ void Client::slotReadyRead()
             qInfo() << "flag message";
             QString str1 = json["str"].toString();
             QString userLogin = json["login"].toString();
-            mesFrom = str1;
             QString out = json["Out"].toString();
+            QString time = QDateTime::currentDateTime().toString("HH:mm");
+            saveMessageToJson(userLogin,str1,out);
+
             if(out == "out")
             {
-                emit newOutMessage(userLogin);
+                emit newOutMessage(userLogin,str1,time);
             }
             else
             {
-                emit newInMessage(userLogin);
+                emit newInMessage(userLogin,str1,time);
             }
         }
         else if(flag == "login")
@@ -352,7 +427,32 @@ void Client::slotReadyRead()
                     qDebug() << "Ошибка: не удалось сохранить изображение";
                 }
 
+                QDir dir(QCoreApplication::applicationDirPath() + "/resources/messages");
+                if (!dir.exists()) {
+                    dir.mkpath(".");
+                }
+                activeUserName = name;
+
+                QFile file(QCoreApplication::applicationDirPath() + "/resources/messages/message_" + activeUserName + ".json");
+
+                if (!file.exists()) {
+                    qDebug() << "File not exist, creating new file";
+
+                    if (file.open(QIODevice::WriteOnly)) {
+                        QJsonArray emptyArray;
+                        QJsonDocument doc(emptyArray);
+                        file.write(doc.toJson());
+                        file.close();
+                    } else {
+                        qWarning() << "File dont create";
+                    }
+                } else {
+                    qDebug() << "File exist";
+                }
+
+
                 emit loginSuccess(name);
+                loadMessageFromJson();
                 createConfigFile(name,password);
             }
             else if(success == "poor")

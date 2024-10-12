@@ -8,8 +8,11 @@
 
 #include <QJsonDocument>
 #include <QJsonObject>
+#include <QJsonArray>
 
+#include <QDir>
 #include <QFile>
+#include <QDateTime>
 #include <QStandardPaths>
 #include <QSettings>
 #include <QCoreApplication>
@@ -27,12 +30,15 @@ public:
     void setMessageFrom(QString value);
 
 private:
+    void loadMessageToQml(const QString username,const QString message,const QString out,const QString date);
+    void loadMessageFromJson();
+    void saveMessageToJson(const QString username,const QString message,const QString out);
     void connectToServer();
     void createConfigFile(QString userLogin,QString userPassword);
 
 signals:
-    void newInMessage(QString name);
-    void newOutMessage(QString name);
+    void newInMessage(QString name,QString message,QString time);
+    void newOutMessage(QString name,QString message,QString time);
 
     void errorWithConnect();
     void connectionSuccess();
@@ -49,6 +55,7 @@ signals:
     void changeAccount(QString username,QString password);
 
 private:
+    QString activeUserName;
     QTimer reconnectTimer;
     QTcpSocket* socket;
     QByteArray data;

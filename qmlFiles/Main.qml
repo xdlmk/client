@@ -200,20 +200,20 @@ Window {
         }
     }
 
-    function onInMessage(name) {
+    function onInMessage(name,message,time) {
         var newMsg = {};
-        newMsg.text = messageFrom;
-        newMsg.time = Qt.formatTime(new Date(), "hh:mm");
+        newMsg.text = message;
+        newMsg.time = time;
         newMsg.name = name;
         newMsg.isOutgoing = false;
         listModel.append(newMsg);
         listView.positionViewAtIndex(listModel.count - 1, ListView.End);
     }
 
-    function onOutMessage(name) {
+    function onOutMessage(name,message,time) {
         var newMsg = {};
-        newMsg.text = messageFrom;
-        newMsg.time = Qt.formatTime(new Date(), "hh:mm");
+        newMsg.text = message;
+        newMsg.time = time;
         newMsg.name = name;
         newMsg.isOutgoing = true;
         listModel.append(newMsg);
