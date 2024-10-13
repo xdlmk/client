@@ -55,6 +55,22 @@ int main(int argc, char *argv[])
         }
         engine.load(switchUrl);
     });
+
+    QObject::connect(&client, &Client::addAccount, [&engine, &client, switchUrl]() {
+        qDebug() << "addAccount received, deleting root object";
+        QList<QObject*> rootObjects = engine.rootObjects();
+        if (!rootObjects.isEmpty()) {
+            QObject *rootObject = rootObjects.first();
+            rootObject->deleteLater();
+            qDebug() << "Root object marked for deletion";
+        }
+        else
+        {
+            qDebug() << "No root objects found!";
+        }
+        client.clientChangeAccount();
+        engine.load(switchUrl);
+    });
     // connection in case the configuration file is damaged
     QObject::connect(&client, &Client::loginFail, [&engine, switchUrl]() {
         QList<QObject*> rootObjects = engine.rootObjects();

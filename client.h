@@ -53,6 +53,7 @@ signals:
 
     void newUser(QString username);
     void changeAccount(QString username,QString password);
+    void addAccount();
 
 private:
     QString activeUserName;

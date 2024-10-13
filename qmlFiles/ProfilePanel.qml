@@ -134,7 +134,7 @@ Rectangle {
                             }
                             else
                             {
-                                client.regSuccess();
+                                client.addAccount();
                             }
                         }
 
