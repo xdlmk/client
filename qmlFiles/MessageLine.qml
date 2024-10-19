@@ -46,7 +46,19 @@ Rectangle{
                     } else {
                         // Enter: отправка сообщения
                         if (edtText.text.trim() !== "") {
-                            newMessage(edtText.text);
+                            if(upLine.currentState == "default"){
+                                newMessage(edtText.text);
+                            }
+                            else if (upLine.currentState == "personal") {
+                                var newMsg = {};
+                                newMsg.text = edtText.text;
+                                newMsg.time = Qt.formatTime(new Date(), "hh:mm");
+                                newMsg.name = userlogin;
+                                newMsg.isOutgoing = true;
+                                console.log(nameText.text);
+                                client.sendPersonalMessage(edtText.text, nameText.text,upLine.user_id);
+                            }
+
                             edtText.clear();
                         }
                     }
@@ -75,7 +87,19 @@ Rectangle{
 
                 onClicked: {
                     if (edtText.text.trim() !== "") {
-                        newMessage(edtText.text);
+                        if(upLine.currentState == "default"){
+                            newMessage(edtText.text);
+                        }
+                        else if (upLine.currentState == "personal") {
+                            var newMsg = {};
+                            newMsg.text = edtText.text;
+                            newMsg.time = Qt.formatTime(new Date(), "hh:mm");
+                            newMsg.name = userlogin;
+                            newMsg.isOutgoing = true;
+                            console.log("upLine.userid: " + upLine.user_id);
+                            client.sendPersonalMessage(edtText.text, nameText.text,upLine.user_id);
+                        }
+
                         edtText.clear();
                     }
                 }

@@ -8,11 +8,11 @@ Rectangle {
     height: parent.height
     color: "#1e2a36"
     border.color: "black"
-    border.width: 0.5
+    //border.width: 0.5
     anchors.top: parent.top
     anchors.bottom: parent.bottom
     property bool isUserListEnable: false
-    // Первый список: Фото, имя и кнопка
+
     Column {
         anchors.top: parent.top
         anchors.topMargin: 20
@@ -21,7 +21,6 @@ Rectangle {
         anchors.margins: 2
         spacing: 10
 
-        // Аватар пользователя
         Rectangle {
             id: profileImageContainer
             width: 50
@@ -42,7 +41,6 @@ Rectangle {
             }
         }
 
-        // Логин пользователя и кнопка раскрытия списка
         RowLayout {
             Text {
                 id: userLoginText
@@ -54,22 +52,12 @@ Rectangle {
                 anchors.leftMargin: 10
                 visible: true
             }
-            /*Button {
-                id: changeUser
-                anchors.left: userLoginText.right
-                anchors.leftMargin: 150
-                onClicked: {
-                    console.log("button click");
-                    isUserListEnable = !isUserListEnable; // Переключаем состояние
-                    console.log("isUserListEnable:", isUserListEnable);
-                }
-            }*/
         }
 
         Rectangle {
             id: usersListContainer
             width: parent.width
-            height: Math.min(userListModel.count, 3) * 35 + 10  // Ограничение на отображение не более 3 элементов
+            height: Math.min(userListModel.count, 3) * 35 + 10
             color: "#1e2a36"
 
             ListView {
@@ -91,7 +79,6 @@ Rectangle {
                         anchors.fill: parent
                         anchors.leftMargin: 10
 
-                        // Аватарка пользователя
                         Rectangle {
                             id:userAvatar
                             width: 24
@@ -107,7 +94,6 @@ Rectangle {
                             }
                         }
 
-                        // Имя пользователя
                         Text {
                             text: username
                             color: "white"
@@ -149,7 +135,6 @@ Rectangle {
                 }
             }
 
-            // Модель данных
             ListModel {
                 id: userListModel
             }
@@ -244,11 +229,6 @@ Rectangle {
                 }
             }
         }
-
-        // Третий список (можно добавить позже)
-        // Rectangle {
-        //    ...
-        // }
     }
 
     function onNewUser(name) {

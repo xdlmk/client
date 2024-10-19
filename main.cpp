@@ -121,7 +121,7 @@ int main(int argc, char *argv[])
             engine.load(switchUrl);
         }
     });
-    // connection
+
     QObject::connect(&client, &Client::connectionSuccess, [&engine, switchUrl]() {
         qDebug() << "clientLogout received, deleting root object";
         QList<QObject*> rootObjects = engine.rootObjects();
@@ -136,6 +136,11 @@ int main(int argc, char *argv[])
         }
         engine.load(switchUrl);
         qDebug() << "Loaded new URL";
+    });
+
+    QObject::connect(&client, &Client::changeReceiverUserSignal, [&client](QString userlogin, int id) {
+        qDebug() << "changeReceiverUserSignal";
+        client.readPersonalJson(userlogin);
     });
     // loop for fix crash if server dont be started
     QObject::connect(&client, &Client::connectionSuccess,&loop,&QEventLoop::quit);

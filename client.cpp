@@ -33,6 +33,139 @@ void Client::setMessageFrom(QString value)
     mesFrom = value;
 }
 
+void Client::showMessageList(QString login)
+{
+    qDebug() << "showMessageList";
+    QFile file(QCoreApplication::applicationDirPath() + "/resources/" + activeUserName + "/personal" +"/message_" + login + ".json");
+    if (!file.open(QIODevice::ReadWrite)) {
+        qDebug() << "File not open client.cpp::showMessageList::41";
+        return;
+    }
+
+    QByteArray fileData = file.readAll();
+    if (!fileData.isEmpty()) {
+        QJsonArray chatHistory = QJsonDocument::fromJson(fileData).array();
+
+        if (!chatHistory.isEmpty()) {
+            QJsonObject lastMessageObject = chatHistory.last().toObject();
+
+            QString message = lastMessageObject["str"].toString();
+            int id = lastMessageObject["id"].toInt();
+            QString out = lastMessageObject["Out"].toString();
+
+            showPersonalChat(login,message,id,out);
+        } else {
+            qDebug() << "chatHistory is Empty";
+        }
+    }
+    file.close();
+}
+
+void Client::saveMessageFromDatabase(QJsonObject json)
+{
+    QJsonArray messagesArray = json["messages"].toArray();
+    if(messagesArray.isEmpty()){
+        return;
+    }
+
+    for (const QJsonValue &value : messagesArray) {
+        QJsonObject json = value.toObject();
+
+        QString message = json["str"].toString();
+        QString time = json["time"].toString();
+        QString fulldate = json["FullDate"].toString();
+        int dialog_id = json["dialog_id"].toInt();
+        int message_id = json["message_id"].toInt();
+        QString sender_login = json["sender_login"].toString();
+        int sender_id = json["sender_id"].toInt();
+        qDebug() << message << time << dialog_id << message_id << sender_login;
+
+        if(sender_login == activeUserName) {
+            QString receiver_login = json["receiver_login"].toString();
+            int receiver_id = json["receiver_id"].toInt();
+            saveMessageToJson(receiver_login, message, "out", time, fulldate, message_id, dialog_id,receiver_id);
+        }
+        else{
+            saveMessageToJson(sender_login, message, "", time, fulldate, message_id, dialog_id,sender_id);
+        }
+    }
+}
+
+void Client::updatingChats()
+{
+    QString folderPath = QCoreApplication::applicationDirPath() + "/resources/" + activeUserName + "/personal";
+
+    QDir dir(folderPath);
+
+    QStringList fileList = dir.entryList(QStringList() << "message_*.json", QDir::Files);
+
+    QJsonArray jsonArray;
+
+    QRegularExpression regex("^message_(.*)\\.json$");
+
+
+    for (const QString& fileName : fileList) {
+        QRegularExpressionMatch match = regex.match(fileName);
+        if (match.hasMatch()) {
+            QString login = match.captured(1);
+            if(login == "") continue;
+
+            showMessageList(login);
+            QJsonObject loginObject;
+
+            //Parser for message ID
+
+            QFile file(QCoreApplication::applicationDirPath() + "/resources/" + activeUserName + "/personal" +"/message_" + login + ".json");
+            if (!file.open(QIODevice::ReadWrite)) {
+                qDebug() << "File not open client.cpp::updatingChats::91";
+                return;
+            }
+
+            QByteArray fileData = file.readAll();
+            if (!fileData.isEmpty()) {
+                QJsonDocument doc = QJsonDocument::fromJson(fileData);
+                QJsonArray chatHistory = doc.array();
+
+                if (!chatHistory.isEmpty()) {
+
+                    QJsonObject lastMessageObject = chatHistory.last().toObject();
+                    loginObject["message_id"] = lastMessageObject["message_id"];
+                    loginObject["login"] = login;
+                    loginObject["dialog_id"] = lastMessageObject["dialog_id"];
+
+                } else {
+                    qDebug() << "chatHistory is Empty.";
+                }
+            }
+            file.close();
+            //end of parser for message ID
+
+            if (!loginObject.isEmpty()) {
+                jsonArray.append(loginObject);
+            }
+            else {
+                qDebug() << "loginObject is empty";
+            }
+        }
+    }
+
+    QJsonObject mainObject;
+    mainObject["flag"] = "updating_chats";
+    if(!fileList.isEmpty()) {
+        mainObject["chats"] = jsonArray;
+    }
+    else {
+        mainObject["userlogin"] = activeUserName;
+    }
+
+    QJsonDocument doc(mainObject);
+    data.clear();
+    QDataStream out(&data,QIODevice::WriteOnly);
+    out.setVersion(QDataStream::Qt_6_7);
+    out << doc.toJson();
+    socket->write(data);
+}
+
 void Client::loadMessageToQml(const QString username, const QString message, const QString out, const QString time)
 {
     if(out == "out")
@@ -45,15 +178,15 @@ void Client::loadMessageToQml(const QString username, const QString message, con
     }
 }
 
-void Client::loadMessageFromJson()
+void Client::loadMessageFromJson(const QString &filepath)
 {
-    QFile file(QCoreApplication::applicationDirPath() + "/resources/messages/message_" + activeUserName + ".json");
+    QFile file(filepath);
 
     if (!file.open(QIODevice::ReadWrite)) {
-        qDebug() << "File not open client.cpp::saveMessageToJson::41";
+        qDebug() << "File not open client.cpp::loadMessageFromJson::41";
         return;
     }
-
+    emit clearMainListView();
     QByteArray fileData = file.readAll();
     if (!fileData.isEmpty()) {
         QJsonDocument doc = QJsonDocument::fromJson(fileData);
@@ -74,12 +207,29 @@ void Client::loadMessageFromJson()
 
 }
 
-void Client::saveMessageToJson(const QString username, const QString message, const QString out)
+void Client::saveMessageToJson(const QString userlogin, const QString message, const QString out, const QString time,const QString FullDate, const int message_id,const int dialog_id, const int id)
 {
-    QFile file(QCoreApplication::applicationDirPath() + "/resources/messages/message_" + activeUserName + ".json");
+    QDir dir(QCoreApplication::applicationDirPath() + "/resources/" + activeUserName + "/personal");
+    if (!dir.exists()) {
+        dir.mkpath(".");
+    }
+    QFile file(QCoreApplication::applicationDirPath() + "/resources/" + activeUserName + "/personal" +"/message_" + userlogin + ".json");
+
+    if (!file.exists()) {
+        if (file.open(QIODevice::WriteOnly)) {
+            QJsonArray emptyArray;
+            QJsonDocument doc(emptyArray);
+            file.write(doc.toJson());
+            file.close();
+        } else {
+            qDebug() << "File dont create " + userlogin ;
+        }
+    } else {
+        qDebug() << "File exist " + userlogin;
+    }
 
     if (!file.open(QIODevice::ReadWrite)) {
-        qDebug() << "File not open client.cpp::saveMessageToJson::41";
+        qDebug() << "File not open client.cpp::saveMessageToJson::99";
         return;
     }
 
@@ -91,11 +241,19 @@ void Client::saveMessageToJson(const QString username, const QString message, co
     }
 
     QJsonObject messageObject;
-    messageObject["login"] = username;
+    if(out == "out"){
+        messageObject["login"] = activeUserName;
+    }
+    else {
+        messageObject["login"] = userlogin;
+    }
+    messageObject["id"] = id;
+    messageObject["message_id"] = message_id;
+    messageObject["dialog_id"] = dialog_id;
     messageObject["str"] = message;
     messageObject["Out"] = out;
-    messageObject["FullDate"] = QDateTime::currentDateTime().toString(Qt::ISODate);
-    messageObject["time"] = QDateTime::currentDateTime().toString("HH:mm");
+    messageObject["FullDate"] = FullDate;
+    messageObject["time"] = time;
 
     chatHistory.append(messageObject);
 
@@ -104,6 +262,7 @@ void Client::saveMessageToJson(const QString username, const QString message, co
     file.write(updatedDoc.toJson());
     file.close();
 
+    emit showPersonalChat(userlogin, message, id, out);
 }
 
 void Client::connectToServer()
@@ -186,6 +345,106 @@ void Client::attemptReconnect()
     }
 }
 
+void Client::readPersonalJson(const QString userlogin)
+{
+    if(activeUserName == userlogin){
+        return;
+    }
+    QDir dir(QCoreApplication::applicationDirPath() + "/resources/"+ activeUserName + "/personal");
+    if (!dir.exists()) {
+        dir.mkpath(".");
+    }
+
+    QFile file(QCoreApplication::applicationDirPath() + "/resources/" + activeUserName + "/personal" +"/message_" + userlogin + ".json");
+
+    if (!file.exists()) {
+        qDebug() << "File not exist, creating new file";
+
+        if (file.open(QIODevice::WriteOnly)) {
+            QJsonArray emptyArray;
+            QJsonDocument doc(emptyArray);
+            file.write(doc.toJson());
+            file.close();
+        } else {
+            qDebug() << "File dont create";
+        }
+    }
+
+    if (!file.open(QIODevice::ReadWrite)) {
+        qDebug() << "File not open client.cpp::readPersonalJson::211";
+        return;
+    }
+
+    QByteArray fileData = file.readAll();
+    if (!fileData.isEmpty()) {
+        QJsonDocument doc = QJsonDocument::fromJson(fileData);
+        QJsonArray chatHistory = doc.array();
+
+        emit clearMainListView();
+        for (const QJsonValue &value : chatHistory) {
+            QJsonObject messageObject = value.toObject();
+            QString user = messageObject["login"].toString();
+            QString message = messageObject["str"].toString();
+            QString out = messageObject["Out"].toString();
+            QString time = messageObject["time"].toString();
+
+            qDebug() << time <<" "<< user << ": " << message;
+            loadMessageToQml(user,message,out,time);
+        }
+    }
+    file.close();
+
+}
+
+void Client::sendPersonalMessage(const QString &message, const QString &receiver_login, const int &receiver_id)
+{
+    QJsonObject json;
+
+    json["flag"] = "personal_message";
+    json["message"] = message;
+
+    json["sender_login"] = activeUserName;
+    json["sender_id"] = user_id;
+
+    json["receiver_login"] = receiver_login;
+    json["receiver_id"] = receiver_id;
+
+    qDebug() << "JSON to send:" << json;
+
+    QJsonDocument doc(json);
+    data.clear();
+    QDataStream out(&data,QIODevice::WriteOnly);
+    out.setVersion(QDataStream::Qt_6_7);
+    out << doc.toJson();
+    socket->write(data);
+}
+
+void Client::checkMessage(const QString &userlogin)
+{
+    QDir dir(QCoreApplication::applicationDirPath() + "/resources/"+ activeUserName + "/personal");
+    if (!dir.exists()) {
+        dir.mkpath(".");
+    }
+
+    QString pathtomessages = QCoreApplication::applicationDirPath() + "/resources/" + activeUserName + "/personal" +"/message_" + userlogin + ".json";
+    QFile file(pathtomessages);
+    if (!file.exists()) {
+        qDebug() << "File not exist, creating new file";
+
+        if (file.open(QIODevice::WriteOnly)) {
+            QJsonArray emptyArray;
+            QJsonDocument doc(emptyArray);
+            file.write(doc.toJson());
+            file.close();
+        } else {
+            qDebug() << "File dont create";
+        }
+    } else {
+        qDebug() << "File exist";
+        loadMessageFromJson(pathtomessages);
+    }
+}
+
 void Client::changeActiveAccount(const QString username)
 {
     QString configFilePath = QStandardPaths::writableLocation(QStandardPaths::AppConfigLocation);
@@ -232,6 +491,19 @@ void Client::login(QString login, QString password)
     json["flag"] = "login";
     json["login"] = login;
     json["password"] = password;
+    QJsonDocument doc(json);
+    data.clear();
+    QDataStream out(&data,QIODevice::WriteOnly);
+    out.setVersion(QDataStream::Qt_6_7);
+    out << doc.toJson();
+    socket->write(data);
+}
+
+void Client::sendSearchToServer(const QString &searchable)
+{
+    QJsonObject json;
+    json["flag"] = "search";
+    json["searchable"] = searchable;
     QJsonDocument doc(json);
     data.clear();
     QDataStream out(&data,QIODevice::WriteOnly);
@@ -396,7 +668,7 @@ void Client::slotReadyRead()
             QString userLogin = json["login"].toString();
             QString out = json["Out"].toString();
             QString time = QDateTime::currentDateTime().toString("HH:mm");
-            saveMessageToJson(userLogin,str1,out);
+            //saveMessageToJson(userLogin,str1,out);
 
             if(out == "out")
             {
@@ -413,6 +685,7 @@ void Client::slotReadyRead()
             QString success = json["success"].toString();
             QString name = json["name"].toString();
             QString password = json["password"].toString();
+            user_id = json["user_id"].toInt();
 
             QString imageString = json["profileImage"].toString();
             QByteArray imageData = QByteArray::fromBase64(imageString.toLatin1());
@@ -433,7 +706,8 @@ void Client::slotReadyRead()
                 }
                 activeUserName = name;
 
-                QFile file(QCoreApplication::applicationDirPath() + "/resources/messages/message_" + activeUserName + ".json");
+                QString pathtomessages = QCoreApplication::applicationDirPath() + "/resources/messages/message_" + activeUserName + ".json";
+                QFile file(pathtomessages);
 
                 if (!file.exists()) {
                     qDebug() << "File not exist, creating new file";
@@ -444,7 +718,7 @@ void Client::slotReadyRead()
                         file.write(doc.toJson());
                         file.close();
                     } else {
-                        qWarning() << "File dont create";
+                        qDebug() << "File dont create";
                     }
                 } else {
                     qDebug() << "File exist";
@@ -452,13 +726,15 @@ void Client::slotReadyRead()
 
 
                 emit loginSuccess(name);
-                loadMessageFromJson();
+                loadMessageFromJson(pathtomessages);
                 createConfigFile(name,password);
+                updatingChats();
             }
             else if(success == "poor")
             {
                 emit loginFail();
             }
+
         }
         else if (flag == "reg")
         {
@@ -473,6 +749,50 @@ void Client::slotReadyRead()
                 QString error = json["errorMes"].toString();
                 emit regFail(error);
             }
+        }
+        else if (flag == "search")
+        {
+            QJsonArray resultsArray = json.value("results").toArray();
+            for (const QJsonValue &value : resultsArray) {
+                QJsonObject userObj = value.toObject();
+                int id = userObj.value("id").toInt();
+                QString userlogin = userObj.value("userlogin").toString();
+                emit newSearchUser(userlogin,id);
+                qDebug() << "ID:" << id << "Userlogin:" << userlogin;
+            }
+        }
+        else if (flag == "personal_message")
+        {
+            qDebug() << json["message"].toString();
+            qDebug() << json["time"].toString();
+            qDebug() << json["message_id"].toInt();
+            QString message = json["message"].toString();
+            QString time = json["time"].toString();
+            int message_id = json["message_id"].toInt();
+            int dialog_id = json["dialog_id"].toInt();
+            QString login;
+            int id;
+
+            if(json.contains("receiver_login"))
+            {
+                login = json["receiver_login"].toString();
+                id = json["receiver_id"].toInt();
+                qDebug() << "Message from me to " + login + " id: " << id;
+                saveMessageToJson(login, message, "out", time,"not:done(personal_message(activesocket))", message_id,dialog_id,id);
+            }
+            else
+            {
+                login = json["sender_login"].toString();
+                id = json["sender_id"].toInt();
+                qDebug() << "Message from " + login + " id: " << id;
+                saveMessageToJson(login, message, "", time, "not:done(personal_message(activesocket))", message_id,dialog_id,id);
+            }
+            emit checkActiveDialog(login);
+        }
+        else if( flag == "updating_chats")
+        {
+            qDebug() << "Flag == updating_chats ";
+            saveMessageFromDatabase(json);
         }
 
         blockSize = 0;

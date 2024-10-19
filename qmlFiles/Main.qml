@@ -74,18 +74,13 @@ Window {
         }
     }
 
-    Rectangle {
+    ChatsList {
         id: centerLine
-        color: "#17212b"
-        border.color: "black"
-        border.width: 0.5
         height: root.height
         width: root.width - (root.width / 2 + root.width / 4) - 54
-        anchors.left:  parent.left
-        anchors.leftMargin: 54
-        anchors.bottom: parent.bottom
-        anchors.top: parent.top
     }
+
+
 
     ListView {
         id: listView
@@ -156,30 +151,30 @@ Window {
     Rectangle {
         id: upLine
         color: "#17212b"
-        border.color: "black"
-        border.width: 0.5
         height: 60
         anchors.left:  centerLine.right
         anchors.top: parent.top
         anchors.right: parent.right
+        property string currentState: "default"
+        property int user_id: 0
 
         Text {
+            id: nameText
             anchors.left: parent.left
             anchors.leftMargin: 10
             anchors.top: parent.top
             anchors.topMargin: 10
-            id: nameText
             text: "Chat"
             font.pointSize: 10
             color: "white"
         }
 
         Text {
+            id: valueText
             anchors.left: parent.left
             anchors.leftMargin: 10
             anchors.bottom: parent.bottom
             anchors.bottomMargin: 10
-            id: valueText
             text: "5 participants"
             font.pointSize: 8
             color: "grey"
@@ -188,8 +183,6 @@ Window {
 
     MessageLine {
         id: downLine
-        border.color: "black"
-        border.width: 0.5
         onNewMessage: {
             var newMsg = {};
             newMsg.text = msg;
@@ -272,11 +265,34 @@ Window {
     function connectSuccess() {
         connectRect.visible = false;
     }
+    function onChangeReceiverUser(userlogin,id)
+    {
+        console.log("changeReceiverUser " + userlogin + " " + id);
+        nameText.text=userlogin;
+        upLine.user_id=id;
+    }
+
+    function onCheckActiveDialog(userlogin)
+    {
+        console.log("onCheckActiveDialog: " + nameText.text + "<-ActiveDialog " + userlogin + "<-checkDialog ");
+        if (nameText.text === userlogin)
+        {
+            readPersonalJson(userlogin);
+        }
+    }
+
+    function onClearMainListView()
+    {
+        listModel.clear();
+    }
 
     Component.onCompleted: {
+        clearMainListView.connect(onClearMainListView);
         newInMessage.connect(onInMessage);
         newOutMessage.connect(onOutMessage);
+        checkActiveDialog.connect(onCheckActiveDialog);
         errorWithConnect.connect(connectError);
-        connectionSuccess.connect(connectSuccess)
+        connectionSuccess.connect(connectSuccess);
+        changeReceiverUserSignal.connect(onChangeReceiverUser);
     }
 }
