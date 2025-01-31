@@ -78,8 +78,8 @@ Window {
         id: centerLine
         height: root.height
         width: root.width - (root.width / 2 + root.width / 4) - 54
-    }
 
+    }
 
 
     ListView {
@@ -157,6 +157,7 @@ Window {
         anchors.right: parent.right
         property string currentState: "default"
         property int user_id: 0
+        visible: currentState === "default" ? false : true
 
         Text {
             id: nameText
@@ -178,6 +179,14 @@ Window {
             text: "5 participants"
             font.pointSize: 8
             color: "grey"
+        }
+        MouseArea{
+            id: testIdandName
+            anchors.fill: parent
+            onClicked:
+            {
+                console.log("id: " + upLine.user_id + " name: " + nameText.text);
+            }
         }
     }
 
@@ -204,6 +213,7 @@ Window {
     }
 
     function onOutMessage(name,message,time) {
+        console.log("onOutMessage");
         var newMsg = {};
         newMsg.text = message;
         newMsg.time = time;
@@ -265,19 +275,13 @@ Window {
     function connectSuccess() {
         connectRect.visible = false;
     }
-    function onChangeReceiverUser(userlogin,id)
-    {
-        console.log("changeReceiverUser " + userlogin + " " + id);
-        nameText.text=userlogin;
-        upLine.user_id=id;
-    }
 
     function onCheckActiveDialog(userlogin)
     {
         console.log("onCheckActiveDialog: " + nameText.text + "<-ActiveDialog " + userlogin + "<-checkDialog ");
         if (nameText.text === userlogin)
         {
-            readPersonalJson(userlogin);
+            loadingPersonalChat(userlogin);
         }
     }
 
@@ -291,8 +295,7 @@ Window {
         newInMessage.connect(onInMessage);
         newOutMessage.connect(onOutMessage);
         checkActiveDialog.connect(onCheckActiveDialog);
-        errorWithConnect.connect(connectError);
+        connectionError.connect(connectError);
         connectionSuccess.connect(connectSuccess);
-        changeReceiverUserSignal.connect(onChangeReceiverUser);
     }
 }

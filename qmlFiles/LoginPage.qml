@@ -78,7 +78,7 @@ Item {
                 cursorShape: Qt.PointingHandCursor
 
                 onClicked: {
-                    client.login(loginField.text,passwordField.text);
+                    client.sendLoginRequest(loginField.text,passwordField.text);
                     loginField.clear();
                     passwordField.clear();
                 }
@@ -218,7 +218,7 @@ Item {
         Component.onCompleted:
         {
             loginFail.connect(logFail);
-            errorWithConnect.connect(connectError);
+            connectionError.connect(connectError);
             connectionSuccess.connect(connectSuccess)
         }
 

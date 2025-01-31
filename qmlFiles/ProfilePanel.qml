@@ -67,6 +67,7 @@ Rectangle {
                 anchors.top: parent.top
                 anchors.topMargin: 10
                 spacing: 5
+                boundsBehavior: Flickable.StopAtBounds
 
                 model: userListModel
                 delegate: Rectangle {

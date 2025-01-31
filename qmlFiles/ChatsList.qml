@@ -40,7 +40,8 @@ Rectangle {
                 console.log("Search text: " + searchField.text);
                 userSearchListModel.clear();
                 sendSearchToServer(searchField.text);
-                usersSearchListContainer.z = 999;
+                usersSearchListContainer.z = 5;
+                globalMouseArea.z = 6;
             }
         }
     }
@@ -63,6 +64,7 @@ Rectangle {
             height: parent.height
             anchors.fill: parent
             spacing: 5
+            boundsBehavior: Flickable.StopAtBounds
 
             model: userSearchListModel
             delegate: Rectangle {
@@ -113,6 +115,7 @@ Rectangle {
                         console.log("Clicked on "+ userlogin + " ID: " + user_id);
                         upLine.currentState = "personal";
                         upLine.user_id = user_id;
+                        nameText.text = userlogin;
                         console.log("ChatsList.qml::116 upLine.user_id = " + upLine.user_id + " user id: " + user_id);
                         listModel.clear();
                         usersSearchListContainer.z = 0;
@@ -132,23 +135,6 @@ Rectangle {
         }
     }
 
-    /*MouseArea {
-        id: globalMouseArea
-        anchors.fill: parent
-        hoverEnabled: true
-        z:0
-        onClicked: {
-            if(userSearchListModel.count !== 0){
-                if (!usersSearchListContainer.containsMouse) {
-                    console.log("Clicked outside of usersSearchListContainer");
-                    userSearchListModel.clear();
-                } else {
-                    console.log("Clicked inside usersSearchListContainer, ignoring.");
-                }
-            }
-        }
-    }*/
-
     ListModel {
         id: userSearchListModel
     }
@@ -163,7 +149,7 @@ Rectangle {
         anchors.topMargin: 10
         anchors.bottom: parent.bottom
         color: "#17212b"
-        z:998
+        z:4
 
         ListView {
             id: personalChatsListView
@@ -171,6 +157,7 @@ Rectangle {
             height: parent.height
             anchors.fill: parent
             spacing: 5
+            boundsBehavior: Flickable.StopAtBounds
 
             model: personalChatsListModel
             delegate: Rectangle {
@@ -179,6 +166,7 @@ Rectangle {
                 color: "#1e2a36"
                 height: 60
                 property int user_id: id
+                property string currentState: currentStateText
                 RowLayout {
                     anchors.fill: parent
                     anchors.leftMargin: 10
@@ -230,17 +218,48 @@ Rectangle {
                     onClicked: {
                         console.log("Clicked on "+ userlogin + " ID: " + user_id);
                         upLine.currentState = "personal";
+
+                        for (var i = 0; i < personalChatsListModel.count; ++i) {
+                            var item = personalChatsListModel.get(i);
+                            //console.log(i + " " + item.currentStateText);
+                            //console.log(personalChatsListModel.get(i).color);
+                            if (item.currentStateText === "active") {
+                                //console.log("Item found");
+                                //personalChatsListModel.setProperty(i,"color","#1e2a36");
+                                //console.log(item.color);
+                                //personalChatsListModel.setProperty(i,"currentState","default");
+                                item.currentStateText = "static";
+                                item.color = "#1e2a36";
+                                //console.log(personalChatsListModel.get(i).color);
+                                personalChatsListView.forceLayout();
+                            }
+                        }
+
+                        //personalChatsListModel.setProperty(index,"color","#2b5278");
+                        personalChatsListModel.setProperty(index,"currentStateText","active");
+                        if(currentStateText === "active") personalChat.color = "#2b5278";
+                        //personalChat.currentStateText = "active";
+
+
                         upLine.user_id = user_id;
+                        nameText.text = userlogin;
                         console.log("ChatsList.qml::233 upLine.user_id = " + upLine.user_id + " user id: " + user_id);
                         changeReceiverUserSignal(userlogin,user_id);
                     }
 
+
                     onEntered: {
-                        personalChat.color = "#626a72";
+                        //console.log("Entered:" + index + " CurrentState = " + currentStateText);
+                        if (currentStateText === "static"){
+                            personalChat.color = "#626a72";
+                        }
                     }
 
                     onExited: {
-                        personalChat.color = "#1e2a36";
+                        //console.log("Exited:" + index + " CurrentState = " + currentStateText);
+                        if (currentStateText === "static"){
+                            personalChat.color = "#1e2a36";
+                        }
                     }
                 }
 
@@ -262,6 +281,8 @@ Rectangle {
 
     function onShowPersonalChat(userlogin,message,id,out)
     {
+        console.log(userlogin + " " + message + " "+ id + " "+ out);
+
         var exists = false;
         for (var i = 0; i < personalChatsListModel.count; i++) {
             var item = personalChatsListModel.get(i);
@@ -274,15 +295,14 @@ Rectangle {
         var newPersChat;
         if(out === "out")
         {
-            newPersChat = {"userlogin":userlogin, "message": "You: " + message , "id":id};
+            newPersChat = {"userlogin":userlogin,"currentStateText": "static", "message": "You: " + message , "id":id};
         }
         else {
-            newPersChat = {"userlogin":userlogin, "message": message , "id":id};
+            newPersChat = {"userlogin":userlogin,"currentStateText": "static", "message": message , "id":id};
         }
 
         console.log(userlogin + " " + message + " "+ id);
-        personalChatsListModel.append(newPersChat);
-        personalChatsListView.positionViewAtIndex(0,ListView.Beginning);
+        personalChatsListModel.insert(0,newPersChat);
     }
 
     Component.onCompleted: {

@@ -223,7 +223,7 @@ Item {
         Component.onCompleted:
         {
             regFail.connect(regsFail);
-            errorWithConnect.connect(connectError);
+            connectionError.connect(connectError);
             connectionSuccess.connect(connectSuccess)
         }
 

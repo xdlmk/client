@@ -3,11 +3,11 @@ import QtQuick.Controls 2.15
 import QtQuick.Layouts
 
 Rectangle{
-
     readonly property int defMargin: 10
+    property int maxHeight: 150
     id: downLine
     color: "#17212b"
-    height: 54
+    height: Math.max(Math.min(edtText.implicitHeight,maxHeight),54)
     width: parent.width/2 + parent.width/4
 
     property alias textColor: edtText.color
@@ -16,6 +16,8 @@ Rectangle{
     anchors.right:  parent.right
     anchors.bottom: parent.bottom
 
+    visible: upLine.currentState === "default" ? false : true
+
     RowLayout {
         anchors.fill: parent
         spacing: defMargin
@@ -23,46 +25,57 @@ Rectangle{
         Layout.leftMargin: defMargin
         Layout.topMargin: defMargin
 
-        TextArea{
-            id: edtText
-            selectByMouse: true
+        ScrollView {
             Layout.fillWidth: true
-            Layout.alignment: Qt.AlignVCenter
-            placeholderText: "Написать сообщение..."
-            placeholderTextColor: "grey"
-            font.pointSize: 10
-            color: "white"
-            background: Rectangle {
-                color: downLine.color
-            }
-            Layout.leftMargin: defMargin
-            //wrapMode: TextEdit.Wrap
+            Layout.fillHeight: true
 
-            Keys.onPressed: {
-                if (event.key === Qt.Key_Return || event.key === Qt.Key_Enter) {
-                    if (event.modifiers & Qt.ShiftModifier) {
-                        // Shift + Enter: перенос строки
-                        //edtText.text += "\n";
-                    } else {
-                        // Enter: отправка сообщения
-                        if (edtText.text.trim() !== "") {
-                            if(upLine.currentState == "default"){
-                                newMessage(edtText.text);
-                            }
-                            else if (upLine.currentState == "personal") {
-                                var newMsg = {};
-                                newMsg.text = edtText.text;
-                                newMsg.time = Qt.formatTime(new Date(), "hh:mm");
-                                newMsg.name = userlogin;
-                                newMsg.isOutgoing = true;
-                                console.log(nameText.text);
-                                client.sendPersonalMessage(edtText.text, nameText.text,upLine.user_id);
-                            }
+            clip:true
 
-                            edtText.clear();
+            TextArea {
+                id: edtText
+                selectByMouse: true
+                Layout.fillWidth: true
+                Layout.alignment: Qt.AlignVCenter
+                placeholderText: "Write message..."
+                placeholderTextColor: "grey"
+                font.pointSize: 10
+                color: "white"
+                background: Rectangle {
+                    color: downLine.color
+                }
+                Layout.leftMargin: defMargin
+                wrapMode: TextEdit.Wrap
+
+                ScrollBar.horizontal: ScrollBar {
+                    policy: Qt.ScrollBarAlwaysOff
+                }
+
+                height: Math.min(implicitHeight, maxHeight)
+
+                Keys.onPressed: {
+                    if (event.key === Qt.Key_Return || event.key === Qt.Key_Enter) {
+                        if (event.modifiers & Qt.ShiftModifier) {
+                        } else {
+
+                            if (edtText.text.trim() !== "") {
+                                if(upLine.currentState == "default"){
+                                    //newMessage(edtText.text);
+                                }
+                                else if (upLine.currentState == "personal") {
+                                    var newMsg = {};
+                                    newMsg.text = edtText.text;
+                                    newMsg.time = Qt.formatTime(new Date(), "hh:mm");
+                                    newMsg.name = userlogin;
+                                    newMsg.isOutgoing = true;
+                                    console.log(nameText.text);
+                                    client.sendPersonalMessage(edtText.text, nameText.text,upLine.user_id);
+                                }
+
+                                edtText.clear();
+                            }
                         }
+                        event.accepted = true;
                     }
-                    event.accepted = true;
                 }
             }
         }
@@ -88,7 +101,7 @@ Rectangle{
                 onClicked: {
                     if (edtText.text.trim() !== "") {
                         if(upLine.currentState == "default"){
-                            newMessage(edtText.text);
+                            //newMessage(edtText.text);
                         }
                         else if (upLine.currentState == "personal") {
                             var newMsg = {};
