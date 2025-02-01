@@ -8,6 +8,7 @@ find_package(Qt6 6.4 REQUIRED COMPONENTS Quick Core Network Gui)
 
 qt_standard_project_setup()
 
+
 qt_add_executable(regagram
     main.cpp
 )
@@ -32,6 +33,7 @@ qt_add_qml_module(regagram
         networkmanager.h networkmanager.cpp
         messagemanager.h messagemanager.cpp
         accountmanager.h accountmanager.cpp
+        Logger/logger.cpp Logger/logger.h
     RESOURCES
         images/logo.png
         images/logo2.png
@@ -60,6 +62,5 @@ install(TARGETS regagram
     LIBRARY DESTINATION ${CMAKE_INSTALL_LIBDIR}
     RUNTIME DESTINATION ${CMAKE_INSTALL_BINDIR}
 )
-
 
 # configure_file(config.ini ${CMAKE_CURRENT_BINARY_DIR}/config.ini COPYONLY)

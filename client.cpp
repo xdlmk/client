@@ -7,25 +7,6 @@ Client::Client(QObject *parent)
     messageManager = new MessageManager(this);
     accountManager = new AccountManager(networkManager, this);
 
-    /* socket = new QTcpSocket(this);
-    QObject::connect(socket, &QTcpSocket::connected, [&]() {
-        qInfo() <<  "Success connect to server on port 2020";
-        reconnectTimer.stop();
-        emit connectionSuccess();
-    });
-    QObject::connect(socket, &QAbstractSocket::errorOccurred, [&](QAbstractSocket::SocketError socketError) {
-        if (!reconnectTimer.isActive()) {
-            reconnectTimer.start(2000);
-        }
-        qDebug() << "Connection error: " << socket->errorString();
-    });
-    qDebug() << "Client constructor";
-    connectToServer();
-    qDebug() << "Client constructor1";
-    connect(socket,&QTcpSocket::readyRead,this,&Client::slotReadyRead);
-    connect(socket,&QTcpSocket::disconnected,this,&Client::onDisconnected);
-    connect(&reconnectTimer, &QTimer::timeout, this, &Client::attemptReconnect);
-*/
     connect(networkManager,&NetworkManager::connectionSuccess,this,&Client::connectionSuccess);
     connect(networkManager,&NetworkManager::connectionError,this,&Client::connectionError);
 
@@ -41,9 +22,14 @@ Client::Client(QObject *parent)
     connect(accountManager,&AccountManager::registrationFail,this,&Client::registrationFail);
 
     connect(accountManager,&AccountManager::clientLogout,this,&Client::clientLogout);
+    connect(this,&Client::clientLogout,accountManager,&AccountManager::logout);
 
     connect(this,&Client::loadingPersonalChat,messageManager,&MessageManager::loadingPersonalChat);
+
     connect(this,&Client::sendPersonalMessage,messageManager,&MessageManager::sendPersonalMessage);
+    connect(this,&Client::sendSearchToServer,accountManager,&AccountManager::sendSearchToServer);
+    connect(this,&Client::sendLoginRequest,accountManager,&AccountManager::login);
+
 
     connect(messageManager,&MessageManager::sendMessageJson,networkManager,&NetworkManager::sendData);
 
@@ -53,7 +39,6 @@ Client::Client(QObject *parent)
     connect(messageManager,&MessageManager::showPersonalChat,this,&Client::showPersonalChat);
     connect(accountManager,&AccountManager::saveMessageFromDatabase,messageManager,&MessageManager::saveMessageFromDatabase);
 
-    //connect(networkManager,&NetworkManager::messageReceived,messageManager,&MessageManager::loadMessageToQml);
     connect(accountManager,&AccountManager::newAccountLoginSuccessful,messageManager,&MessageManager::loadMessagesFromJson);
 
     connect(accountManager,&AccountManager::transferUserNameAndIdAfterLogin,messageManager,&MessageManager::setActiveUser);
@@ -73,48 +58,6 @@ Client::Client(QObject *parent)
     connect(this,&Client::changeActiveAccount,accountManager,&AccountManager::changeActiveAccount);
 }
 
-QString Client::messageFrom()
-{
-    return mesFrom;
-}
-
-void Client::setMessageFrom(QString value)
-{
-    mesFrom = value;
-}
-
 AccountManager* Client::getAccountManager() {
     return accountManager;
-}
-
-NetworkManager* Client::getNetworkManager() {
-    return networkManager;
-}
-
-MessageManager* Client::getMessageManager() {
-    return messageManager;
-}
-
-void Client::sendLoginRequest(QString &userlogin, QString &password)
-{
-    accountManager->login(userlogin,password);
-}
-
-void Client::sendSearchToServer(const QString &searchable)
-{
-    accountManager->sendSearchToServer(searchable);
-}
-
-void Client::sendToServer(QString str,QString userLogin)
-{
-    QJsonObject json;
-    json["flag"] = "message";
-    json["str"] = str;
-    json["login"] = userLogin;
-    QJsonDocument doc(json);
-    data.clear();
-    QDataStream out(&data,QIODevice::WriteOnly);
-    out.setVersion(QDataStream::Qt_6_7);
-    out << doc.toJson();
-    socket->write(data);
 }

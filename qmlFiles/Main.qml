@@ -192,14 +192,6 @@ Window {
 
     MessageLine {
         id: downLine
-        onNewMessage: {
-            var newMsg = {};
-            newMsg.text = msg;
-            newMsg.time = Qt.formatTime(new Date(), "hh:mm");
-            newMsg.name = userlogin;
-            newMsg.isOutgoing = true;
-            client.sendToServer(msg, newMsg.name);
-        }
     }
 
     function onInMessage(name,message,time) {

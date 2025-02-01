@@ -59,7 +59,7 @@ Rectangle{
 
                             if (edtText.text.trim() !== "") {
                                 if(upLine.currentState == "default"){
-                                    //newMessage(edtText.text);
+
                                 }
                                 else if (upLine.currentState == "personal") {
                                     var newMsg = {};

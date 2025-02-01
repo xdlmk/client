@@ -28,7 +28,7 @@ public slots:
     void loadMessagesFromJson(const QString &filepath);
     void saveMessageFromDatabase(QJsonObject &json);
 
-    void loadingPersonalChat(const QString userlogin); //readPersonalJson(const QString userlogin)
+    void loadingPersonalChat(const QString userlogin);
 
     void sendPersonalMessage(const QString &message, const QString &receiver_login, const int &receiver_id);
 signals:

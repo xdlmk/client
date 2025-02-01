@@ -17,11 +17,10 @@ class AccountManager : public QObject
 public:
     explicit AccountManager(NetworkManager* networkManager,QObject *parent = nullptr);
     void login(const QString &login, const QString &password);
-    void registerAccount(const QString &login, const QString &password); // void reg(QString login,QString password);
-    void logout(); // void logout()
-    void sendSearchToServer(const QString &searchable);
+    void registerAccount(const QString &login, const QString &password);
+    void logout();
     void clientChangeAccount();
-    void createConfigFile(const QString &userLogin, const QString &userPassword); // void createConfigFile(QString userLogin,QString userPassword);
+    void createConfigFile(const QString &userLogin, const QString &userPassword);
 
 public slots:
     void processingLoginResultsFromServer(const QJsonObject &loginResultsJson);
@@ -29,6 +28,8 @@ public slots:
     void processingPersonalMessageFromServer(const QJsonObject &personalMessageJson);
     void processingSearchDataFromServer(const QJsonObject &searchDataJson);
     void processingChatsUpdateDataFromServer(QJsonObject &chatsUpdateDataJson);
+
+    void sendSearchToServer(const QString &searchable);
 
     void changeActiveAccount(QString username);
 
@@ -47,12 +48,12 @@ signals:
 
     void checkActiveDialog(QString login);
 
-    void loginSuccess(QString &name); // void loginSuccess(QString name);
+    void loginSuccess(QString &name);
     void loginFail();
     void transferUserNameAndIdAfterLogin(const QString &activeUserName,const int &activeUserId);
 
-    void registrationSuccess(); // void regSuccess();
-    void registrationFail(QString &error); // void regFail(QString error);
+    void registrationSuccess();
+    void registrationFail(QString &error);
 
     void clientLogout();
 

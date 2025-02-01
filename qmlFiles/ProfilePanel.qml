@@ -200,7 +200,7 @@ Rectangle {
 
             Text {
                 id: leaveText
-                text: "Выйти"
+                text: "Leave"
                 color: "#cc353e"
                 font.pointSize: 10
                 font.bold: true
@@ -218,7 +218,7 @@ Rectangle {
                 hoverEnabled: true
 
                 onClicked: {
-                    client.logout();
+                    client.clientLogout();
                 }
 
                 onEntered: {

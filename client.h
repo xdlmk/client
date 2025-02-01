@@ -27,16 +27,11 @@
 class Client : public QObject
 {
     Q_OBJECT
-    Q_PROPERTY(QString messageFrom READ messageFrom WRITE setMessageFrom)
 
 public:
     explicit Client(QObject *parent = nullptr);
-    QString messageFrom();
-    void setMessageFrom(QString value);
 
     AccountManager* getAccountManager();
-    NetworkManager* getNetworkManager();
-    MessageManager* getMessageManager();
 
 signals:
     void newOutMessage(QString username,QString message,QString time);
@@ -65,6 +60,8 @@ signals:
     void addAccount();
 
     void sendPersonalMessage(const QString &message, const QString &receiver_login, const int &receiver_id);
+    void sendSearchToServer(const QString &searchable);
+    void sendLoginRequest(QString &userlogin,QString &password);
 
     void clearMainListView();
     void newUser(QString username);
@@ -76,21 +73,6 @@ private:
     NetworkManager *networkManager;
     MessageManager *messageManager;
     AccountManager *accountManager;
-
-    int user_id;
-    QString activeUserName;
-    QTimer reconnectTimer;
-    QTcpSocket* socket;
-    QByteArray data;
-
-protected:
-    QString mesFrom;
-
-public slots:
-    void sendLoginRequest(QString &userlogin,QString &password);
-
-    void sendSearchToServer(const QString &searchable);
-    void sendToServer(QString str,QString name);
 };
 
 #endif // CLIENT_H

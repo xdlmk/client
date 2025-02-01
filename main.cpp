@@ -12,6 +12,7 @@
 #include "accountmanager.h"
 #include "messagemanager.h"
 #include "networkmanager.h"
+#include "Logger/logger.h"
 
 int main(int argc, char *argv[])
 {
@@ -26,6 +27,7 @@ int main(int argc, char *argv[])
     const QUrl loginUrl(QStringLiteral("resources/qmlFiles/LoginPage.qml"));
 
     Client client;
+    Logger logger;
     AccountManager* accountManager = client.getAccountManager();
 
     engine.rootContext()->setContextObject(&client);
@@ -38,8 +40,8 @@ int main(int argc, char *argv[])
         []() { QCoreApplication::exit(-1); },
         Qt::QueuedConnection);
 
-    QObject::connect(&client, &Client::connectionSuccess, [&engine, switchUrl]() {
-        qDebug() << "clientLogout received, deleting root object";
+    QObject::connect(&client, &Client::connectionSuccess, [&engine, switchUrl,&logger]() {
+        logger.log(Logger::DEBUG,"main.cpp","Connection to the server established");
         QList<QObject*> rootObjects = engine.rootObjects();
         if (!rootObjects.isEmpty()) {
             QObject *rootObject = rootObjects.first();
@@ -126,7 +128,7 @@ int main(int argc, char *argv[])
     });
 
     QObject::connect(accountManager, &AccountManager::changeAccount, [&engine, &client,accountManager](QString username,QString password) {
-        qDebug() << "clientLogout received, deleting root object";
+        qDebug() << "changeAccount received";
         QList<QObject*> rootObjects = engine.rootObjects();
         if (!rootObjects.isEmpty()) {
             QObject *rootObject = rootObjects.first();

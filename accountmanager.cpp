@@ -31,7 +31,6 @@ void AccountManager::logout()
     networkManager->sendData(json);
 
     qDebug() << "Emitting clientLogout";
-    emit clientLogout();
 
     QString configFilePath = QStandardPaths::writableLocation(QStandardPaths::AppConfigLocation);
     configFilePath = configFilePath + "/config.ini";
