@@ -5,7 +5,6 @@ import QtQuick.Layouts
 Rectangle{
     readonly property int defMargin: 10
     property int maxHeight: 150
-    id: downLine
     color: "#17212b"
     height: Math.max(Math.min(edtText.implicitHeight,maxHeight),54)
     width: parent.width/2 + parent.width/4

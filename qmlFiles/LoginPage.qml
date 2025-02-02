@@ -78,9 +78,21 @@ Item {
                 cursorShape: Qt.PointingHandCursor
 
                 onClicked: {
-                    client.sendLoginRequest(loginField.text,passwordField.text);
-                    loginField.clear();
-                    passwordField.clear();
+                    var login = loginField.text.trim()
+                    var password = passwordField.text.trim()
+
+                    if(login === "" || password === ""){
+                        recPass.color = "#ef5959";
+                        recLog.color = "#ef5959";
+                        textPass.color = "#ef5959";
+                        textLog.color = "#ef5959";
+                        resetColorTimer.start();
+                    }
+                    else{
+                        client.sendLoginRequest(loginField.text,passwordField.text);
+                        loginField.clear();
+                        passwordField.clear();
+                    }
                 }
                 onPositionChanged: confirmButton.color = "#4884b3";
                 onExited:  confirmButton.color = "#2f6ea5";

@@ -23,6 +23,7 @@
 #include "accountmanager.h"
 #include "messagemanager.h"
 #include "networkmanager.h"
+#include "Logger/logger.h"
 
 class Client : public QObject
 {
@@ -44,7 +45,7 @@ signals:
     void loginFail();
 
     void registrationSuccess();
-    void registrationFail(QString &error);
+    void registrationFail(QString error);
 
     void clientLogout();
 
@@ -61,18 +62,22 @@ signals:
 
     void sendPersonalMessage(const QString &message, const QString &receiver_login, const int &receiver_id);
     void sendSearchToServer(const QString &searchable);
-    void sendLoginRequest(QString &userlogin,QString &password);
+    void sendLoginRequest(QString userlogin,QString password);
+    void sendRegisterRequest(const QString login, const QString password);
 
     void clearMainListView();
     void newUser(QString username);
 
     void changeActiveAccount(QString username);
 
-
+    void setLoggers(Logger* logger);
 private:
+    Logger* logger;
     NetworkManager *networkManager;
     MessageManager *messageManager;
     AccountManager *accountManager;
+
+    void setLogger(Logger* logger);
 };
 
 #endif // CLIENT_H

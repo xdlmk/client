@@ -94,6 +94,7 @@ Window {
         boundsBehavior: Flickable.StopAtBounds
 
         ScrollBar.vertical: ScrollBar {
+            visible: upLine.currentState === "default" ? false : true
             background: Rectangle {
                 implicitWidth: 10
                 color: root.color
@@ -258,6 +259,20 @@ Window {
         onClicked: {
             isProfileExtended = !isProfileExtended
         }
+    }
+    Rectangle {
+        id: overlay
+        anchors.fill: parent
+        color: "#80000000"
+        visible: false
+        opacity: 0
+        Behavior on opacity {
+            NumberAnimation { duration: 200 }
+        }
+    }
+
+    MyProfile{
+        id: myProfileWindow
     }
 
     function connectError() {

@@ -31,14 +31,14 @@ void MessageManager::saveMessageToJson(QString &userlogin, QString &message, QSt
             file.write(doc.toJson());
             file.close();
         } else {
-            qDebug() << "File dont create " + userlogin ;
+            logger->log(Logger::ERROR,"messagemanager.cpp::saveMessageToJson","File dont create " + userlogin);
         }
     } else {
-        qDebug() << "File exist " + userlogin;
+        logger->log(Logger::INFO,"messagemanager.cpp::saveMessageToJson","File exist " + userlogin);
     }
 
     if (!file.open(QIODevice::ReadWrite)) {
-        qDebug() << "File not open client.cpp::saveMessageToJson::99";
+        logger->log(Logger::ERROR,"messagemanager.cpp::saveMessageToJson","File did not open with error: " + file.errorString());
         return;
     }
 
@@ -79,7 +79,7 @@ void MessageManager::loadMessagesFromJson(const QString &filepath)
     QFile file(filepath);
 
     if (!file.open(QIODevice::ReadWrite)) {
-        qDebug() << "File not open messagemanager.cpp::loadMessageFromJson::82";
+        logger->log(Logger::ERROR,"messagemanager.cpp::loadMessagesFromJson","File did not open with error: " + file.errorString());
         return;
     }
     emit clearMainListView();
@@ -95,7 +95,6 @@ void MessageManager::loadMessagesFromJson(const QString &filepath)
             QString out = messageObject["Out"].toString();
             QString time = messageObject["time"].toString();
 
-            qDebug() << time <<" "<< user << ": " << message;
             loadMessageToQml(user,message,out,time);
         }
     }
@@ -125,7 +124,6 @@ void MessageManager::saveMessageFromDatabase(QJsonObject &json)
         int message_id = json["message_id"].toInt();
         QString sender_login = json["sender_login"].toString();
         int sender_id = json["sender_id"].toInt();
-        qDebug() << message << time << dialog_id << message_id << sender_login;
         QString out = "";
 
         if(sender_login == activeUserName) {
@@ -150,7 +148,7 @@ void MessageManager::loadingPersonalChat(const QString userlogin)
     QFile file(QCoreApplication::applicationDirPath() + "/resources/" + activeUserName + "/personal" +"/message_" + userlogin + ".json");
 
     if (!file.exists()) {
-        qDebug() << "File not exist, creating new file";
+        logger->log(Logger::INFO,"messagemanager.cpp::loadingPersonalChat","File not exist, creating new file");
 
         if (file.open(QIODevice::WriteOnly)) {
             QJsonArray emptyArray;
@@ -158,12 +156,12 @@ void MessageManager::loadingPersonalChat(const QString userlogin)
             file.write(doc.toJson());
             file.close();
         } else {
-            qDebug() << "File dont create";
+            logger->log(Logger::INFO,"messagemanager.cpp::checkingChatAvailability","File not create");
         }
     }
 
     if (!file.open(QIODevice::ReadWrite)) {
-        qDebug() << "File not open client.cpp::readPersonalJson::211";
+        logger->log(Logger::ERROR,"messagemanager.cpp::loadingPersonalChat","File did not open with error: " + file.errorString());
         return;
     }
 
@@ -180,7 +178,6 @@ void MessageManager::loadingPersonalChat(const QString userlogin)
             QString out = messageObject["Out"].toString();
             QString time = messageObject["time"].toString();
 
-            qDebug() << time <<" "<< user << ": " << message;
             loadMessageToQml(user,message,out,time);
         }
     }
@@ -201,17 +198,20 @@ void MessageManager::sendPersonalMessage(const QString &message, const QString &
     personalMessageJson["receiver_login"] = receiver_login;
     personalMessageJson["receiver_id"] = receiver_id;
 
-    qDebug() << "JSON to send:" << personalMessageJson;
-
     emit sendMessageJson(personalMessageJson);
+}
+
+void MessageManager::setLogger(Logger *logger)
+{
+    this->logger = logger;
 }
 
 void MessageManager::checkingChatAvailability(QString &login)
 {
-    qDebug() << "checkingChatAvailability";
+    logger->log(Logger::INFO,"messagemanager.cpp::checkingChatAvailability","Checking if a chat exists in a local save");
     QFile file(QCoreApplication::applicationDirPath() + "/resources/" + activeUserName + "/personal" +"/message_" + login + ".json");
     if (!file.open(QIODevice::ReadWrite)) {
-        qDebug() << "File not open messagemanager.cpp::checkingChatAvailability";
+        logger->log(Logger::ERROR,"messagemanager.cpp::checkingChatAvailability","File did not open with error: " + file.errorString());
         return;
     }
 
@@ -226,11 +226,9 @@ void MessageManager::checkingChatAvailability(QString &login)
             int id = lastMessageObject["id"].toInt();
             QString out = lastMessageObject["Out"].toString();
 
-            qDebug() << message << " " << id << " " << out;
-
             emit showPersonalChat(login,message,id,out);
         } else {
-            qDebug() << "chatHistory is Empty";
+            logger->log(Logger::INFO,"messagemanager.cpp::checkingChatAvailability","Chat history is empty");
         }
     }
     file.close();

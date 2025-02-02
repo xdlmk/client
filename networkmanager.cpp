@@ -5,7 +5,7 @@ NetworkManager::NetworkManager(QObject *parent)
 {
     socket = new QTcpSocket(this);
     QObject::connect(socket, &QTcpSocket::connected, [&]() {
-        qInfo() <<  "Success connect to server on port 2020";
+        logger->log(Logger::INFO,"networkmanager.cpp::constructor","Connection to the server established");
         reconnectTimer.stop();
         emit connectionSuccess();
     });
@@ -13,7 +13,7 @@ NetworkManager::NetworkManager(QObject *parent)
         if (!reconnectTimer.isActive()) {
             reconnectTimer.start(2000);
         }
-        qDebug() << "Connection error: " << socket->errorString();
+        logger->log(Logger::ERROR,"networkmanager.cpp::constructor","Connection error: " + socket->errorString());
     });
     connectToServer();
 
@@ -24,14 +24,13 @@ NetworkManager::NetworkManager(QObject *parent)
 
 void NetworkManager::connectToServer()
 {
-    qDebug() << "connectToServer";
     socket->connectToHost("127.0.0.1",2020);
 }
 
 void NetworkManager::sendData(const QJsonObject &jsonToSend)
 {
     QJsonDocument doc(jsonToSend);
-    qDebug() << "Sending json: "<< doc.toJson(QJsonDocument::Indented);
+    logger->log(Logger::INFO,"networkmanager.cpp::sendData","Sending json for " + jsonToSend["flag"].toString());
     QByteArray jsonDataOut = doc.toJson(QJsonDocument::Compact);
     QByteArray data;
     data.clear();
@@ -43,9 +42,14 @@ void NetworkManager::sendData(const QJsonObject &jsonToSend)
     socket->flush();
 }
 
+void NetworkManager::setLogger(Logger *logger)
+{
+    this->logger = logger;
+}
+
 void NetworkManager::onDisconnected()
 {
-    qDebug() << "Disconnected from server.";
+    logger->log(Logger::INFO,"networkmanager.cpp::onDisconnected","Disconnecting from the server");
     if (!reconnectTimer.isActive()) {
         reconnectTimer.start(2000);
     }
@@ -54,10 +58,9 @@ void NetworkManager::onDisconnected()
 void NetworkManager::attemptReconnect()
 {
     emit connectionError();
-    qDebug() << socket->state();
     if(socket->state() == QAbstractSocket::UnconnectedState)
     {
-        qDebug() << "Attempting to reconnect...";
+        logger->log(Logger::INFO,"networkmanager.cpp::attemptReconnect","Trying to connect to the server");
         socket->abort();
         connectToServer();
     }
@@ -66,21 +69,19 @@ void NetworkManager::attemptReconnect()
 void NetworkManager::onDataReceived()
 {
     QDataStream in(socket);
-    qInfo() << "data reads";
+    logger->log(Logger::INFO,"networkmanager.cpp::onDataReceived","Data packets received");
     in.setVersion(QDataStream::Qt_6_7);
 
     static quint32 blockSize = 0;
 
     if(in.status() == QDataStream::Ok)
     {
-
         if (blockSize == 0) {
             if (socket->bytesAvailable() < sizeof(quint32))
             {
                 return;
             }
             in >> blockSize;
-            qDebug() << "Block size:" << blockSize;
         }
 
         if (socket->bytesAvailable() < blockSize)
@@ -95,17 +96,14 @@ void NetworkManager::onDataReceived()
         QJsonDocument doc = QJsonDocument::fromJson(jsonData);
 
         if (doc.isNull()) {
-            qDebug() << "Error with JSON doc check, doc is null";
+            logger->log(Logger::ERROR,"networkmanager.cpp::onDataReceived","Received JSON doc is null");
             blockSize = 0;
             return;
         }
 
-        QJsonObject jsonToRead = doc.object();
-        jsonToRead.remove("profileImage");
-        QJsonDocument toReadDoc(jsonToRead);
-        qDebug() << "(without profileImage)JSON to read:" << toReadDoc.toJson(QJsonDocument::Indented);
-
         QJsonObject receivedFromServerJson = doc.object();
+        logger->log(Logger::INFO,"networkmanager.cpp::onDataReceived","Readings JSON for " + receivedFromServerJson["flag"].toString());
+
         QString flag = receivedFromServerJson["flag"].toString();
 
         if(flag == "login")
@@ -128,13 +126,12 @@ void NetworkManager::onDataReceived()
         {
             emit chatsUpdateDataReceived(receivedFromServerJson);
         }
-        //emit dataReceived(doc);
 
         blockSize = 0;
-        qDebug() << "Leave read message from server";
+        logger->log(Logger::INFO,"networkmanager.cpp::onDataReceived","Leave onDataReceived");
     }
     else
     {
-        qDebug() << "[" << QDateTime::currentDateTime().toString() << "] " << "Error DataStream status (networkmanager.cpp::onDataReceived)";
+        logger->log(Logger::WARN,"networkmanager.cpp::onDataReceived","QDataStream status error");
     }
 }

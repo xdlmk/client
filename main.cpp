@@ -3,6 +3,7 @@
 
 #include <QQmlEngine>
 #include <QQmlContext>
+#include <QQuickStyle>
 
 #include <QSettings>
 #include <QEventLoop>
@@ -17,6 +18,7 @@
 int main(int argc, char *argv[])
 {
     QGuiApplication app(argc, argv);
+    QQuickStyle::setStyle("Basic");
 
     QQmlApplicationEngine engine;
 
@@ -28,6 +30,8 @@ int main(int argc, char *argv[])
 
     Client client;
     Logger logger;
+    client.setLoggers(&logger);
+
     AccountManager* accountManager = client.getAccountManager();
 
     engine.rootContext()->setContextObject(&client);
@@ -40,20 +44,13 @@ int main(int argc, char *argv[])
         []() { QCoreApplication::exit(-1); },
         Qt::QueuedConnection);
 
-    QObject::connect(&client, &Client::connectionSuccess, [&engine, switchUrl,&logger]() {
-        logger.log(Logger::DEBUG,"main.cpp","Connection to the server established");
+    QObject::connect(&client, &Client::connectionSuccess, [&engine, switchUrl]() {
         QList<QObject*> rootObjects = engine.rootObjects();
         if (!rootObjects.isEmpty()) {
             QObject *rootObject = rootObjects.first();
             rootObject->deleteLater();
-            qDebug() << "Root object marked for deletion";
-        }
-        else
-        {
-            qDebug() << "No root objects found!";
         }
         engine.load(switchUrl);
-        qDebug() << "Loaded new URL";
     });
 
     QObject::connect(&client, &Client::connectionError, [&engine, switchUrl]() {
@@ -84,17 +81,12 @@ int main(int argc, char *argv[])
         engine.load(switchUrl);
     });
 
-    QObject::connect(&client, &Client::addAccount, [&engine, &client, switchUrl, accountManager]() {
-        qDebug() << "addAccount received, deleting root object";
+    QObject::connect(&client, &Client::addAccount, [&engine, &client, switchUrl, accountManager,&logger]() {
+        logger.log(Logger::INFO,"main.cpp","addAccount received, deleting root object");
         QList<QObject*> rootObjects = engine.rootObjects();
         if (!rootObjects.isEmpty()) {
             QObject *rootObject = rootObjects.first();
             rootObject->deleteLater();
-            qDebug() << "Root object marked for deletion";
-        }
-        else
-        {
-            qDebug() << "No root objects found!";
         }
         accountManager->clientChangeAccount();
         engine.load(switchUrl);
@@ -110,45 +102,32 @@ int main(int argc, char *argv[])
 
     });
 
-    QObject::connect(&client, &Client::clientLogout, [&engine, switchUrl]() {
-        qDebug() << "clientLogout received, deleting root object";
+    QObject::connect(&client, &Client::clientLogout, [&engine, switchUrl,&logger]() {
+        logger.log(Logger::INFO,"main.cpp","clientLogout received, deleting root object");
         QList<QObject*> rootObjects = engine.rootObjects();
         if (!rootObjects.isEmpty()) {
             QObject *rootObject = rootObjects.first();
             rootObject->deleteLater();
-            qDebug() << "Root object marked for deletion";
-        }
-        else
-            {
-            qDebug() << "No root objects found!";
         }
         engine.load(switchUrl);
-        qDebug() << "Loaded new URL";
-
     });
 
-    QObject::connect(accountManager, &AccountManager::changeAccount, [&engine, &client,accountManager](QString username,QString password) {
-        qDebug() << "changeAccount received";
+    QObject::connect(accountManager, &AccountManager::changeAccount, [&engine, &client,accountManager,&logger](QString username,QString password) {
+        logger.log(Logger::INFO,"main.cpp","changeAccount received, deleting root object");
         QList<QObject*> rootObjects = engine.rootObjects();
         if (!rootObjects.isEmpty()) {
             QObject *rootObject = rootObjects.first();
             rootObject->deleteLater();
-            qDebug() << "Root object marked for deletion";
-        }
-        else
-        {
-            qDebug() << "No root objects found!";
         }
         accountManager->clientChangeAccount();
         accountManager->login(username,password);
 
     });
 
-    QObject::connect(&client, &Client::changeReceiverUserSignal, [&client](QString userlogin, int id) {
-        qDebug() << "changeReceiverUserSignal";
+    QObject::connect(&client, &Client::changeReceiverUserSignal, [&client,&logger](QString userlogin, int id) {
+        logger.log(Logger::INFO,"main.cpp","changeReceiverUserSignal received");
         client.loadingPersonalChat(userlogin);
     });
-    // loop for fix crash if server dont be started
     QObject::connect(&client, &Client::connectionSuccess,&loop,&QEventLoop::quit);
     loop.exec();
 
@@ -162,7 +141,6 @@ int main(int argc, char *argv[])
     if(total >= 1)
     {
         QString success = settings.value("success"+QString::number(active_account),"").toString();
-        qDebug() << success;
         if(success == "ok")
         {
             QString login = settings.value("login"+QString::number(active_account), "").toString();
@@ -170,10 +148,6 @@ int main(int argc, char *argv[])
 
             accountManager->login(login,password);
         }
-    }
-    else
-    {
-        qDebug() << "Total !=1,2,3";
     }
 
     return app.exec();

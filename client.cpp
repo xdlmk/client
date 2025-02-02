@@ -29,7 +29,7 @@ Client::Client(QObject *parent)
     connect(this,&Client::sendPersonalMessage,messageManager,&MessageManager::sendPersonalMessage);
     connect(this,&Client::sendSearchToServer,accountManager,&AccountManager::sendSearchToServer);
     connect(this,&Client::sendLoginRequest,accountManager,&AccountManager::login);
-
+    connect(this,&Client::sendRegisterRequest,accountManager,&AccountManager::registerAccount);
 
     connect(messageManager,&MessageManager::sendMessageJson,networkManager,&NetworkManager::sendData);
 
@@ -56,8 +56,18 @@ Client::Client(QObject *parent)
     connect(accountManager,&AccountManager::checkActiveDialog,this,&Client::checkActiveDialog);
 
     connect(this,&Client::changeActiveAccount,accountManager,&AccountManager::changeActiveAccount);
+
+    connect(this,&Client::setLoggers,this,&Client::setLogger);
+    connect(this,&Client::setLoggers,accountManager,&AccountManager::setLogger);
+    connect(this,&Client::setLoggers,messageManager,&MessageManager::setLogger);
+    connect(this,&Client::setLoggers,networkManager,&NetworkManager::setLogger);
 }
 
 AccountManager* Client::getAccountManager() {
     return accountManager;
+}
+
+void Client::setLogger(Logger *logger)
+{
+    this->logger = logger;
 }

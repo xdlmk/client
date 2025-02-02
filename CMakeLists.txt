@@ -4,7 +4,7 @@ project(clientDes VERSION 0.1 LANGUAGES CXX)
 
 set(CMAKE_CXX_STANDARD_REQUIRED ON)
 
-find_package(Qt6 6.4 REQUIRED COMPONENTS Quick Core Network Gui)
+find_package(Qt6 6.4 REQUIRED COMPONENTS Quick Core Network Gui QuickControls2)
 
 qt_standard_project_setup()
 
@@ -28,6 +28,7 @@ qt_add_qml_module(regagram
         qmlFiles/pageSwitch.qml
         qmlFiles/ProfilePanel.qml
         qmlFiles/ChatsList.qml
+        qmlFiles/MyProfile.qml
     SOURCES
         client.h client.cpp
         networkmanager.h networkmanager.cpp
@@ -53,7 +54,7 @@ set_target_properties(regagram PROPERTIES
 
 target_link_libraries(regagram
     PRIVATE Qt6::Quick
-    Qt${QT_VERSION_MAJOR}::Core Qt${QT_VERSION_MAJOR}::Network Qt${QT_VERSION_MAJOR}::Gui
+    Qt${QT_VERSION_MAJOR}::Core Qt${QT_VERSION_MAJOR}::Network Qt${QT_VERSION_MAJOR}::Gui Qt${QT_VERSION_MAJOR}::QuickControls2
 )
 
 include(GNUInstallDirs)

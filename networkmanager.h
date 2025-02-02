@@ -12,6 +12,8 @@
 
 #include <QTimer>
 
+#include "Logger/logger.h"
+
 class NetworkManager : public QObject
 {
     Q_OBJECT
@@ -23,6 +25,7 @@ public:
 public slots:
     void sendData(const QJsonObject &jsonToSend);
 
+    void setLogger(Logger *logger);
 signals:
     void dataReceived(const QJsonDocument &doc);
 
@@ -45,6 +48,7 @@ private slots:
 private:
     QTcpSocket* socket;
     QTimer reconnectTimer;
+    Logger* logger;
 };
 
 #endif // NETWORKMANAGER_H

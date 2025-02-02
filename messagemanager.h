@@ -10,6 +10,8 @@
 #include <QJsonArray>
 #include <QCoreApplication>
 
+#include "Logger/logger.h"
+
 class MessageManager : public QObject
 {
     Q_OBJECT
@@ -31,6 +33,8 @@ public slots:
     void loadingPersonalChat(const QString userlogin);
 
     void sendPersonalMessage(const QString &message, const QString &receiver_login, const int &receiver_id);
+
+    void setLogger(Logger* logger);
 signals:
     void newOutMessage(QString name,QString message,QString time);
     void newInMessage(QString name,QString message,QString time);
@@ -42,6 +46,7 @@ signals:
 private:
     QString activeUserName;
     int activeUserId;
+    Logger* logger;
 };
 
 #endif // MESSAGEMANAGER_H

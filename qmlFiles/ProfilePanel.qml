@@ -8,10 +8,8 @@ Rectangle {
     height: parent.height
     color: "#1e2a36"
     border.color: "black"
-    //border.width: 0.5
     anchors.top: parent.top
     anchors.bottom: parent.bottom
-    property bool isUserListEnable: false
 
     Column {
         anchors.top: parent.top
@@ -161,7 +159,6 @@ Rectangle {
 
 
         Rectangle{
-
             id:settings
             anchors.left:  parent.left
             anchors.right: parent.right
@@ -169,14 +166,64 @@ Rectangle {
             y:100
             color: "#1e2a36"
 
-            Button{
-                id:setti
-                anchors.top:parent.top
-                text:"Settings"
+            Rectangle {
+                id:openMyProfileButton
+                width: parent.width
+                color: "#1e2a36"
+                height: 30
+
+                RowLayout {
+                    anchors.fill: parent
+                    anchors.leftMargin: 10
+
+                    Rectangle {
+                        id:myProfileImage
+                        width: 24
+                        height: 24
+                        radius: 12
+                        color: "transparent"
+                        border.color: "lightblue"
+                        clip: true
+                        Image {
+                            anchors.fill: parent
+                            //source: myProfileButtonImage
+                            fillMode: Image.PreserveAspectFit
+                        }
+                    }
+
+                    Text {
+                        text: "My profile"
+                        color: "white"
+                        font.pointSize: 10
+                        font.bold: true
+                        anchors.left: myProfileImage.right
+                        anchors.leftMargin: 10
+                    }
+                }
+                MouseArea {
+                    id: myProfileButtonMouseArea
+                    anchors.fill: parent
+                    cursorShape: Qt.PointingHandCursor
+                    hoverEnabled: true
+
+                    onClicked: {
+                        isProfileExtended = false
+                        overlay.visible = true
+                        myProfileWindow.open()
+                    }
+
+                    onEntered: {
+                        openMyProfileButton.color = "#626a72";
+                    }
+
+                    onExited: {
+                        openMyProfileButton.color = "#1e2a36";
+                    }
+                }
             }
             Button{
                 id:setti2
-                anchors.top:setti.bottom
+                anchors.top:openMyProfileButton.bottom
                 text:"Settings2"
             }
             Button{
@@ -234,7 +281,6 @@ Rectangle {
 
     function onNewUser(name) {
         var newUsr = {"username":name,"isSpecial": false};
-        console.log(name);
         userListModel.append(newUsr);
         userListView.positionViewAtIndex(userListModel.count - 1, ListView.End);
 
@@ -243,7 +289,6 @@ Rectangle {
         for (var i = 0; i < userListModel.count; i++) {
             if (userListModel.get(i).isSpecial) {
                 hasAddAccount = true;
-                console.log("Index:"+i);
                 userListModel.move(i, userListModel.count - 1,1);
                 break;
             }

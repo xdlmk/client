@@ -10,14 +10,15 @@
 #include <QDir>
 
 #include "networkmanager.h"
+#include "Logger/logger.h"
 
 class AccountManager : public QObject
 {
     Q_OBJECT
 public:
     explicit AccountManager(NetworkManager* networkManager,QObject *parent = nullptr);
-    void login(const QString &login, const QString &password);
-    void registerAccount(const QString &login, const QString &password);
+    void login(const QString login, const QString password);
+    void registerAccount(const QString login, const QString password);
     void logout();
     void clientChangeAccount();
     void createConfigFile(const QString &userLogin, const QString &userPassword);
@@ -34,6 +35,7 @@ public slots:
     void changeActiveAccount(QString username);
 
     void setActiveUser(const QString &userName,const int &userId);
+    void setLogger(Logger* logger);
 
 signals:
     void newUser(QString username);
@@ -53,7 +55,7 @@ signals:
     void transferUserNameAndIdAfterLogin(const QString &activeUserName,const int &activeUserId);
 
     void registrationSuccess();
-    void registrationFail(QString &error);
+    void registrationFail(QString error);
 
     void clientLogout();
 
@@ -63,6 +65,7 @@ private:
     QString activeUserName;
 
     NetworkManager* networkManager;
+    Logger* logger;
 
     void updatingChats();
 };

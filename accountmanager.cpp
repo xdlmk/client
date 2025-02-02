@@ -6,7 +6,7 @@ AccountManager::AccountManager(NetworkManager* networkManager,QObject *parent)
     this->networkManager = networkManager;
 }
 
-void AccountManager::login(const QString &login, const QString &password)
+void AccountManager::login(const QString login, const QString password)
 {
     QJsonObject loginDataJson;
     loginDataJson["flag"] = "login";
@@ -15,7 +15,7 @@ void AccountManager::login(const QString &login, const QString &password)
     networkManager->sendData(loginDataJson);
 }
 
-void AccountManager::registerAccount(const QString &login, const QString &password)
+void AccountManager::registerAccount(const QString login, const QString password)
 {
     QJsonObject registrationDataJson;
     registrationDataJson["flag"] = "reg";
@@ -30,7 +30,7 @@ void AccountManager::logout()
     json["flag"]= "logout";
     networkManager->sendData(json);
 
-    qDebug() << "Emitting clientLogout";
+    logger->log(Logger::INFO,"accountmanager.cpp::logout","Client logout process has begun");
 
     QString configFilePath = QStandardPaths::writableLocation(QStandardPaths::AppConfigLocation);
     configFilePath = configFilePath + "/config.ini";
@@ -63,7 +63,6 @@ void AccountManager::logout()
         active_account = configFile.value("active_account",0).toInt();
 
         QString success = configFile.value("success"+QString::number(active_account),"").toString();
-        qDebug() << success;
         if(success == "ok")
         {
             QString login = configFile.value("login"+QString::number(active_account), "").toString();
@@ -77,12 +76,12 @@ void AccountManager::logout()
         QFile confFile(configFilePath);
         if (confFile.exists()) {
             if (confFile.remove()) {
-                qDebug() << "Config file removed successfully";
+                logger->log(Logger::INFO,"accountmanager.cpp::logout","Config file removed successfully");
             } else {
-                qDebug() << "Failed to remove config file";
+                logger->log(Logger::ERROR,"accountmanager.cpp::logout","Failed to remove config file");
             }
         } else {
-            qDebug() << "Config file does not exist";
+            logger->log(Logger::INFO,"accountmanager.cpp::logout","Config file does not exist");
         }
     }
 }
@@ -108,15 +107,14 @@ void AccountManager::changeActiveAccount(QString username)
 
         if (currentLogin == username) {
             configFile.setValue("active_account", i);
-            qDebug() << "Active account changed to:" << i;
+            logger->log(Logger::INFO,"accountmanager.cpp::changeActiveAccount","Active account changed to: " + QString::number(i));
             QString password = configFile.value("password"+ QString::number(i),"").toString();
             emit changeAccount(username,password);
 
             return;
         }
     }
-
-    qDebug() << "User not found:" << username;
+    logger->log(Logger::WARN,"accountmanager.cpp::changeActiveAccount","User not found: " + username);
 }
 
 void AccountManager::clientChangeAccount()
@@ -150,7 +148,7 @@ void AccountManager::createConfigFile(const QString &userLogin, const QString &u
             settings.setValue("success1","ok");
             settings.setValue("login1", userLogin);
             settings.setValue("password1", userPassword);
-            qDebug()<<"Config file created! 1 user";
+            logger->log(Logger::INFO,"accountmanager.cpp::createConfigFile","Config file created! 1 users");
         }
         else if(settings.value("total",0).toInt() == 1)
         {
@@ -159,7 +157,7 @@ void AccountManager::createConfigFile(const QString &userLogin, const QString &u
             settings.setValue("success2","ok");
             settings.setValue("login2", userLogin);
             settings.setValue("password2", userPassword);
-            qDebug()<<"Config file created! 2 users";
+            logger->log(Logger::INFO,"accountmanager.cpp::createConfigFile","Config file created! 2 users");
         }
         else if(settings.value("total",0).toInt() == 2)
         {
@@ -168,15 +166,14 @@ void AccountManager::createConfigFile(const QString &userLogin, const QString &u
             settings.setValue("success3","ok");
             settings.setValue("login3", userLogin);
             settings.setValue("password3", userPassword);
-            qDebug()<<"Config file created! 3 users";
+            logger->log(Logger::INFO,"accountmanager.cpp::createConfigFile","Config file created! 3 users");
         }
     }
-    else qDebug() << "Already exists: " << already_exists;
+    else logger->log(Logger::INFO,"accountmanager.cpp::createConfigFile","Account is recorded in the config");
     total = settings.value("total",0).toInt();
     for( int i = 1; i<=total;i++)
     {
         emit newUser(settings.value("login"+QString::number(i), "").toString());
-        qDebug()<< settings.value("login"+QString::number(i), "").toString();
     }
 }
 
@@ -195,9 +192,8 @@ void AccountManager::processingLoginResultsFromServer(const QJsonObject &loginRe
         QImage image;
         image.loadFromData(imageData);
         QString filePath(QCoreApplication::applicationDirPath() + "/resources/images/avatar.png");
-        qDebug() <<"File path: " <<filePath;
         if (!image.save(filePath)) {
-            qDebug() << "Ошибка: не удалось сохранить изображение";
+            logger->log(Logger::ERROR,"accountmanager.cpp::processingLoginResultsFromServer","Failed to save image");
         }
 
         QDir dir(QCoreApplication::applicationDirPath() + "/resources/messages");
@@ -211,7 +207,7 @@ void AccountManager::processingLoginResultsFromServer(const QJsonObject &loginRe
         QFile file(pathToMessages);
 
         if (!file.exists()) {
-            qDebug() << "File not exist, creating new file";
+            logger->log(Logger::INFO,"accountmanager.cpp::processingLoginResultsFromServer","File does not exist, create a new one");
 
             if (file.open(QIODevice::WriteOnly)) {
                 QJsonArray emptyArray;
@@ -219,10 +215,10 @@ void AccountManager::processingLoginResultsFromServer(const QJsonObject &loginRe
                 file.write(doc.toJson());
                 file.close();
             } else {
-                qDebug() << "File dont create";
+                logger->log(Logger::ERROR,"accountmanager.cpp::processingLoginResultsFromServer","The file is not created");
             }
         } else {
-            qDebug() << "File exist";
+            logger->log(Logger::INFO,"accountmanager.cpp::processingLoginResultsFromServer","File exist");
         }
 
 
@@ -240,7 +236,7 @@ void AccountManager::processingLoginResultsFromServer(const QJsonObject &loginRe
 
 void AccountManager::processingRegistrationResultsFromServer(const QJsonObject &regResultsJson)
 {
-    qDebug() << "[" << QDateTime::currentDateTime().toString() << "] " <<" processingRegistrationResultsFromServer";
+    logger->log(Logger::INFO,"accountmanager.cpp::processingRegistrationResultsFromServer","processingRegistrationResultsFromServer has begun");
     QString success = regResultsJson["success"].toString();
     if(success == "ok")
     {
@@ -264,14 +260,12 @@ void AccountManager::processingPersonalMessageFromServer(const QJsonObject &pers
     QString fullDate = "not:done(processingPersonalMessageFromServer)";
     int id;
 
-    qDebug() << "[" << QDateTime::currentDateTime().toString() << "] " <<
-        " Message: " << message << " Time: "<< time << " id: " <<message_id;
+    logger->log(Logger::INFO,"accountmanager.cpp::processingPersonalMessageFromServer","Personal message received");
 
     if(personalMessageJson.contains("receiver_login"))
     {
         login = personalMessageJson["receiver_login"].toString();
         id = personalMessageJson["receiver_id"].toInt();
-        qDebug() << "Message from me to " + login + " id: " << id;
         out = "out";
         emit saveMessageToJson(login, message, out, time,fullDate, message_id,dialog_id,id);
     }
@@ -279,7 +273,6 @@ void AccountManager::processingPersonalMessageFromServer(const QJsonObject &pers
     {
         login = personalMessageJson["sender_login"].toString();
         id = personalMessageJson["sender_id"].toInt();
-        qDebug() << "Message from " + login + " id: " << id;
         emit saveMessageToJson(login, message, out, time, fullDate, message_id,dialog_id,id);
     }
     emit checkActiveDialog(login);
@@ -287,20 +280,19 @@ void AccountManager::processingPersonalMessageFromServer(const QJsonObject &pers
 
 void AccountManager::processingSearchDataFromServer(const QJsonObject &searchDataJson)
 {
+    logger->log(Logger::INFO,"accountmanager.cpp::processingSearchDataFromServer","processingSearchDataFromServer has begun");
     QJsonArray resultsArray = searchDataJson.value("results").toArray();
     for (const QJsonValue &value : resultsArray) {
         QJsonObject userObj = value.toObject();
         int id = userObj.value("id").toInt();
         QString userlogin = userObj.value("userlogin").toString();
         emit newSearchUser(userlogin,id);
-        qDebug() << "ID:" << id << "Userlogin:" << userlogin;
     }
 }
 
 void AccountManager::processingChatsUpdateDataFromServer(QJsonObject &chatsUpdateDataJson)
 {
-    qDebug() << "[" << QDateTime::currentDateTime().toString()
-             << "] " <<" processingChatsUpdateDataFromServer";
+    logger->log(Logger::INFO,"accountmanager.cpp::processingChatsUpdateDataFromServer","processingChatsUpdateDataFromServer has begun");
     emit saveMessageFromDatabase(chatsUpdateDataJson);
 }
 
@@ -308,6 +300,11 @@ void AccountManager::setActiveUser(const QString &userName, const int &userId)
 {
     activeUserName=userName;
     user_id = userId;
+}
+
+void AccountManager::setLogger(Logger *logger)
+{
+    this->logger = logger;
 }
 
 void AccountManager::updatingChats()
@@ -336,7 +333,7 @@ void AccountManager::updatingChats()
 
             QFile file(QCoreApplication::applicationDirPath() + "/resources/" + activeUserName + "/personal" +"/message_" + login + ".json");
             if (!file.open(QIODevice::ReadWrite)) {
-                qDebug() << "File not open accountmanager.cpp::updatingChats::266";
+                logger->log(Logger::INFO,"accountmanager.cpp::updatingChats","File not open with error: " + file.errorString());
                 return;
             }
 
@@ -354,7 +351,7 @@ void AccountManager::updatingChats()
                     dialogIdsArray.append(loginObject["dialog_id"].toInt());
 
                 } else {
-                    qDebug() << "chatHistory is Empty.";
+                    logger->log(Logger::INFO,"accountmanager.cpp::updatingChats","ChatHistory is empty");
                 }
             }
             file.close();
@@ -363,7 +360,7 @@ void AccountManager::updatingChats()
                 jsonArray.append(loginObject);
             }
             else {
-                qDebug() << "loginObject is empty";
+                logger->log(Logger::INFO,"accountmanager.cpp::updatingChats","loginObject is empty");
             }
         }
     }
@@ -376,5 +373,5 @@ void AccountManager::updatingChats()
     mainObject["userlogin"] = activeUserName;
     mainObject["dialogIds"] = dialogIdsArray;
 
-   networkManager->sendData(mainObject);
+    networkManager->sendData(mainObject);
 }
