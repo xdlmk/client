@@ -64,6 +64,7 @@ signals:
     void sendSearchToServer(const QString &searchable);
     void sendLoginRequest(QString userlogin,QString password);
     void sendRegisterRequest(const QString login, const QString password);
+    void sendEditProfileRequest(const QString editable,const QString editInformation);
 
     void clearMainListView();
     void newUser(QString username);

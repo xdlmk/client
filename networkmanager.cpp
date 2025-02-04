@@ -126,6 +126,10 @@ void NetworkManager::onDataReceived()
         {
             emit chatsUpdateDataReceived(receivedFromServerJson);
         }
+        else if(flag == "edit")
+        {
+            emit editResultsReceived(receivedFromServerJson);
+        }
 
         blockSize = 0;
         logger->log(Logger::INFO,"networkmanager.cpp::onDataReceived","Leave onDataReceived");

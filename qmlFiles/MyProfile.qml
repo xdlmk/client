@@ -9,12 +9,12 @@ Dialog {
     opacity: 0
 
     background: Rectangle {
-            color: "#1e2a36"
-            radius: 10
-            border.color: "#626a72"
-            border.width: 1/2
-        }
-    width: 300
+        color: "#1e2a36"
+        radius: 6
+        border.color: "#626a72"
+        border.width: 1/2
+    }
+    width: 400
     height: 500
 
     Text{
@@ -30,19 +30,147 @@ Dialog {
         anchors.topMargin: 10
     }
 
-    /*Text{
+    Text{
+        id:editButton
+        text: "\u270E"
+        color: "White"
+        font.pointSize: 15
+        font.bold: false
+
+        anchors.right: closeButton.left
+        anchors.rightMargin: 10
+        anchors.top: parent.top
+        anchors.topMargin: 10
+        MouseArea {
+            id: editButtonMouseArea
+            anchors.fill: parent
+            hoverEnabled: true
+            cursorShape: Qt.PointingHandCursor
+
+            onClicked: {
+                myProfileEdit.open()
+            }
+        }
+    }
+
+    Text{
+        id:closeButton
+        text: "✕"
+        color: "White"
+        font.pointSize: 15
+        font.bold: true
+
+        anchors.right: parent.right
+        anchors.rightMargin: 10
+        anchors.top: parent.top
+        anchors.topMargin: 10
+        MouseArea {
+            id: closeButtonMouseArea
+            anchors.fill: parent
+            hoverEnabled: true
+            cursorShape: Qt.PointingHandCursor
+
+            onClicked: {
+                myProfileWindow.close()
+            }
+        }
+    }
+
+    Rectangle {
+        id:userAvatar
+        width: 80
+        height: 80
+        radius: 40
+        anchors.top: myProfileText.bottom
+        anchors.topMargin: 30
+        anchors.left: myProfileText.left
+        color: "transparent"
+        border.color: "lightblue"
+        clip: true
+        Image {
+            anchors.fill: parent
+            source: avatarSource
+            fillMode: Image.PreserveAspectFit
+        }
+    }
+
+    Text{
         id:userLoginText
         text: userlogin
+        font.pointSize: 12
         color: "White"
-    }*/
+        font.bold: true
+        anchors.left: userAvatar.right
+        anchors.leftMargin: 12
+        anchors.top: userAvatar.top
+        anchors.topMargin: 12
+    }
 
-    Column {
-        anchors.fill: parent
+    Rectangle{
+        id:defLine
+        height: 6
+        width:parent.width + 22
+        color:"#626a72"
+        anchors.left: parent.left
+        anchors.leftMargin: -11
+        anchors.top: userAvatar.bottom
+        anchors.topMargin: 24
+    }
 
+    Text{
+        id:informationIcon
+        text: "ⓘ"
+        font.pointSize: 18
+        color: "White"
+        font.bold: true
+        anchors.left: userAvatar.left
+        anchors.top: defLine.bottom
+        anchors.topMargin: 12
+    }
+
+
+    Item{
+        anchors.left: informationIcon.right
+        anchors.leftMargin: 36
+        anchors.top: defLine.bottom
+        anchors.topMargin: 12
+        Text{
+            id:userCheckLoginText
+            text: userCheckLoginMouseArea.containsMouse ? "<u>@" + userlogin + "</u>" : "@" + userlogin
+            font.pointSize: 12
+            color: "#0078D4"
+            font.bold: false
+            anchors.top: parent.top
+            textFormat: Text.RichText
+            MouseArea {
+                id: userCheckLoginMouseArea
+                anchors.fill: parent
+                hoverEnabled: true
+                cursorShape: Qt.PointingHandCursor
+
+                onClicked: {
+
+                }
+            }
+        }
+        Text{
+            id:underUserCheckLoginText
+            text: "Username"
+            font.pointSize: 10
+            color: "white"
+            anchors.top: userCheckLoginText.bottom
+            anchors.topMargin: 3
+            anchors.left: userCheckLoginText.left
+            anchors.leftMargin: 3
+        }
     }
 
     Behavior on opacity {
         NumberAnimation { duration: 200 }
+    }
+
+    EditProfileDialog{
+        id: myProfileEdit
     }
 
     onOpened: {

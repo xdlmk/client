@@ -45,10 +45,6 @@ Rectangle{
                 Layout.leftMargin: defMargin
                 wrapMode: TextEdit.Wrap
 
-                ScrollBar.horizontal: ScrollBar {
-                    policy: Qt.ScrollBarAlwaysOff
-                }
-
                 height: Math.min(implicitHeight, maxHeight)
 
                 Keys.onPressed: {

@@ -167,7 +167,7 @@ Rectangle {
                 height: 60
                 property int user_id: id
                 property string currentState: currentStateText
-                RowLayout {
+                Item {
                     anchors.fill: parent
                     anchors.leftMargin: 10
 
@@ -179,6 +179,10 @@ Rectangle {
                         color: "transparent"
                         border.color: "lightblue"
                         clip: true
+                        anchors.left: parent.left
+                        anchors.leftMargin: 6
+                        anchors.top: parent.top
+                        anchors.topMargin: 6
                         Image {
                             anchors.fill: parent
                             source: avatarSource

@@ -31,6 +31,7 @@ public slots:
     void processingChatsUpdateDataFromServer(QJsonObject &chatsUpdateDataJson);
 
     void sendSearchToServer(const QString &searchable);
+    void sendEditProfileRequest(const QString editable,const QString editInformation);
 
     void changeActiveAccount(QString username);
 

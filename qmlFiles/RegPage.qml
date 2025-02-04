@@ -12,8 +12,8 @@ Item {
         color: "#17212b"
 
         Text{
-            anchors.bottom: columnText.top
-            anchors.right:columnText.right
+            anchors.bottom: loginFieldsContainer.top
+            anchors.right:loginFieldsContainer.right
             anchors.rightMargin: confirmButton.width/2 - 50
             text: "Registration"
             color: "white"
@@ -102,11 +102,12 @@ Item {
                 onExited:  confirmButton.color = "#2f6ea5";
             }
         }
-        ColumnLayout
-        {
-            id:columnText
+        Item {
+            id:loginFieldsContainer
+            width: loginField.width
+            height: textLog.height + loginField.height + recLog.height + passwordField.height + textPass.height + recPass.height
             anchors.bottom: confirmButton.top
-            anchors.bottomMargin: 20
+            anchors.bottomMargin: 36
             anchors.left: confirmButton.left
             anchors.leftMargin: -6
             anchors.right:confirmButton.right
@@ -117,7 +118,8 @@ Item {
                 font.pointSize: 10
                 font.bold: true
                 color: "#2f6ea5"
-                anchors.bottom: loginField.top
+                anchors.top: loginFieldsContainer.top
+                anchors.topMargin: 6
                 anchors.left: loginField.left
                 anchors.leftMargin: 6
             }
@@ -126,14 +128,14 @@ Item {
             {
                 id:loginField
                 selectByMouse: true
-                Layout.fillWidth: true
-                Layout.alignment: Qt.AlignVCenter
+                anchors.top: textLog.bottom
                 font.pointSize: 10
                 color: "white"
                 background: Rectangle {
                     color: root.color
                 }
             }
+
             Rectangle
             {
                 id:recLog
@@ -142,6 +144,7 @@ Item {
                 height: 2
                 anchors.left: loginField.left
                 anchors.leftMargin: 6
+                anchors.top: loginField.bottom
             }
 
             Text
@@ -151,8 +154,9 @@ Item {
                 font.pointSize: 10
                 font.bold: true
                 color: "#2f6ea5"
-                anchors.bottom: passwordField.top
-                anchors.left: passwordField.left
+                anchors.top: recLog.bottom
+                anchors.topMargin: 6
+                anchors.left: loginField.left
                 anchors.leftMargin: 6
             }
             TextField
@@ -168,6 +172,8 @@ Item {
                 background: Rectangle {
                     color: root.color
                 }
+                anchors.top: textPass.bottom
+                anchors.left: loginField.left
             }
             Rectangle
             {
@@ -175,6 +181,7 @@ Item {
                 color: "#2f6ea5"
                 width: 250
                 height: 2
+                anchors.top: passwordField.bottom
                 anchors.left: passwordField.left
                 anchors.leftMargin: 6
             }

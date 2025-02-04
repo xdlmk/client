@@ -29,6 +29,8 @@ qt_add_qml_module(regagram
         qmlFiles/ProfilePanel.qml
         qmlFiles/ChatsList.qml
         qmlFiles/MyProfile.qml
+        qmlFiles/EditProfileDialog.qml
+        qmlFiles/EditFiledInformation.qml
     SOURCES
         client.h client.cpp
         networkmanager.h networkmanager.cpp
@@ -39,6 +41,7 @@ qt_add_qml_module(regagram
         images/logo.png
         images/logo2.png
         images/profile.png
+
 )
 
 # Qt for iOS sets MACOSX_BUNDLE_GUI_IDENTIFIER automatically since Qt 6.1.

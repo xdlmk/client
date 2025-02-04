@@ -11,6 +11,7 @@ Window {
     title: qsTr("Regagram")
 
     property bool isProfileExtended: false
+    property string avatarSource: "../images/avatar.png"
 
     Rectangle {
         id: leftLine

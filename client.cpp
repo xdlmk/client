@@ -30,6 +30,7 @@ Client::Client(QObject *parent)
     connect(this,&Client::sendSearchToServer,accountManager,&AccountManager::sendSearchToServer);
     connect(this,&Client::sendLoginRequest,accountManager,&AccountManager::login);
     connect(this,&Client::sendRegisterRequest,accountManager,&AccountManager::registerAccount);
+    connect(this,&Client::sendEditProfileRequest,accountManager,&AccountManager::sendEditProfileRequest);
 
     connect(messageManager,&MessageManager::sendMessageJson,networkManager,&NetworkManager::sendData);
 

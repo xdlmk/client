@@ -39,17 +39,15 @@ Rectangle {
             }
         }
 
-        RowLayout {
-            Text {
-                id: userLoginText
-                text: userlogin
-                color: "white"
-                font.pointSize: 10
-                font.bold: true
-                anchors.left: parent.left
-                anchors.leftMargin: 10
-                visible: true
-            }
+        Text {
+            id: userLoginText
+            text: userlogin
+            color: "white"
+            font.pointSize: 10
+            font.bold: true
+            anchors.left: parent.left
+            anchors.leftMargin: 10
+            visible: true
         }
 
         Rectangle {
@@ -74,9 +72,10 @@ Rectangle {
                     color: "#1e2a36"
                     height: 30
 
-                    RowLayout {
+                    Item {
                         anchors.fill: parent
                         anchors.leftMargin: 10
+                        anchors.topMargin: 3
 
                         Rectangle {
                             id:userAvatar
@@ -99,6 +98,8 @@ Rectangle {
                             font.pointSize: 10
                             font.bold: true
                             anchors.left: userAvatar.right
+                            anchors.top:parent.top
+                            anchors.topMargin: 3
                             anchors.leftMargin: 10
                         }
                     }
@@ -172,9 +173,10 @@ Rectangle {
                 color: "#1e2a36"
                 height: 30
 
-                RowLayout {
+                Item {
                     anchors.fill: parent
                     anchors.leftMargin: 10
+                    anchors.topMargin: 3
 
                     Rectangle {
                         id:myProfileImage
@@ -197,6 +199,8 @@ Rectangle {
                         font.pointSize: 10
                         font.bold: true
                         anchors.left: myProfileImage.right
+                        anchors.top: parent.top
+                        anchors.topMargin: 3
                         anchors.leftMargin: 10
                     }
                 }

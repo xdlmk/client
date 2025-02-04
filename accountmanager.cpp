@@ -94,6 +94,16 @@ void AccountManager::sendSearchToServer(const QString &searchable)
     networkManager->sendData(dataForSearchUsers);
 }
 
+void AccountManager::sendEditProfileRequest(const QString editable, const QString editInformation)
+{
+    QJsonObject dataEditProfile;
+    dataEditProfile["flag"] = "edit";
+    dataEditProfile["user_id"] = user_id;
+    dataEditProfile["editable"] = editable;
+    dataEditProfile["editInformation"] = editInformation;
+    networkManager->sendData(dataEditProfile);
+}
+
 void AccountManager::changeActiveAccount(QString username)
 {
     QString configFilePath = QStandardPaths::writableLocation(QStandardPaths::AppConfigLocation);
