@@ -28,6 +28,8 @@ Dialog {
                 return "Editing phone number"
             } else if(editInformation.infoType === "Username"){
                 return "Editing username"
+            } else if(editInformation.infoType === "default"){
+                return ""
             }
         }
         color: "White"
@@ -51,6 +53,8 @@ Dialog {
                 return "Phone number"
             } else if(editInformation.infoType === "Username"){
                 return "Username"
+            } else if(editInformation.infoType === "default"){
+                return ""
             }
         }
         placeholderTextColor: "grey"

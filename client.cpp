@@ -15,6 +15,7 @@ Client::Client(QObject *parent)
     connect(networkManager,&NetworkManager::messageReceived,accountManager,&AccountManager::processingPersonalMessageFromServer);
     connect(networkManager,&NetworkManager::searchDataReceived,accountManager,&AccountManager::processingSearchDataFromServer);
     connect(networkManager,&NetworkManager::chatsUpdateDataReceived,accountManager,&AccountManager::processingChatsUpdateDataFromServer);
+    connect(networkManager,&NetworkManager::editResultsReceived,accountManager,&AccountManager::processingEditProfileFromServer);
 
     connect(accountManager,&AccountManager::loginSuccess,this,&Client::loginSuccess);
     connect(accountManager,&AccountManager::loginFail,this,&Client::loginFail);
@@ -40,6 +41,11 @@ Client::Client(QObject *parent)
     connect(messageManager,&MessageManager::showPersonalChat,this,&Client::showPersonalChat);
     connect(accountManager,&AccountManager::saveMessageFromDatabase,messageManager,&MessageManager::saveMessageFromDatabase);
 
+    connect(accountManager,&AccountManager::editUserlogin,this,&Client::editUserlogin);
+    connect(accountManager,&AccountManager::editPhoneNumber,this,&Client::editPhoneNumber);
+    connect(accountManager,&AccountManager::editName,this,&Client::editName);
+
+
     connect(accountManager,&AccountManager::newAccountLoginSuccessful,messageManager,&MessageManager::loadMessagesFromJson);
 
     connect(accountManager,&AccountManager::transferUserNameAndIdAfterLogin,messageManager,&MessageManager::setActiveUser);
@@ -53,6 +59,7 @@ Client::Client(QObject *parent)
     connect(messageManager,&MessageManager::clearMainListView,this,&Client::clearMainListView);
 
     connect(accountManager,&AccountManager::newUser,this,&Client::newUser);
+    connect(this,&Client::configCheck,accountManager,&AccountManager::checkConfigFile);
 
     connect(accountManager,&AccountManager::checkActiveDialog,this,&Client::checkActiveDialog);
 

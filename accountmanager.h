@@ -24,11 +24,14 @@ public:
     void createConfigFile(const QString &userLogin, const QString &userPassword);
 
 public slots:
+    void checkConfigFile(const QSettings& settings);
+
     void processingLoginResultsFromServer(const QJsonObject &loginResultsJson);
     void processingRegistrationResultsFromServer(const QJsonObject &regResultsJson);
     void processingPersonalMessageFromServer(const QJsonObject &personalMessageJson);
     void processingSearchDataFromServer(const QJsonObject &searchDataJson);
     void processingChatsUpdateDataFromServer(QJsonObject &chatsUpdateDataJson);
+    void processingEditProfileFromServer(const QJsonObject &editResultsJson);
 
     void sendSearchToServer(const QString &searchable);
     void sendEditProfileRequest(const QString editable,const QString editInformation);
@@ -57,6 +60,10 @@ signals:
 
     void registrationSuccess();
     void registrationFail(QString error);
+
+    void editUserlogin(QString editInformation);
+    void editPhoneNumber(QString editInformation);
+    void editName(QString editInformation);
 
     void clientLogout();
 

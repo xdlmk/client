@@ -315,9 +315,14 @@ Rectangle {
 
     }
 
+    function clearUserList() {
+    userListModel.clear();
+}
+
     Component.onCompleted: {
-        newUser.connect(onNewUser);
-    }
+    newUser.connect(onNewUser);
+    clearUserListModel.connect(clearUserList);
+}
 
 
 }

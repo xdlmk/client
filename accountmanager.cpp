@@ -15,6 +15,15 @@ void AccountManager::login(const QString login, const QString password)
     networkManager->sendData(loginDataJson);
 }
 
+void AccountManager::checkConfigFile(const QSettings& settings)
+{
+    int total = settings.value("total",0).toInt();
+    for( int i = 1; i<=total;i++)
+    {
+        emit newUser(settings.value("login"+QString::number(i), "").toString());
+    }
+}
+
 void AccountManager::registerAccount(const QString login, const QString password)
 {
     QJsonObject registrationDataJson;
@@ -180,11 +189,7 @@ void AccountManager::createConfigFile(const QString &userLogin, const QString &u
         }
     }
     else logger->log(Logger::INFO,"accountmanager.cpp::createConfigFile","Account is recorded in the config");
-    total = settings.value("total",0).toInt();
-    for( int i = 1; i<=total;i++)
-    {
-        emit newUser(settings.value("login"+QString::number(i), "").toString());
-    }
+    checkConfigFile(settings);
 }
 
 void AccountManager::processingLoginResultsFromServer(const QJsonObject &loginResultsJson)
@@ -306,6 +311,22 @@ void AccountManager::processingChatsUpdateDataFromServer(QJsonObject &chatsUpdat
     emit saveMessageFromDatabase(chatsUpdateDataJson);
 }
 
+void AccountManager::processingEditProfileFromServer(const QJsonObject &editResultsJson)
+{
+    logger->log(Logger::INFO,"accountmanager.cpp::processingEditProfileFromServer","processingEditProfileFromServer has begun");
+
+    QString editable = editResultsJson["editable"].toString();
+    QString editInformation = editResultsJson["editInformation"].toString();
+
+    if(editable == "Username") {
+        emit editUserlogin(editInformation);
+    } else if (editable == "Phone number") {
+        emit editPhoneNumber(editInformation);
+    } else if (editable == "Name") {
+        emit editName(editInformation);
+    }
+}
+
 void AccountManager::setActiveUser(const QString &userName, const int &userId)
 {
     activeUserName=userName;
@@ -385,3 +406,5 @@ void AccountManager::updatingChats()
 
     networkManager->sendData(mainObject);
 }
+
+

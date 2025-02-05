@@ -34,7 +34,7 @@ signals:
     void registrationResultsReceived(const QJsonObject &registrationResultsJson);
     void searchDataReceived(const QJsonObject &searchDataJson);
     void chatsUpdateDataReceived(QJsonObject &chatsUpdateDataJson);
-    void editResultsReceived(const QJsonObject &loginResultsJson);
+    void editResultsReceived(const QJsonObject &editResultsJson);
 
     void connectionError();
     void connectionSuccess();

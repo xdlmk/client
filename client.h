@@ -66,8 +66,14 @@ signals:
     void sendRegisterRequest(const QString login, const QString password);
     void sendEditProfileRequest(const QString editable,const QString editInformation);
 
+    void editUserlogin(QString editInformation);
+    void editPhoneNumber(QString editInformation);
+    void editName(QString editInformation);
+
     void clearMainListView();
     void newUser(QString username);
+    void configCheck(const QSettings& settings);
+    void clearUserListModel();
 
     void changeActiveAccount(QString username);
 

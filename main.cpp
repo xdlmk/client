@@ -34,6 +34,10 @@ int main(int argc, char *argv[])
 
     AccountManager* accountManager = client.getAccountManager();
 
+    QString configFilePath = QStandardPaths::writableLocation(QStandardPaths::AppConfigLocation);
+    configFilePath = configFilePath + "/config.ini";
+    QSettings settings(configFilePath,QSettings::IniFormat);
+
     engine.rootContext()->setContextObject(&client);
     engine.rootContext()->setContextProperty("client",&client);
 
@@ -70,6 +74,17 @@ int main(int argc, char *argv[])
         engine.clearComponentCache();
         engine.rootContext()->setContextProperty("userlogin", userLogin);
         engine.load(mainUrl);
+    });
+
+    QObject::connect(&client, &Client::editUserlogin, [&engine,&settings,&client](QString newUserLogin) {
+        engine.rootContext()->setContextProperty("userlogin", newUserLogin);
+
+        int active_account = settings.value("active_account",0).toInt();
+        settings.setValue("login"+QString::number(active_account), newUserLogin);
+
+        client.clearUserListModel();
+        client.configCheck(settings);
+
     });
 
     QObject::connect(&client, &Client::registrationSuccess, [&engine, switchUrl]() {
@@ -130,11 +145,6 @@ int main(int argc, char *argv[])
     });
     QObject::connect(&client, &Client::connectionSuccess,&loop,&QEventLoop::quit);
     loop.exec();
-
-    QString configFilePath = QStandardPaths::writableLocation(QStandardPaths::AppConfigLocation);
-    configFilePath = configFilePath + "/config.ini";
-
-    QSettings settings(configFilePath,QSettings::IniFormat);
 
     int total = settings.value("total",0).toInt();
     int active_account = settings.value("active_account",0).toInt();

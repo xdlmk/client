@@ -245,7 +245,7 @@ Dialog {
         ListElement {
             iconSource: ""
             informationName: "Username"
-            information: "username"
+            information: "userlogin"
         }
     }
 
