@@ -78,8 +78,24 @@ Dialog {
     }
 
     Text{
-        id:cansel
-        text: "Cansel"
+        id:errorMessage
+        text: "This login is already taken"
+        font.pointSize: 10
+        anchors.top: recEditField.bottom
+        anchors.topMargin: 10
+        anchors.left: recEditField.left
+
+        color: "#2f6ea5"
+        opacity: 0
+
+        Behavior on opacity {
+            NumberAnimation { duration: 200 }
+        }
+    }
+
+    Text{
+        id:cancel
+        text: "Cancel"
         color: "White"
         font.pointSize: 12
         font.bold: false
@@ -107,9 +123,9 @@ Dialog {
         font.bold: false
 
         anchors.right: parent.right
-        anchors.leftMargin: 10
+        anchors.rightMargin: 10
         anchors.bottom: parent.bottom
-        anchors.topMargin: 10
+        anchors.bottomMargin: 10
         MouseArea {
             id: saveButtonMouseArea
             anchors.fill: parent
@@ -118,9 +134,9 @@ Dialog {
 
             onClicked: {
                 client.sendEditProfileRequest(editableFiled.placeholderText,editableFiled.text)
-                editInformation.close()
-                myProfileEdit.close()
-                myProfileWindow.close()
+                //editInformation.close()
+                //myProfileEdit.close()
+                //myProfileWindow.close()
             }
         }
     }
@@ -137,5 +153,43 @@ Dialog {
     onClosed: {
         editableFiled.clear()
         editInformation.opacity = 0
+        recEditField.color = "#2f6ea5"
+        errorMessage.color = "#2f6ea5"
+        errorMessage.opacity = 0
+    }
+
+    Timer {
+        id: resetColorTimer
+        interval: 5000
+        repeat: false
+        onTriggered: {
+            recEditField.color = "#2f6ea5"
+            errorMessage.color = "#2f6ea5"
+        }
+    }
+
+    function editSuccess(string){
+        editInformation.close()
+    }
+
+    function editError(){
+        editableFiled.clear()
+        errorMessage.opacity = 1
+        errorMessage.color = "#ef5959"
+        recEditField.color = "#ef5959"
+        resetColorTimer.start()
+    }
+
+    function unknownError(){
+        errorMessage.text = "Unknown error, please try again later"
+        editError();
+    }
+
+    Component.onCompleted: {
+        editUniqueError.connect(editError);
+        editName.connect(editSuccess);
+        editPhoneNumber.connect(editSuccess);
+        editUserlogin.connect(editSuccess);
+        unknownError.connect(unknownError);
     }
 }

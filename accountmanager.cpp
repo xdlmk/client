@@ -17,6 +17,7 @@ void AccountManager::login(const QString login, const QString password)
 
 void AccountManager::checkConfigFile(const QSettings& settings)
 {
+    logger->log(Logger::INFO,"accountmanager.cpp::checkConfigFile","checkConfigFile has begun");
     int total = settings.value("total",0).toInt();
     for( int i = 1; i<=total;i++)
     {
@@ -314,6 +315,19 @@ void AccountManager::processingChatsUpdateDataFromServer(QJsonObject &chatsUpdat
 void AccountManager::processingEditProfileFromServer(const QJsonObject &editResultsJson)
 {
     logger->log(Logger::INFO,"accountmanager.cpp::processingEditProfileFromServer","processingEditProfileFromServer has begun");
+
+    QString status = editResultsJson["status"].toString();
+    if(status == "poor"){
+        QString error = editResultsJson["error"].toString();
+        if(error == "Unique error"){
+            emit editUniqueError();
+            logger->log(Logger::ERROR,"accountmanager.cpp::processingEditProfileFromServer","Information changed was not unique");
+            return;
+        }
+        logger->log(Logger::WARN,"accountmanager.cpp::processingEditProfileFromServer","Unknown request error");
+        emit unknownError();
+        return;
+    }
 
     QString editable = editResultsJson["editable"].toString();
     QString editInformation = editResultsJson["editInformation"].toString();

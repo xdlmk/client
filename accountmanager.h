@@ -64,6 +64,8 @@ signals:
     void editUserlogin(QString editInformation);
     void editPhoneNumber(QString editInformation);
     void editName(QString editInformation);
+    void editUniqueError();
+    void unknownError();
 
     void clientLogout();
 

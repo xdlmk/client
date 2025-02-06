@@ -170,6 +170,17 @@ Window {
             text: "Chat"
             font.pointSize: 10
             color: "white"
+            MouseArea {
+                id: openProfileMouseArea
+                anchors.fill: parent
+                hoverEnabled: true
+                cursorShape: Qt.PointingHandCursor
+
+                onClicked: {
+                    overlay.visible = true
+                    myProfileWindow.open()
+                }
+            }
         }
 
         Text {
@@ -181,14 +192,6 @@ Window {
             text: "5 participants"
             font.pointSize: 8
             color: "grey"
-        }
-        MouseArea{
-            id: testIdandName
-            anchors.fill: parent
-            onClicked:
-            {
-                console.log("id: " + upLine.user_id + " name: " + nameText.text);
-            }
         }
     }
 

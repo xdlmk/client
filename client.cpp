@@ -44,7 +44,8 @@ Client::Client(QObject *parent)
     connect(accountManager,&AccountManager::editUserlogin,this,&Client::editUserlogin);
     connect(accountManager,&AccountManager::editPhoneNumber,this,&Client::editPhoneNumber);
     connect(accountManager,&AccountManager::editName,this,&Client::editName);
-
+    connect(accountManager,&AccountManager::editUniqueError,this,&Client::editUniqueError);
+    connect(accountManager,&AccountManager::unknownError,this,&Client::unknownError);
 
     connect(accountManager,&AccountManager::newAccountLoginSuccessful,messageManager,&MessageManager::loadMessagesFromJson);
 
