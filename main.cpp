@@ -134,6 +134,7 @@ int main(int argc, char *argv[])
             QObject *rootObject = rootObjects.first();
             rootObject->deleteLater();
         }
+
         accountManager->clientChangeAccount();
         accountManager->login(username,password);
 

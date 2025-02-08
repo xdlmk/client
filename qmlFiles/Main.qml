@@ -11,6 +11,7 @@ Window {
     title: qsTr("Regagram")
 
     property bool isProfileExtended: false
+    property bool isSearchListExtended: false
     property string avatarSource: "../images/avatar.png"
 
     Rectangle {
@@ -79,9 +80,7 @@ Window {
         id: centerLine
         height: root.height
         width: root.width - (root.width / 2 + root.width / 4) - 54
-
     }
-
 
     ListView {
         id: listView
@@ -109,51 +108,25 @@ Window {
 
         model: listModel
 
-        delegate: Loader {
+        delegate: ChatBubble {
+            id:chatBubble
             anchors.margins: 10 * 2
             width: Math.min(root.width, listView.width * 0.45)
-            active: true
-            sourceComponent: model.isOutgoing ? outgoingDelegate : incomingDelegate
-            property string textload: model.text
-            property string timeload: model.time
-            property string nameload: model.name
-        }
-
-        Component {
-            id: outgoingDelegate
-            ChatBubbleOut {
-                anchors.right: parent.right
-                text: textload
-                time: timeload
-                name: nameload
-            }
-        }
-
-        Component {
-            id: incomingDelegate
-            ChatBubbleIn {
-                anchors.left: parent.left
-                text: textload
-                time: timeload
-                name: nameload
-            }
+            property string message: model.text
+            property string time: model.time
+            property string name: model.name
+            property bool isOutgoing: model.isOutgoing
         }
     }
 
     ListModel {
         id: listModel
-        ListElement {
-            text: "FFFFFflsq12"
-            time: "no:time"
-            name: "xdlmk"
-            isOutgoing: false
-        }
     }
 
     Rectangle {
         id: upLine
         color: "#17212b"
-        height: 60
+        height: 55
         anchors.left:  centerLine.right
         anchors.top: parent.top
         anchors.right: parent.right
@@ -179,6 +152,7 @@ Window {
                 onClicked: {
                     overlay.visible = true
                     myProfileWindow.open()
+                    myProfileWindow.userProfile(nameText.text)
                 }
             }
         }
@@ -199,24 +173,9 @@ Window {
         id: downLine
     }
 
-    function onInMessage(name,message,time) {
-        var newMsg = {};
-        newMsg.text = message;
-        newMsg.time = time;
-        newMsg.name = name;
-        newMsg.isOutgoing = false;
-        listModel.append(newMsg);
-        listView.positionViewAtIndex(listModel.count - 1, ListView.End);
-    }
-
-    function onOutMessage(name,message,time) {
-        console.log("onOutMessage");
-        var newMsg = {};
-        newMsg.text = message;
-        newMsg.time = time;
-        newMsg.name = name;
-        newMsg.isOutgoing = true;
-        listModel.append(newMsg);
+    function onNewMessage(name,message,time,isOutgoing) {
+        console.log("New message: " + message + " from: " + name + " " + isOutgoing);
+        listModel.append({text: message, time: time, name: name, isOutgoing: isOutgoing});
         listView.positionViewAtIndex(listModel.count - 1, ListView.End);
     }
 
@@ -264,6 +223,22 @@ Window {
             isProfileExtended = !isProfileExtended
         }
     }
+
+    MouseArea{
+        id:leaveSearchListArea
+        anchors{
+            left: centerLine.right
+            right: parent.right
+            top: parent.top
+            bottom: parent.bottom
+        }
+        enabled: isSearchListExtended
+
+        onClicked: {
+            isSearchListExtended = !isSearchListExtended
+        }
+    }
+
     Rectangle {
         id: overlay
         anchors.fill: parent
@@ -303,8 +278,7 @@ Window {
 
     Component.onCompleted: {
         clearMainListView.connect(onClearMainListView);
-        newInMessage.connect(onInMessage);
-        newOutMessage.connect(onOutMessage);
+        newMessage.connect(onNewMessage);
         checkActiveDialog.connect(onCheckActiveDialog);
         connectionError.connect(connectError);
         connectionSuccess.connect(connectSuccess);

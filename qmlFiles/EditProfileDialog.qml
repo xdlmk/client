@@ -17,6 +17,8 @@ Dialog {
     width: 400
     height: 500
 
+    property string login: userlogin
+
     Text{
         id:information
         text: "Information"
@@ -232,26 +234,14 @@ Dialog {
 
     ListModel {
         id: informationListModel
-        ListElement {
-            iconSource: ""
-            informationName: "Name"
-            information: "xdlmq"
-        }
-        ListElement {
-            iconSource: ""
-            informationName: "Phone number"
-            information: "phone number"
-        }
-        ListElement {
-            iconSource: ""
-            informationName: "Username"
-            information: "userlogin"
-        }
     }
 
     onOpened: {
         myProfileWindow.opacity = 0
         myProfileEdit.opacity = 1
+        informationListModel.append({ iconSource: "", informationName: "Name", information: "name" });
+        informationListModel.append({ iconSource: "", informationName: "Phone number", information: "+810128919" });
+        informationListModel.append({ iconSource: "", informationName: "Username", information: login });
 
     }
 

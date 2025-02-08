@@ -133,10 +133,12 @@ Dialog {
             cursorShape: Qt.PointingHandCursor
 
             onClicked: {
-                client.sendEditProfileRequest(editableFiled.placeholderText,editableFiled.text)
-                //editInformation.close()
-                //myProfileEdit.close()
-                //myProfileWindow.close()
+                if (validateInput() === "ok"){
+                    client.sendEditProfileRequest(editableFiled.placeholderText,editableFiled.text)
+                } else {
+                    errorMessage.text = validateInput();
+                    editError();
+                }
             }
         }
     }
@@ -168,6 +170,33 @@ Dialog {
         }
     }
 
+    function validateInput() {
+        if(information.text === "Username"){
+            const text = editableFiled.text.trim();
+            if (text.length === 0) {
+                return "The field must not be emply";
+            }
+            if (text.length < 5) {
+                return "Not less than 5 characters";
+            }
+            const validPattern = /^[a-zA-Z0-9]+$/;
+            if (!validPattern.test(text)) {
+                return "Only letters and numbers";
+            }
+            if (text === myProfileEdit.login) {
+                return "You already have such a login";
+            }
+            return "ok";
+        }
+        if(information.text === "Phone number"){
+            return "ok";
+        }
+        if(information.text === "Name"){
+            return "ok";
+        }
+        return "ok";
+    }
+
     function editSuccess(string){
         editInformation.close()
     }
@@ -180,7 +209,7 @@ Dialog {
         resetColorTimer.start()
     }
 
-    function unknownError(){
+    function unknownErrorFunc(){
         errorMessage.text = "Unknown error, please try again later"
         editError();
     }
@@ -190,6 +219,6 @@ Dialog {
         editName.connect(editSuccess);
         editPhoneNumber.connect(editSuccess);
         editUserlogin.connect(editSuccess);
-        unknownError.connect(unknownError);
+        unknownError.connect(unknownErrorFunc);
     }
 }

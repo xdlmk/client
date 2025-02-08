@@ -52,8 +52,7 @@ Client::Client(QObject *parent)
     connect(accountManager,&AccountManager::transferUserNameAndIdAfterLogin,messageManager,&MessageManager::setActiveUser);
     connect(accountManager,&AccountManager::transferUserNameAndIdAfterLogin,accountManager,&AccountManager::setActiveUser);
 
-    connect(messageManager,&MessageManager::newOutMessage,this,&Client::newOutMessage);
-    connect(messageManager,&MessageManager::newInMessage,this,&Client::newInMessage);
+    connect(messageManager,&MessageManager::newMessage,this,&Client::newMessage);
 
     connect(accountManager,&AccountManager::newSearchUser,this,&Client::newSearchUser);
 

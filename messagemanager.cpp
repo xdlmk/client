@@ -8,11 +8,11 @@ void MessageManager::loadMessageToQml(const QString &username, const QString &me
 {
     if(out == "out")
     {
-        emit newOutMessage(username,message,time);
+        emit newMessage(username,message,time,true);
     }
     else
     {
-        emit newInMessage(username,message,time);
+        emit newMessage(username,message,time,false);
     }
 }
 

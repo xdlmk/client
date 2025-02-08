@@ -36,8 +36,7 @@ public slots:
 
     void setLogger(Logger* logger);
 signals:
-    void newOutMessage(QString name,QString message,QString time);
-    void newInMessage(QString name,QString message,QString time);
+    void newMessage(QString name,QString message,QString time,bool isOutgoing);
     void clearMainListView();
     void showPersonalChat(QString login,QString message,int id,QString out);
 

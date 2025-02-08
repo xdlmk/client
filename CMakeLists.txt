@@ -20,8 +20,6 @@ qt_add_qml_module(regagram
     VERSION 1.0
     QML_FILES
         qmlFiles/Main.qml
-        qmlFiles/ChatBubbleOut.qml
-        qmlFiles/ChatBubbleIn.qml
         qmlFiles/MessageLine.qml
         qmlFiles/LoginPage.qml
         qmlFiles/RegPage.qml
@@ -31,6 +29,9 @@ qt_add_qml_module(regagram
         qmlFiles/MyProfile.qml
         qmlFiles/EditProfileDialog.qml
         qmlFiles/EditFiledInformation.qml
+        qmlFiles/UsersSearchList.qml
+        qmlFiles/PersonalChatsList.qml
+        qmlFiles/ChatBubble.qml
     SOURCES
         client.h client.cpp
         networkmanager.h networkmanager.cpp

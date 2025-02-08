@@ -17,6 +17,8 @@ Dialog {
     width: 400
     height: 500
 
+    property string login: userlogin
+
     Text{
         id:myProfileText
         text: "My profile"
@@ -41,6 +43,7 @@ Dialog {
         anchors.rightMargin: 10
         anchors.top: parent.top
         anchors.topMargin: 10
+        visible: true
         MouseArea {
             id: editButtonMouseArea
             anchors.fill: parent
@@ -96,7 +99,7 @@ Dialog {
 
     Text{
         id:userLoginText
-        text: userlogin
+        text: login
         font.pointSize: 12
         color: "White"
         font.bold: true
@@ -136,7 +139,7 @@ Dialog {
         anchors.topMargin: 12
         Text{
             id:userCheckLoginText
-            text: userCheckLoginMouseArea.containsMouse ? "<u>@" + userlogin + "</u>" : "@" + userlogin
+            text: userCheckLoginMouseArea.containsMouse ? "<u>@" + login + "</u>" : "@" + login
             font.pointSize: 12
             color: "#0078D4"
             font.bold: false
@@ -181,5 +184,14 @@ Dialog {
     onClosed: {
         overlay.opacity = 0
         myProfileWindow.opacity = 0
+        login = userlogin
+        editButton.visible = true
+
+    }
+
+    function userProfile(userlogin)
+    {
+        login = userlogin
+        editButton.visible = false
     }
 }

@@ -35,8 +35,7 @@ public:
     AccountManager* getAccountManager();
 
 signals:
-    void newOutMessage(QString username,QString message,QString time);
-    void newInMessage(QString username,QString message,QString time);
+    void newMessage(QString username,QString message,QString time, bool isOutgoing);
 
     void connectionSuccess();
     void connectionError();
