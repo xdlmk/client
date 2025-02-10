@@ -58,13 +58,11 @@ Rectangle {
                 hoverEnabled: true
 
                 onClicked: {
-                    console.log("Clicked on "+ userlogin + " ID: " + user_id);
                     upLine.currentState = "personal";
                     upLine.user_id = user_id;
                     nameText.text = userlogin;
                     listModel.clear();
                     isSearchListExtended = false;
-                    console.log(isSearchListExtended);
                     searchField.clear();
                     changeReceiverUserSignal(userlogin,user_id);
                 }
@@ -76,7 +74,7 @@ Rectangle {
     function onNewSearchUser(userlogin,id)
     {
         var newSearchUsr = {"userlogin":userlogin,"id":id};
-        console.log(userlogin + " " + id);
+        logger.qmlLog("INFO","UsersSearchList.qml::onNewSearchUser","New search user:" + userlogin + " with id " + id);
         userSearchListModel.append(newSearchUsr);
         userSearchListView.positionViewAtIndex(userSearchListModel.count - 1, ListView.End);
     }

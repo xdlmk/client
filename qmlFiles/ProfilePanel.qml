@@ -110,7 +110,6 @@ Rectangle {
                         hoverEnabled: true
 
                         onClicked: {
-                            console.log("Mouse clicked "+username);
                             if(!isSpecial)
                             {
                                 if (username != userlogin)

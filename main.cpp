@@ -40,6 +40,7 @@ int main(int argc, char *argv[])
 
     engine.rootContext()->setContextObject(&client);
     engine.rootContext()->setContextProperty("client",&client);
+    engine.rootContext()->setContextProperty("logger",&logger);
 
     QObject::connect(
         &engine,

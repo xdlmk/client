@@ -10,9 +10,11 @@ Item {
         color: "#17212b"
 
         Text{
-            anchors.bottom: loginFieldsContainer.top
-            anchors.right:loginFieldsContainer.right
-            anchors.rightMargin: confirmButton.width/2 - 25
+            anchors{
+                bottom: loginFieldsContainer.top
+                right:loginFieldsContainer.right
+                rightMargin: confirmButton.width/2 - 25
+            }
             text: "Login"
             color: "white"
             font.pointSize: 15
@@ -20,11 +22,13 @@ Item {
 
         Rectangle {
             id:regRect
-            anchors.top: confirmButton.bottom
-            anchors.topMargin: 15
-            anchors.right: confirmButton.right
-            anchors.left: confirmButton.left
             color: "#17212b"
+            anchors{
+                top: confirmButton.bottom
+                topMargin: 15
+                right: confirmButton.right
+                left: confirmButton.left
+            }
             Text {
                 id:regText
                 anchors.centerIn: parent
@@ -35,12 +39,9 @@ Item {
                     anchors.fill: parent
                     hoverEnabled: true
                     cursorShape: Qt.PointingHandCursor
-
                     onPositionChanged: underText.visible = true
                     onExited: underText.visible = false
-                    onClicked: {
-                        pageLoader.source = "RegPage.qml"
-                    }
+                    onClicked: { pageLoader.source = "RegPage.qml" }
                 }
             }
             Rectangle
@@ -48,10 +49,12 @@ Item {
                 id:underText
                 visible: false
                 color: "#2f6ea5"
-                anchors.top: regText.bottom
-                anchors.topMargin: 1
-                anchors.right: regText.right
-                anchors.left: regText.left
+                anchors{
+                    top: regText.bottom
+                    topMargin: 1
+                    right: regText.right
+                    left: regText.left
+                }
                 height: 1
             }
         }
@@ -76,7 +79,6 @@ Item {
                 anchors.fill: parent
                 hoverEnabled: true
                 cursorShape: Qt.PointingHandCursor
-
                 onClicked: {
                     var login = loginField.text.trim()
                     var password = passwordField.text.trim()
@@ -98,90 +100,95 @@ Item {
                 onExited:  confirmButton.color = "#2f6ea5";
             }
         }
-            Item {
-                id:loginFieldsContainer
-                width: loginField.width
-                height: textLog.height + loginField.height + recLog.height + passwordField.height + textPass.height + recPass.height
-                anchors.bottom: confirmButton.top
-                anchors.bottomMargin: 36
-                anchors.left: confirmButton.left
-                anchors.leftMargin: -6
-                anchors.right:confirmButton.right
-                Text
-                {
-                    id:textLog
-                    text:"Login"
-                    font.pointSize: 10
-                    font.bold: true
-                    color: "#2f6ea5"
-                    anchors.top: loginFieldsContainer.top
-                    anchors.topMargin: 6
-                    anchors.left: loginField.left
-                    anchors.leftMargin: 6
-                }
-
-                TextField
-                {
-                    id:loginField
-                    selectByMouse: true
-                    anchors.top: textLog.bottom
-                    font.pointSize: 10
-                    color: "white"
-                    background: Rectangle {
-                        color: root.color
-                    }
-                }
-
-                Rectangle
-                {
-                    id:recLog
-                    color: "#2f6ea5"
-                    width: 250
-                    height: 2
-                    anchors.left: loginField.left
-                    anchors.leftMargin: 6
-                    anchors.top: loginField.bottom
-                }
-
-                Text
-                {
-                    id:textPass
-                    text:"Password"
-                    font.pointSize: 10
-                    font.bold: true
-                    color: "#2f6ea5"
-                    anchors.top: recLog.bottom
-                    anchors.topMargin: 6
-                    anchors.left: loginField.left
-                    anchors.leftMargin: 6
-                }
-                TextField
-                {
-                    id:passwordField
-                    selectByMouse: true
-                    Layout.fillWidth: true
-                    Layout.alignment: Qt.AlignVCenter
-                    font.pointSize: 10
-                    color: "white"
-                    echoMode: TextInput.Password
-                    passwordCharacter: "\u2022"
-                    background: Rectangle {
-                        color: root.color
-                    }
-                    anchors.top: textPass.bottom
-                    anchors.left: loginField.left
-                }
-                Rectangle
-                {
-                    id:recPass
-                    color: "#2f6ea5"
-                    width: 250
-                    height: 2
-                    anchors.top: passwordField.bottom
-                    anchors.left: passwordField.left
-                    anchors.leftMargin: 6
+        Item {
+            id:loginFieldsContainer
+            width: loginField.width
+            height: textLog.height + loginField.height + recLog.height + passwordField.height + textPass.height + recPass.height
+            anchors{
+                bottom: confirmButton.top
+                bottomMargin: 36
+                left: confirmButton.left
+                leftMargin: -6
+                right:confirmButton.right
+            }
+            Text
+            {
+                id:textLog
+                text:"Login"
+                font.pointSize: 10
+                font.bold: true
+                color: "#2f6ea5"
+                anchors{
+                    top: loginFieldsContainer.top
+                    topMargin: 6
+                    left: loginField.left
+                    leftMargin: 6
                 }
             }
+
+            TextField
+            {
+                id:loginField
+                selectByMouse: true
+                anchors.top: textLog.bottom
+                font.pointSize: 10
+                color: "white"
+                background: Rectangle {
+                    color: root.color
+                }
+            }
+            Rectangle
+            {
+                id:recLog
+                color: "#2f6ea5"
+                width: 250
+                height: 2
+                anchors{
+                    left: loginField.left
+                    leftMargin: 6
+                    top: loginField.bottom
+                }
+            }
+
+            Text
+            {
+                id:textPass
+                text:"Password"
+                font.pointSize: 10
+                font.bold: true
+                color: "#2f6ea5"
+                anchors{
+                    top: recLog.bottom
+                    topMargin: 6
+                    left: loginField.left
+                    leftMargin: 6
+                }
+            }
+            TextField
+            {
+                id:passwordField
+                selectByMouse: true
+                Layout.fillWidth: true
+                Layout.alignment: Qt.AlignVCenter
+                font.pointSize: 10
+                color: "white"
+                echoMode: TextInput.Password
+                passwordCharacter: "\u2022"
+                background: Rectangle { color: root.color }
+                anchors.top: textPass.bottom
+                anchors.left: loginField.left
+            }
+            Rectangle
+            {
+                id:recPass
+                color: "#2f6ea5"
+                width: 250
+                height: 2
+                anchors.top: passwordField.bottom
+                anchors.left: passwordField.left
+                anchors.leftMargin: 6
+            }
+        }
 
         Timer {
             id: resetColorTimer
@@ -202,18 +209,19 @@ Item {
             textPass.color = "#ef5959";
             textLog.color = "#ef5959";
             resetColorTimer.start();
-
         }
 
         Rectangle
         {
             id:connectRect
             visible:false
-            anchors.left: parent.left
-            anchors.top:parent.top
-            anchors.right: parent.right
             color:"#9945464f"
             height: 25
+            anchors{
+                left: parent.left
+                top:parent.top
+                right: parent.right
+            }
 
             Text{
                 id:textConnect
@@ -228,7 +236,6 @@ Item {
         {
             connectRect.visible = true;
         }
-
         function connectSuccess()
         {
             connectRect.visible = false;

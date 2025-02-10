@@ -28,6 +28,18 @@ void Logger::log(LogLevel level, const QString &module, const QString &message) 
     qDebug() << logMessage;
 }
 
+void Logger::qmlLog(QString level, QString module, QString message)
+{
+    LogLevel logLevel = DEBUG;
+
+    if (level == "INFO") logLevel = INFO;
+    else if (level == "WARN") logLevel = WARN;
+    else if (level == "ERROR") logLevel = ERROR;
+    else if (level == "FATAL") logLevel = FATAL;
+
+    log(logLevel, module, message);
+}
+
 QString Logger::getLevelString(LogLevel level) {
     switch (level) {
     case DEBUG: return "DEBUG";

@@ -169,12 +169,10 @@ Window {
         }
     }
 
-    MessageLine {
-        id: downLine
-    }
+    MessageLine { id: downLine }
 
     function onNewMessage(name,message,time,isOutgoing) {
-        console.log("New message: " + message + " from: " + name + " " + isOutgoing);
+        //logger.qmlLog("INFO","Main.qml::onNewMessage","Upload new message to listModel");
         listModel.append({text: message, time: time, name: name, isOutgoing: isOutgoing});
         listView.positionViewAtIndex(listModel.count - 1, ListView.End);
     }
@@ -262,12 +260,16 @@ Window {
         connectRect.visible = false;
     }
 
-    function onCheckActiveDialog(userlogin)
+    function onCheckActiveDialog(login,message,out,time)
     {
-        console.log("onCheckActiveDialog: " + nameText.text + "<-ActiveDialog " + userlogin + "<-checkDialog ");
-        if (nameText.text === userlogin)
+        logger.qmlLog("INFO","Main.qml::onCheckActiveDialog","Dialog active: " + (nameText.text === login));
+        if (nameText.text === login)
         {
-            loadingPersonalChat(userlogin);
+            if(out === "out") {
+                onNewMessage(userlogin,message,time,true);
+            } else {
+                onNewMessage(login,message,time,false);
+            }
         }
     }
 

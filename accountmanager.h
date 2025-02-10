@@ -52,7 +52,7 @@ signals:
     void saveMessageToJson(QString &userlogin, QString &message, QString &out, QString &time,
                            QString &fullDate, int message_id, int dialog_id, int id);
 
-    void checkActiveDialog(QString login);
+    void checkActiveDialog(QString login,QString message, QString out,QString time);
 
     void loginSuccess(QString &name);
     void loginFail();

@@ -31,11 +31,9 @@ Rectangle {
         }
         Keys.onReturnPressed: {
             if (searchField.text.trim() !== "") {
-                console.log("Search text: " + searchField.text);
                 userSearchListModel.clear();
                 sendSearchToServer(searchField.text);
                 isSearchListExtended = true;
-                console.log(isSearchListExtended);
             }
         }
     }
@@ -82,9 +80,6 @@ Rectangle {
 
     function onShowPersonalChat(userlogin,message,id,out)
     {
-        console.log(userlogin + " " + message + " "+ id + " "+ out);
-        if (personalChatsListModel) {
-            console.error("personalChatsListModel is null!");
             var exists = false;
             for (var i = 0; i < personalChatsListModel.count; i++) {
                 var item = personalChatsListModel.get(i);
@@ -94,7 +89,6 @@ Rectangle {
                     break;
                 }
             }
-        }
         var newPersChat;
         if(out === "out") {
             newPersChat = {"userlogin":userlogin,"currentStateText": "static", "message": "You: " + message , "id":id};

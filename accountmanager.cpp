@@ -291,7 +291,7 @@ void AccountManager::processingPersonalMessageFromServer(const QJsonObject &pers
         id = personalMessageJson["sender_id"].toInt();
         emit saveMessageToJson(login, message, out, time, fullDate, message_id,dialog_id,id);
     }
-    emit checkActiveDialog(login);
+    emit checkActiveDialog(login,message,out,time);
 }
 
 void AccountManager::processingSearchDataFromServer(const QJsonObject &searchDataJson)

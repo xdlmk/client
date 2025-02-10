@@ -6,7 +6,8 @@
 #include <QTextStream>
 #include <QDateTime>
 
-class Logger {
+class Logger :  public QObject {
+    Q_OBJECT
 public:
     enum LogLevel {
         DEBUG,
@@ -20,6 +21,9 @@ public:
     ~Logger();
 
     void log(LogLevel level, const QString &module, const QString &message);
+
+public slots:
+    void qmlLog(QString level,QString module,QString message);
 
 private:
     QFile logFile;

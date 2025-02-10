@@ -80,7 +80,6 @@ Rectangle {
                 hoverEnabled: true
 
                 onClicked: {
-                    console.log("Clicked on "+ userlogin + " ID: " + user_id);
                     upLine.currentState = "personal";
 
                     for (var i = 0; i < personalChatsListModel.count; ++i) {
