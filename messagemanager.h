@@ -33,6 +33,8 @@ public slots:
     void loadingPersonalChat(const QString userlogin);
 
     void sendPersonalMessage(const QString &message, const QString &receiver_login, const int &receiver_id);
+    void saveMessageAndSendFile(const QString &message, const QString &receiver_login, const int &receiver_id,const QString& filePath);
+    void sendPersonalMessageWithFile(const QString &fileUrl);
 
     void setLogger(Logger* logger);
 signals:
@@ -41,6 +43,7 @@ signals:
     void showPersonalChat(QString login,QString message,int id,QString out);
 
     void sendMessageJson(const QJsonObject &messageJson);
+    void sendFile(const QString& filePath);
 
 private:
     QString activeUserName;

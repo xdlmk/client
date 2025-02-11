@@ -69,6 +69,8 @@ signals:
 
     void clientLogout();
 
+    void getFile(const QString& fileUrl);
+
     void newSearchUser(QString &userlogin,int &id);
 private:
     int user_id;

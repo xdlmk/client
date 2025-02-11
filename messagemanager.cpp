@@ -88,6 +88,7 @@ void MessageManager::loadMessagesFromJson(const QString &filepath)
         QJsonDocument doc = QJsonDocument::fromJson(fileData);
         QJsonArray chatHistory = doc.array();
 
+        logger->log(Logger::INFO,"messagemanager.cpp::loadMessagesFromJson","Loading messages from json");
         for (const QJsonValue &value : chatHistory) {
             QJsonObject messageObject = value.toObject();
             QString user = messageObject["login"].toString();
@@ -171,6 +172,8 @@ void MessageManager::loadingPersonalChat(const QString userlogin)
         QJsonArray chatHistory = doc.array();
 
         emit clearMainListView();
+
+        logger->log(Logger::INFO,"messagemanager.cpp::loadingPersonalChat","Loading personal chat from json");
         for (const QJsonValue &value : chatHistory) {
             QJsonObject messageObject = value.toObject();
             QString user = messageObject["login"].toString();
@@ -197,6 +200,47 @@ void MessageManager::sendPersonalMessage(const QString &message, const QString &
 
     personalMessageJson["receiver_login"] = receiver_login;
     personalMessageJson["receiver_id"] = receiver_id;
+
+    emit sendMessageJson(personalMessageJson);
+}
+
+void MessageManager::saveMessageAndSendFile(const QString &message, const QString &receiver_login, const int &receiver_id, const QString &filePath)
+{
+    QJsonObject jsonMessage;
+    jsonMessage["message"] = message;
+    jsonMessage["receiver_login"] = receiver_login;
+    jsonMessage["receiver_id"] = receiver_id;
+
+    QJsonDocument jsonDocument(jsonMessage);
+    QByteArray jsonData = jsonDocument.toJson(QJsonDocument::Compact);
+
+    QFile file("data.json");
+
+
+    emit sendFile(filePath);
+}
+
+void MessageManager::sendPersonalMessageWithFile(const QString &fileUrl)
+{
+    QFile file("data.json");
+    QByteArray jsonData;
+    if (file.open(QIODevice::ReadOnly | QIODevice::Text)) {
+        jsonData = file.readAll();
+        file.close();
+    }
+    QJsonObject jsonObject = QJsonDocument::fromJson(jsonData).object();
+
+    QJsonObject personalMessageJson;
+
+    personalMessageJson["flag"] = "personal_message";
+    personalMessageJson["message"] = jsonObject["message"].toString();
+    personalMessageJson["fileUrl"] = fileUrl;
+
+    personalMessageJson["sender_login"] = activeUserName;
+    personalMessageJson["sender_id"] = activeUserId;
+
+    personalMessageJson["receiver_login"] = jsonObject["receiver_login"].toString();;
+    personalMessageJson["receiver_id"] = jsonObject["receiver_id"].toInt();
 
     emit sendMessageJson(personalMessageJson);
 }

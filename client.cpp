@@ -1,10 +1,12 @@
 #include "client.h"
+#include "filemanager.h"
 
 Client::Client(QObject *parent)
     : QObject{parent}
 {
     networkManager = new NetworkManager(this);
     messageManager = new MessageManager(this);
+    fileManager = new FileManager(this);
     accountManager = new AccountManager(networkManager, this);
 
     connect(networkManager,&NetworkManager::connectionSuccess,this,&Client::connectionSuccess);
@@ -16,6 +18,7 @@ Client::Client(QObject *parent)
     connect(networkManager,&NetworkManager::searchDataReceived,accountManager,&AccountManager::processingSearchDataFromServer);
     connect(networkManager,&NetworkManager::chatsUpdateDataReceived,accountManager,&AccountManager::processingChatsUpdateDataFromServer);
     connect(networkManager,&NetworkManager::editResultsReceived,accountManager,&AccountManager::processingEditProfileFromServer);
+    connect(networkManager,&NetworkManager::sendPersonalMessageWithFile,messageManager,&MessageManager::sendPersonalMessageWithFile);
 
     connect(accountManager,&AccountManager::loginSuccess,this,&Client::loginSuccess);
     connect(accountManager,&AccountManager::loginFail,this,&Client::loginFail);
@@ -28,12 +31,14 @@ Client::Client(QObject *parent)
     connect(this,&Client::loadingPersonalChat,messageManager,&MessageManager::loadingPersonalChat);
 
     connect(this,&Client::sendPersonalMessage,messageManager,&MessageManager::sendPersonalMessage);
+    connect(this,&Client::sendPersonalMessageWithFile,messageManager,&MessageManager::saveMessageAndSendFile);
     connect(this,&Client::sendSearchToServer,accountManager,&AccountManager::sendSearchToServer);
     connect(this,&Client::sendLoginRequest,accountManager,&AccountManager::login);
     connect(this,&Client::sendRegisterRequest,accountManager,&AccountManager::registerAccount);
     connect(this,&Client::sendEditProfileRequest,accountManager,&AccountManager::sendEditProfileRequest);
 
     connect(messageManager,&MessageManager::sendMessageJson,networkManager,&NetworkManager::sendData);
+    connect(messageManager,&MessageManager::sendFile,networkManager,&NetworkManager::sendFile);
 
     connect(accountManager,&AccountManager::saveMessageToJson,messageManager,&MessageManager::saveMessageToJson);
 
@@ -65,6 +70,8 @@ Client::Client(QObject *parent)
 
     connect(this,&Client::changeActiveAccount,accountManager,&AccountManager::changeActiveAccount);
 
+    connect(accountManager,&AccountManager::getFile,networkManager,&NetworkManager::getFile);
+
     connect(this,&Client::setLoggers,this,&Client::setLogger);
     connect(this,&Client::setLoggers,accountManager,&AccountManager::setLogger);
     connect(this,&Client::setLoggers,messageManager,&MessageManager::setLogger);
@@ -73,6 +80,11 @@ Client::Client(QObject *parent)
 
 AccountManager* Client::getAccountManager() {
     return accountManager;
+}
+
+FileManager *Client::getFileManager()
+{
+    return fileManager;
 }
 
 void Client::setLogger(Logger *logger)

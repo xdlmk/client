@@ -10,6 +10,8 @@ Rectangle{
     width: parent.width/2 + parent.width/4
 
     property alias textColor: edtText.color
+    property bool fileLoad: false
+    property string filePath: ""
     signal newMessage(string msg)
 
     anchors.right:  parent.right
@@ -75,6 +77,33 @@ Rectangle{
         }
 
         Rectangle {
+            id: btnFileItem
+            width: 50
+            height: 50
+            color: downLine.color
+            Text {
+                id: buttonFileImage
+                text: "\u{1F4CE}"
+                color: "grey"
+                font.pixelSize: 24
+                rotation: 45
+                anchors.centerIn: parent
+            }
+            MouseArea {
+                anchors.fill: parent
+                onClicked:{
+                    filePath = fileManager.openFile();
+                    if (filePath !== "") {
+                        console.log("Selected file path:", filePath);
+                        fileLoad = true;
+                    } else {
+                        console.log("No file selected");
+                    }
+                }
+            }
+        }
+
+        Rectangle {
             id: btnAddItem
             width: 50
             height: 50
@@ -97,12 +126,11 @@ Rectangle{
                         if(upLine.currentState == "default"){
                         }
                         else if (upLine.currentState == "personal") {
-                            var newMsg = {};
-                            newMsg.text = edtText.text;
-                            newMsg.time = Qt.formatTime(new Date(), "hh:mm");
-                            newMsg.name = userlogin;
-                            newMsg.isOutgoing = true;
-                            client.sendPersonalMessage(edtText.text, nameText.text,upLine.user_id);
+                            if(fileLoad) {
+                                client.sendPersonalMessageWithFile(edtText.text, nameText.text,upLine.user_id,filePath)
+                            } else {
+                                client.sendPersonalMessage(edtText.text, nameText.text,upLine.user_id);
+                            }
                         }
 
                         edtText.clear();

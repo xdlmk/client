@@ -5,6 +5,9 @@
 #include <QTcpSocket>
 #include <QDataStream>
 #include <QByteArray>
+#include <QFileInfo>
+#include <QDir>
+#include <QCoreApplication>
 
 #include <QJsonDocument>
 #include <QJsonObject>
@@ -24,6 +27,9 @@ public:
 
 public slots:
     void sendData(const QJsonObject &jsonToSend);
+    void sendToFileServer(const QJsonDocument &doc);
+    void sendFile(const QString &filePath);
+    void getFile(const QString& fileUrl);
 
     void setLogger(Logger *logger);
 signals:
@@ -36,6 +42,8 @@ signals:
     void chatsUpdateDataReceived(QJsonObject &chatsUpdateDataJson);
     void editResultsReceived(const QJsonObject &editResultsJson);
 
+    void sendPersonalMessageWithFile(const QString& fileUrl);
+
     void connectionError();
     void connectionSuccess();
 
@@ -45,8 +53,10 @@ private slots:
     void attemptReconnect();
 
     void onDataReceived();
+    void onFileServerReceived();
 
 private:
+    QTcpSocket* fileSocket;
     QTcpSocket* socket;
     QTimer reconnectTimer;
     Logger* logger;

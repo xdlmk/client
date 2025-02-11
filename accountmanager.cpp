@@ -271,6 +271,10 @@ void AccountManager::processingPersonalMessageFromServer(const QJsonObject &pers
     QString time = personalMessageJson["time"].toString();
     int message_id = personalMessageJson["message_id"].toInt();
     int dialog_id = personalMessageJson["dialog_id"].toInt();
+    if(personalMessageJson.contains("fileUrl"))
+    {
+        getFile(personalMessageJson["fileUrl"].toString());
+    }
     QString login;
     QString out = "";
     QString fullDate = "not:done(processingPersonalMessageFromServer)";

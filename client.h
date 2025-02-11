@@ -23,6 +23,7 @@
 #include "accountmanager.h"
 #include "messagemanager.h"
 #include "networkmanager.h"
+#include "filemanager.h"
 #include "Logger/logger.h"
 
 class Client : public QObject
@@ -33,6 +34,7 @@ public:
     explicit Client(QObject *parent = nullptr);
 
     AccountManager* getAccountManager();
+    FileManager *getFileManager();
 
 signals:
     void newMessage(QString username,QString message,QString time, bool isOutgoing);
@@ -60,6 +62,7 @@ signals:
     void addAccount();
 
     void sendPersonalMessage(const QString &message, const QString &receiver_login, const int &receiver_id);
+    void sendPersonalMessageWithFile(const QString &message, const QString &receiver_login, const int &receiver_id, const QString& filePath);
     void sendSearchToServer(const QString &searchable);
     void sendLoginRequest(QString userlogin,QString password);
     void sendRegisterRequest(const QString login, const QString password);
@@ -84,6 +87,7 @@ private:
     NetworkManager *networkManager;
     MessageManager *messageManager;
     AccountManager *accountManager;
+    FileManager *fileManager;
 
     void setLogger(Logger* logger);
 };
