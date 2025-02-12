@@ -237,7 +237,6 @@ void AccountManager::processingLoginResultsFromServer(const QJsonObject &loginRe
             logger->log(Logger::INFO,"accountmanager.cpp::processingLoginResultsFromServer","File exist");
         }
 
-
         emit loginSuccess(name);
         emit newAccountLoginSuccessful(pathToMessages);
         createConfigFile(name,password);
@@ -271,9 +270,11 @@ void AccountManager::processingPersonalMessageFromServer(const QJsonObject &pers
     QString time = personalMessageJson["time"].toString();
     int message_id = personalMessageJson["message_id"].toInt();
     int dialog_id = personalMessageJson["dialog_id"].toInt();
+    QString fileUrl = "";
     if(personalMessageJson.contains("fileUrl"))
     {
-        getFile(personalMessageJson["fileUrl"].toString());
+        fileUrl = personalMessageJson["fileUrl"].toString();
+        emit getFile(fileUrl);
     }
     QString login;
     QString out = "";
@@ -287,13 +288,13 @@ void AccountManager::processingPersonalMessageFromServer(const QJsonObject &pers
         login = personalMessageJson["receiver_login"].toString();
         id = personalMessageJson["receiver_id"].toInt();
         out = "out";
-        emit saveMessageToJson(login, message, out, time,fullDate, message_id,dialog_id,id);
+        emit saveMessageToJson(login, message, out, time,fullDate, message_id,dialog_id,id,fileUrl);
     }
     else
     {
         login = personalMessageJson["sender_login"].toString();
         id = personalMessageJson["sender_id"].toInt();
-        emit saveMessageToJson(login, message, out, time, fullDate, message_id,dialog_id,id);
+        emit saveMessageToJson(login, message, out, time, fullDate, message_id,dialog_id,id,fileUrl);
     }
     emit checkActiveDialog(login,message,out,time);
 }

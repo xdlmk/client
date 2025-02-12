@@ -34,6 +34,7 @@ public slots:
     void setLogger(Logger *logger);
 signals:
     void dataReceived(const QJsonDocument &doc);
+    void uploadFiles(const QJsonObject &fileDataJson);
 
     void messageReceived(const QJsonObject &receivedMessageJson);
     void loginResultsReceived(const QJsonObject &loginResultsJson);

@@ -45,6 +45,7 @@ void NetworkManager::sendData(const QJsonObject &jsonToSend)
 
 void NetworkManager::sendToFileServer(const QJsonDocument &doc)
 {
+    logger->log(Logger::INFO,"networkmanager.cpp::sendToFileServer","sendToFileServer starts");
     QByteArray fileDataOut = doc.toJson(QJsonDocument::Compact);
     QByteArray data;
     data.clear();
@@ -53,9 +54,11 @@ void NetworkManager::sendToFileServer(const QJsonDocument &doc)
     out << quint32(fileDataOut.size());
     out.writeRawData(fileDataOut.data(),fileDataOut.size());
 
-    fileSocket->connectToHost("127.0.0.1",2021);
-    if (!fileSocket->waitForConnected(5000)) {
-        logger->log(Logger::WARN,"networkmanager.cpp::sendFile","Failed to connect to fileServer");
+    if(fileSocket->state() == QAbstractSocket::UnconnectedState){
+        fileSocket->connectToHost("127.0.0.1",2021);
+        if (!fileSocket->waitForConnected(5000)) {
+            logger->log(Logger::WARN,"networkmanager.cpp::sendFile","Failed to connect to fileServer");
+        }
     }
 
     connect(fileSocket,&QTcpSocket::readyRead,this,&NetworkManager::onFileServerReceived);
@@ -76,7 +79,7 @@ void NetworkManager::sendFile(const QString &filePath)
     file.close();
 
     QJsonObject fileDataJson;
-    fileDataJson["fileName"] = fileInfo.fileName();
+    fileDataJson["fileName"] = fileInfo.baseName();
     fileDataJson["fileExtension"] = fileInfo.suffix();
     fileDataJson["fileData"] = QString(fileData.toBase64());
 
@@ -86,6 +89,7 @@ void NetworkManager::sendFile(const QString &filePath)
 
 void NetworkManager::getFile(const QString &fileUrl)
 {
+    logger->log(Logger::INFO,"networkmanager.cpp::getFile","getFile starts");
     QJsonObject fileUrlJson;
     fileUrlJson["fileUrl"] = fileUrl;
     QJsonDocument doc(fileUrlJson);
@@ -220,31 +224,17 @@ void NetworkManager::onFileServerReceived()
         QJsonDocument doc = QJsonDocument::fromJson(jsonData);
 
         if (doc.isNull()) {
-            logger->log(Logger::ERROR,"networkmanager.cpp::onFileUrlReceived","Received JSON doc is null");
+            logger->log(Logger::ERROR,"networkmanager.cpp::onFileServerReceived","Received JSON doc is null");
             blockSize = 0;
             return;
         }
 
         QJsonObject receivedFromServerJson = doc.object();
-        if(receivedFromServerJson.contains("fileUrl")) {
+        if(receivedFromServerJson["flag"].toString() == "fileUrl") {
             QString fileUrl = receivedFromServerJson["fileUrl"].toString();
             emit sendPersonalMessageWithFile(fileUrl);
-        } else {
-
-            QString fileDataBase64 = receivedFromServerJson["fileData"].toString();
-            QByteArray fileData = QByteArray::fromBase64(fileDataBase64.toUtf8());
-
-            QDir dir(QCoreApplication::applicationDirPath() + "/uploads");
-            if (!dir.exists()) {
-                dir.mkpath(".");
-            }
-            QFile file(QCoreApplication::applicationDirPath() + "/uploads/" + "image.png");
-            if (!file.open(QIODevice::WriteOnly)) {
-                qWarning() << "Failed to save file";
-                return;
-            }
-            file.write(fileData);
-            file.close();
+        } else if (receivedFromServerJson["flag"].toString() == "fileData") {
+            emit uploadFiles(receivedFromServerJson);
         }
 
     } else {

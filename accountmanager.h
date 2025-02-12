@@ -50,7 +50,7 @@ signals:
 
     void saveMessageFromDatabase(QJsonObject &chatsUpdateDataJson);
     void saveMessageToJson(QString &userlogin, QString &message, QString &out, QString &time,
-                           QString &fullDate, int message_id, int dialog_id, int id);
+                           QString &fullDate, int message_id, int dialog_id, int id, QString &fileUrl);
 
     void checkActiveDialog(QString login,QString message, QString out,QString time);
 

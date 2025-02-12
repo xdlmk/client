@@ -17,14 +17,13 @@ class MessageManager : public QObject
     Q_OBJECT
 public:
     explicit MessageManager(QObject *parent = nullptr);
-
-
     void setActiveUser(const QString &userName, const int &userId);
+
     void checkingChatAvailability(QString &login);
 
 public slots:
     void saveMessageToJson(QString &userlogin, QString &message, QString &out, QString &time,
-                           QString &fullDate, int message_id, int dialog_id, int id);
+                           QString &fullDate, int message_id, int dialog_id, int id, QString &fileUrl);
     void loadMessageToQml(const QString &username, const QString &message, const QString &out,
                           const QString &date);
     void loadMessagesFromJson(const QString &filepath);
@@ -36,6 +35,7 @@ public slots:
     void saveMessageAndSendFile(const QString &message, const QString &receiver_login, const int &receiver_id,const QString& filePath);
     void sendPersonalMessageWithFile(const QString &fileUrl);
 
+
     void setLogger(Logger* logger);
 signals:
     void newMessage(QString name,QString message,QString time,bool isOutgoing);
@@ -44,6 +44,7 @@ signals:
 
     void sendMessageJson(const QJsonObject &messageJson);
     void sendFile(const QString& filePath);
+    void getFile(const QString& fileUrl);
 
 private:
     QString activeUserName;

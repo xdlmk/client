@@ -19,7 +19,8 @@ Client::Client(QObject *parent)
     connect(networkManager,&NetworkManager::chatsUpdateDataReceived,accountManager,&AccountManager::processingChatsUpdateDataFromServer);
     connect(networkManager,&NetworkManager::editResultsReceived,accountManager,&AccountManager::processingEditProfileFromServer);
     connect(networkManager,&NetworkManager::sendPersonalMessageWithFile,messageManager,&MessageManager::sendPersonalMessageWithFile);
-
+    connect(networkManager,&NetworkManager::uploadFiles,fileManager,&FileManager::uploadFiles);
+    connect(fileManager,&FileManager::getFile,networkManager,&NetworkManager::getFile);
     connect(accountManager,&AccountManager::loginSuccess,this,&Client::loginSuccess);
     connect(accountManager,&AccountManager::loginFail,this,&Client::loginFail);
     connect(accountManager,&AccountManager::registrationSuccess,this,&Client::registrationSuccess);
@@ -56,6 +57,7 @@ Client::Client(QObject *parent)
 
     connect(accountManager,&AccountManager::transferUserNameAndIdAfterLogin,messageManager,&MessageManager::setActiveUser);
     connect(accountManager,&AccountManager::transferUserNameAndIdAfterLogin,accountManager,&AccountManager::setActiveUser);
+    connect(accountManager,&AccountManager::transferUserNameAndIdAfterLogin,fileManager,&FileManager::setActiveUser);
 
     connect(messageManager,&MessageManager::newMessage,this,&Client::newMessage);
 
@@ -71,11 +73,13 @@ Client::Client(QObject *parent)
     connect(this,&Client::changeActiveAccount,accountManager,&AccountManager::changeActiveAccount);
 
     connect(accountManager,&AccountManager::getFile,networkManager,&NetworkManager::getFile);
+    connect(messageManager,&MessageManager::getFile,networkManager,&NetworkManager::getFile);
 
     connect(this,&Client::setLoggers,this,&Client::setLogger);
     connect(this,&Client::setLoggers,accountManager,&AccountManager::setLogger);
     connect(this,&Client::setLoggers,messageManager,&MessageManager::setLogger);
     connect(this,&Client::setLoggers,networkManager,&NetworkManager::setLogger);
+    connect(this,&Client::setLoggers,fileManager,&FileManager::setLogger);
 }
 
 AccountManager* Client::getAccountManager() {

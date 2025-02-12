@@ -16,7 +16,7 @@ void MessageManager::loadMessageToQml(const QString &username, const QString &me
     }
 }
 
-void MessageManager::saveMessageToJson(QString &userlogin, QString &message, QString &out, QString &time, QString &fullDate, int message_id, int dialog_id, int id)
+void MessageManager::saveMessageToJson(QString &userlogin, QString &message, QString &out, QString &time, QString &fullDate, int message_id, int dialog_id, int id, QString &fileUrl)
 {
     QDir dir(QCoreApplication::applicationDirPath() + "/resources/" + activeUserName + "/personal");
     if (!dir.exists()) {
@@ -63,6 +63,7 @@ void MessageManager::saveMessageToJson(QString &userlogin, QString &message, QSt
     messageObject["Out"] = out;
     messageObject["FullDate"] = fullDate;
     messageObject["time"] = time;
+    messageObject["fileUrl"] = fileUrl;
 
     chatHistory.append(messageObject);
 
@@ -125,16 +126,21 @@ void MessageManager::saveMessageFromDatabase(QJsonObject &json)
         int message_id = json["message_id"].toInt();
         QString sender_login = json["sender_login"].toString();
         int sender_id = json["sender_id"].toInt();
+        QString fileUrl = json["fileUrl"].toString();
+        if(fileUrl != "")
+        {
+            getFile(fileUrl);
+        }
         QString out = "";
 
         if(sender_login == activeUserName) {
             QString receiver_login = json["receiver_login"].toString();
             int receiver_id = json["receiver_id"].toInt();
             out = "out";
-            saveMessageToJson(receiver_login, message, out, time, fulldate, message_id, dialog_id,receiver_id);
+            saveMessageToJson(receiver_login, message, out, time, fulldate, message_id, dialog_id,receiver_id,fileUrl);
         }
         else{
-            saveMessageToJson(sender_login, message, out, time, fulldate, message_id, dialog_id,sender_id);
+            saveMessageToJson(sender_login, message, out, time, fulldate, message_id, dialog_id,sender_id,fileUrl);
         }
     }
 }
@@ -215,9 +221,14 @@ void MessageManager::saveMessageAndSendFile(const QString &message, const QStrin
     QByteArray jsonData = jsonDocument.toJson(QJsonDocument::Compact);
 
     QFile file("data.json");
+    if (file.open(QIODevice::WriteOnly | QIODevice::Text)) {
+        file.write(jsonData);
+        file.close();
 
-
-    emit sendFile(filePath);
+        emit sendFile(filePath);
+    } else {
+        logger->log(Logger::ERROR,"messagemanager.cpp::saveMessageAndSendFile", "File with message do not save");
+    }
 }
 
 void MessageManager::sendPersonalMessageWithFile(const QString &fileUrl)
