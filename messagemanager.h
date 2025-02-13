@@ -25,7 +25,7 @@ public slots:
     void saveMessageToJson(QString &userlogin, QString &message, QString &out, QString &time,
                            QString &fullDate, int message_id, int dialog_id, int id, QString &fileUrl);
     void loadMessageToQml(const QString &username, const QString &message, const QString &out,
-                          const QString &date);
+                          const QString &date, const QString &fileUrl = "");
     void loadMessagesFromJson(const QString &filepath);
     void saveMessageFromDatabase(QJsonObject &json);
 
@@ -38,7 +38,8 @@ public slots:
 
     void setLogger(Logger* logger);
 signals:
-    void newMessage(QString name,QString message,QString time,bool isOutgoing);
+    void newMessage(QString username,QString message,QString time,
+                    QString fileUrl,QString fileName, bool isOutgoing);
     void clearMainListView();
     void showPersonalChat(QString login,QString message,int id,QString out);
 

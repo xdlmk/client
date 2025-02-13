@@ -12,7 +12,6 @@ Rectangle{
     property alias textColor: edtText.color
     property bool fileLoad: false
     property string filePath: ""
-    signal newMessage(string msg)
 
     anchors.right:  parent.right
     anchors.bottom: parent.bottom

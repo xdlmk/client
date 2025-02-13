@@ -105,6 +105,8 @@ Window {
             property string time: model.time
             property string name: model.name
             property bool isOutgoing: model.isOutgoing
+            property string fileUrl: model.fileUrl
+            property string fileName: model.fileName
         }
     }
 
@@ -234,8 +236,9 @@ Window {
         id: myProfileWindow
     }
 
-    function onNewMessage(name,message,time,isOutgoing) {
-        listModel.append({text: message, time: time, name: name, isOutgoing: isOutgoing});
+    function onNewMessage(name,message,time,fileName,fileUrl,isOutgoing) {
+
+        listModel.append({text: message, time: time, name: name, isOutgoing: isOutgoing,fileName: fileName, fileUrl: fileUrl});
         listView.positionViewAtIndex(listModel.count - 1, ListView.End);
     }
 

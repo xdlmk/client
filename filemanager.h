@@ -13,7 +13,10 @@
 #include <QRegularExpression>
 
 #include <QJsonObject>
+#include <QJsonArray>
 #include <QJsonDocument>
+
+#include <QCryptographicHash>
 
 #include "Logger/logger.h"
 
@@ -26,15 +29,17 @@ public:
 
     Q_INVOKABLE QString openFile();
 signals:
-    void getFile(const QString &fileUrl);
 
 public slots:
     void setLogger(Logger* logger);
     void uploadFiles(const QJsonObject &fileDataJson);
 
-    void checkFileExists(const QString &fileUrl);
-
 private:
+    void checkingForFileChecker();
+    QString calculateDataHash(const QByteArray& data);
+    bool checkJsonForMatches(QJsonArray &checkerArray, const QByteArray &fileData, const QString &fileUrl);
+
+    QJsonArray loadJsonArrayFromFile(QFile &fileChecker);
     QString extractFileName(const QString &input);
 
     QString activeUserName;

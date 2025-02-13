@@ -274,7 +274,7 @@ void AccountManager::processingPersonalMessageFromServer(const QJsonObject &pers
     if(personalMessageJson.contains("fileUrl"))
     {
         fileUrl = personalMessageJson["fileUrl"].toString();
-        emit getFile(fileUrl);
+        //emit getFile(fileUrl);
     }
     QString login;
     QString out = "";

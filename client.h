@@ -37,7 +37,8 @@ public:
     FileManager *getFileManager();
 
 signals:
-    void newMessage(QString username,QString message,QString time, bool isOutgoing);
+    void newMessage(QString username,QString message,QString time,
+                    QString fileUrl,QString fileName, bool isOutgoing);
 
     void connectionSuccess();
     void connectionError();
@@ -80,6 +81,8 @@ signals:
     void clearUserListModel();
 
     void changeActiveAccount(QString username);
+
+    void getFile(const QString& fileUrl);
 
     void setLoggers(Logger* logger);
 private:

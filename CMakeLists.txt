@@ -32,6 +32,7 @@ qt_add_qml_module(regagram
         qmlFiles/UsersSearchList.qml
         qmlFiles/PersonalChatsList.qml
         qmlFiles/ChatBubble.qml
+
     SOURCES
         client.h client.cpp
         networkmanager.h networkmanager.cpp

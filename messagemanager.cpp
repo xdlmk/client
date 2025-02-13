@@ -4,15 +4,24 @@ MessageManager::MessageManager(QObject *parent)
     : QObject{parent}
 {}
 
-void MessageManager::loadMessageToQml(const QString &username, const QString &message, const QString &out, const QString &time)
+void MessageManager::loadMessageToQml(const QString &username, const QString &message, const QString &out, const QString &time, const QString &fileUrl)
 {
+    QString fileName = "";
+    if(fileUrl != "") {
+        QRegularExpression regex("_([^_]*$)");
+        QRegularExpressionMatch match = regex.match(fileUrl);
+        if (match.hasMatch()) {
+            fileName = match.captured(1);
+        }
+    }
+
     if(out == "out")
     {
-        emit newMessage(username,message,time,true);
+        emit newMessage(username, message, time, fileName, fileUrl, true);
     }
     else
     {
-        emit newMessage(username,message,time,false);
+        emit newMessage(username, message, time, fileName, fileUrl, false);
     }
 }
 
@@ -95,9 +104,14 @@ void MessageManager::loadMessagesFromJson(const QString &filepath)
             QString user = messageObject["login"].toString();
             QString message = messageObject["str"].toString();
             QString out = messageObject["Out"].toString();
+
+            QString fileUrl;
+            if(messageObject.contains("fileUrl")) fileUrl = messageObject["fileUrl"].toString();
+            else fileUrl = "";
+
             QString time = messageObject["time"].toString();
 
-            loadMessageToQml(user,message,out,time);
+            loadMessageToQml(user,message,out,time,fileUrl);
         }
     }
     file.close();
@@ -129,7 +143,7 @@ void MessageManager::saveMessageFromDatabase(QJsonObject &json)
         QString fileUrl = json["fileUrl"].toString();
         if(fileUrl != "")
         {
-            getFile(fileUrl);
+            //getFile(fileUrl);
         }
         QString out = "";
 
@@ -185,9 +199,14 @@ void MessageManager::loadingPersonalChat(const QString userlogin)
             QString user = messageObject["login"].toString();
             QString message = messageObject["str"].toString();
             QString out = messageObject["Out"].toString();
+
+            QString fileUrl;
+            if(messageObject.contains("fileUrl")) fileUrl = messageObject["fileUrl"].toString();
+            else fileUrl = "";
+
             QString time = messageObject["time"].toString();
 
-            loadMessageToQml(user,message,out,time);
+            loadMessageToQml(user,message,out,time, fileUrl);
         }
     }
     file.close();

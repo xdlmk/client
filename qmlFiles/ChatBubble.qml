@@ -3,7 +3,6 @@ import QtQuick.Controls
 
 Item {
     id: root
-
     width: Math.min(lblText.implicitWidth + 20, listView.width * 0.75)
     height: lblText.implicitHeight + lblTime.implicitHeight + nameText.implicitHeight + 5
 
@@ -42,6 +41,31 @@ Item {
             color: isOutgoing ? "white" : "#e4ecf2"
             wrapMode: Text.WrapAnywhere
         }
+
+        Text {
+            id:fileText
+            text: fileName
+            visible: fileName !== ""
+            height: fileText.visible ? implicitHeight : 0
+            width: fileText.visible ? implicitWidth : 0
+            anchors{
+                right: parent.right
+                rightMargin: 5
+                top: lblText.bottom
+                topMargin: 10
+            }
+            font.pointSize: 10
+            color: isOutgoing ? "white" : "#e4ecf2"
+            font.bold: true
+
+            MouseArea {
+                anchors.fill: parent
+                onClicked: {
+                    client.getFile(fileUrl);
+                }
+            }
+        }
+
         Text {
             id: lblTime
             anchors{
