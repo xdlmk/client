@@ -246,15 +246,15 @@ Window {
 
     function connectSuccess() { connectRect.visible = false; }
 
-    function onCheckActiveDialog(login,message,out,time)
+    function onCheckActiveDialog(login,message,out,time,fileName,fileUrl)
     {
         logger.qmlLog("INFO","Main.qml::onCheckActiveDialog","Dialog active: " + (nameText.text === login));
         if (nameText.text === login)
         {
             if(out === "out") {
-                onNewMessage(userlogin,message,time,true);
+                onNewMessage(userlogin,message,time,fileName,fileUrl,true);
             } else {
-                onNewMessage(login,message,time,false);
+                onNewMessage(login,message,time,fileName,fileUrl,false);
             }
         }
     }

@@ -274,7 +274,6 @@ void AccountManager::processingPersonalMessageFromServer(const QJsonObject &pers
     if(personalMessageJson.contains("fileUrl"))
     {
         fileUrl = personalMessageJson["fileUrl"].toString();
-        //emit getFile(fileUrl);
     }
     QString login;
     QString out = "";
@@ -296,7 +295,16 @@ void AccountManager::processingPersonalMessageFromServer(const QJsonObject &pers
         id = personalMessageJson["sender_id"].toInt();
         emit saveMessageToJson(login, message, out, time, fullDate, message_id,dialog_id,id,fileUrl);
     }
-    emit checkActiveDialog(login,message,out,time);
+
+    QString fileName = "";
+    if(fileUrl != "") {
+        int underscoreIndex = fileUrl.indexOf('_');
+        if (underscoreIndex != -1 && underscoreIndex + 1 < fileUrl.length()) {
+            fileName = fileUrl.mid(underscoreIndex + 1);
+        }
+    }
+
+    emit checkActiveDialog(login,message,out,time,fileName,fileUrl);
 }
 
 void AccountManager::processingSearchDataFromServer(const QJsonObject &searchDataJson)

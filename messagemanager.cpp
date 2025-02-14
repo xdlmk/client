@@ -8,10 +8,9 @@ void MessageManager::loadMessageToQml(const QString &username, const QString &me
 {
     QString fileName = "";
     if(fileUrl != "") {
-        QRegularExpression regex("_([^_]*$)");
-        QRegularExpressionMatch match = regex.match(fileUrl);
-        if (match.hasMatch()) {
-            fileName = match.captured(1);
+        int underscoreIndex = fileUrl.indexOf('_');
+        if (underscoreIndex != -1 && underscoreIndex + 1 < fileUrl.length()) {
+            fileName = fileUrl.mid(underscoreIndex + 1);
         }
     }
 

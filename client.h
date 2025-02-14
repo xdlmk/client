@@ -54,7 +54,8 @@ signals:
     void loadingPersonalChat(const QString userlogin);
 
     void showPersonalChat(QString login,QString message, int id, QString out);
-    void checkActiveDialog(QString login,QString message, QString out,QString time);
+    void checkActiveDialog(QString login,QString message, QString out,
+                           QString time,QString fileName,QString fileUrl);
 
     void changeReceiverUserSignal(QString userlogin,int id);
 

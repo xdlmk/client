@@ -31,19 +31,19 @@ void FileManager::uploadFiles(const QJsonObject &fileDataJson)
     logger->log(Logger::INFO,"filemanager.cpp::uploadFiles", "uploadFiles start");
     QString fileDataString = fileDataJson["fileData"].toString();
     QByteArray fileData = QByteArray::fromBase64(fileDataString.toUtf8());
-    QString fileUrl = extractFileName(fileDataJson["fileName"].toString());
+    QString fileUrl = fileDataJson["fileName"].toString();
 
     checkingForFileChecker();
     QFile fileChecker(QCoreApplication::applicationDirPath() + "/.fileChecker/" + activeUserName + "/checker.json");
     QJsonArray checkerArray = loadJsonArrayFromFile(fileChecker);
 
-    if(!checkJsonForMatches(checkerArray,fileData,fileDataJson["fileName"].toString())) {
-        logger->log(Logger::INFO,"filemanager.cpp::uploadFiles", "checkJsonForMatches returning true");
+    if(!checkJsonForMatches(checkerArray,fileData,fileUrl)) {
         QDir dir(QCoreApplication::applicationDirPath() + "/uploads/" + activeUserName);
         if (!dir.exists()) {
             dir.mkpath(".");
         }
-
+        fileUrl = extractFileName(fileUrl);
+        qDebug() << "File name from upload: "<<fileUrl;
         QFile file(QCoreApplication::applicationDirPath() + "/uploads/" + activeUserName + "/" + fileUrl);
         if (!file.open(QIODevice::WriteOnly)) {
             logger->log(Logger::WARN,"filemanager.cpp::uploadFiles", "Failed to save file");
@@ -60,6 +60,41 @@ void FileManager::uploadFiles(const QJsonObject &fileDataJson)
         file.write(fileData);
         file.close();
     }
+}
+
+QString FileManager::replaceAfterUnderscore(const QString &url, const QString &newString)
+{
+    int underscoreIndex = url.indexOf('_');
+
+    if (underscoreIndex != -1) {
+        return url.left(underscoreIndex + 1) + newString;
+    }
+
+    return url + "_" + newString;
+}
+
+QString FileManager::generateUniqueFileName(const QString &baseName, const QString &directoryPath)
+{
+    QString fileName = baseName;
+    QString fileExtension;
+
+    int dotIndex = baseName.lastIndexOf('.');
+    if (dotIndex != -1) {
+        fileExtension = baseName.mid(dotIndex);
+        fileName = baseName.left(dotIndex);
+    }
+
+    QString uniqueFileName = baseName;
+    int suffix = 1;
+
+    QDir directory(directoryPath);
+
+    while (directory.exists(uniqueFileName)) {
+        uniqueFileName = QString("%1 (%2)%3").arg(fileName).arg(suffix).arg(fileExtension);
+        suffix++;
+    }
+
+    return uniqueFileName;
 }
 
 void FileManager::checkingForFileChecker()
@@ -91,34 +126,44 @@ QString FileManager::calculateDataHash(const QByteArray &data)
     return QString(hash.result().toHex());
 }
 
-bool FileManager::checkJsonForMatches(QJsonArray &checkerArray, const QByteArray &fileData, const QString &fileUrl)
+bool FileManager::checkJsonForMatches(QJsonArray &checkerArray, const QByteArray &fileData, QString &fileUrl)
 {
     logger->log(Logger::INFO,"filemanager.cpp::checkJsonForMatches", "checkJsonForMatches starts");
-    QFile file(QCoreApplication::applicationDirPath() + "/uploads/" + activeUserName + "/" + extractFileName(fileUrl));
-    if(file.exists()){
-        for (const auto &item : checkerArray) {
-            if (!item.isObject()) {
-                logger->log(Logger::WARN,"filemanager.cpp::checkJsonForMatches", "Element is not a JSON object. Skipping");
-                continue;
-            }
+    QString filesDir = QCoreApplication::applicationDirPath() + "/uploads/" + activeUserName;
+    for (int i = 0; i < checkerArray.size(); ++i) {
+        QJsonValue item = checkerArray.at(i);
+        if (!item.isObject()) {
+            logger->log(Logger::WARN,"filemanager.cpp::checkJsonForMatches", "Element is not a JSON object. Skipping");
+            continue;
+        }
 
-            QJsonObject jsonObject = item.toObject();
+        QJsonObject jsonObject = item.toObject();
+        QString jsonFileUrl = jsonObject["fileUrl"].toString();
 
-            QString jsonFileUrl = jsonObject["fileUrl"].toString();
-
-            if (jsonFileUrl == fileUrl) {
-                logger->log(Logger::DEBUG,"filemanager.cpp::checkJsonForMatches", "fileUrl matches");
-                QString jsonFileHash = jsonObject["fileHash"].toString();
-                if (jsonFileHash == calculateDataHash(fileData)) {
-                    logger->log(Logger::DEBUG,"filemanager.cpp::checkJsonForMatches", "fileUrl and dataHash match");
+        if (jsonFileUrl == fileUrl) {
+            logger->log(Logger::DEBUG,"filemanager.cpp::checkJsonForMatches", "fileUrl matches");
+            QString jsonFileHash = jsonObject["fileHash"].toString();
+            if (jsonFileHash == calculateDataHash(fileData)) {
+                logger->log(Logger::DEBUG,"filemanager.cpp::checkJsonForMatches", "fileUrl and dataHash match");
+                QString localFileName = jsonObject["fileName"].toString();
+                QFile file(filesDir + "/" + localFileName);
+                if(file.exists()) {
                     return true;
+                } else {
+                    checkerArray.removeAt(i);
                 }
             }
         }
+
     }
 
     QJsonObject newFileObject;
     newFileObject["fileUrl"] = fileUrl;
+    QString uniqName = generateUniqueFileName(extractFileName(fileUrl),filesDir);
+    newFileObject["fileName"] = uniqName;
+    qDebug() << "1 File url from checkJson: " << fileUrl;
+    fileUrl = replaceAfterUnderscore(fileUrl,uniqName);
+    qDebug() << "2 File url from checkJson: " << fileUrl;
     newFileObject["fileHash"] = calculateDataHash(fileData);
     checkerArray.append(newFileObject);
 
@@ -141,10 +186,9 @@ QJsonArray FileManager::loadJsonArrayFromFile(QFile &fileChecker)
 
 QString FileManager::extractFileName(const QString &input)
 {
-    QRegularExpression regex("_([^_]*$)");
-    QRegularExpressionMatch match = regex.match(input);
-    if (match.hasMatch()) {
-        return match.captured(1);
+    int underscoreIndex = input.indexOf('_');
+    if (underscoreIndex != -1 && underscoreIndex + 1 < input.length()) {
+        return input.mid(underscoreIndex + 1);
     }
     return QString();
 }

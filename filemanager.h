@@ -10,7 +10,6 @@
 
 #include <QFile>
 #include <QFileDialog>
-#include <QRegularExpression>
 
 #include <QJsonObject>
 #include <QJsonArray>
@@ -35,9 +34,12 @@ public slots:
     void uploadFiles(const QJsonObject &fileDataJson);
 
 private:
+    QString replaceAfterUnderscore(const QString &url, const QString &newString);
+    QString generateUniqueFileName(const QString &baseName, const QString &directoryPath);
+
     void checkingForFileChecker();
     QString calculateDataHash(const QByteArray& data);
-    bool checkJsonForMatches(QJsonArray &checkerArray, const QByteArray &fileData, const QString &fileUrl);
+    bool checkJsonForMatches(QJsonArray &checkerArray, const QByteArray &fileData, QString &fileUrl);
 
     QJsonArray loadJsonArrayFromFile(QFile &fileChecker);
     QString extractFileName(const QString &input);
