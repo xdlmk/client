@@ -24,6 +24,8 @@ public:
     void createConfigFile(const QString &userLogin, const QString &userPassword);
 
 public slots:
+    void checkAndSendAvatarUpdate(const QString &avatar_url,const int &user_id);
+
     void checkConfigFile(const QSettings& settings);
 
     void processingLoginResultsFromServer(const QJsonObject &loginResultsJson);

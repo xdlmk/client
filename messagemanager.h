@@ -38,6 +38,8 @@ public slots:
 
     void setLogger(Logger* logger);
 signals:
+    void checkAndSendAvatarUpdate(const QString &avatar_url, const int &user_id);
+
     void newMessage(QString username,QString message,QString time,
                     QString fileUrl,QString fileName, bool isOutgoing);
     void clearMainListView();

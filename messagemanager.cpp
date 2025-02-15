@@ -138,6 +138,7 @@ void MessageManager::saveMessageFromDatabase(QJsonObject &json)
         int dialog_id = json["dialog_id"].toInt();
         int message_id = json["message_id"].toInt();
         QString sender_login = json["sender_login"].toString();
+        QString sender_avatar_url = json["sender_avatar_url"].toString();
         int sender_id = json["sender_id"].toInt();
         QString fileUrl = json["fileUrl"].toString();
         QString out = "";
@@ -145,10 +146,13 @@ void MessageManager::saveMessageFromDatabase(QJsonObject &json)
         if(sender_login == activeUserName) {
             QString receiver_login = json["receiver_login"].toString();
             int receiver_id = json["receiver_id"].toInt();
+            QString receiver_avatar_url = json["receiver_avatar_url"].toString();
+            checkAndSendAvatarUpdate(receiver_avatar_url,receiver_id);
             out = "out";
             saveMessageToJson(receiver_login, message, out, time, fulldate, message_id, dialog_id,receiver_id,fileUrl);
         }
         else{
+            checkAndSendAvatarUpdate(sender_avatar_url,sender_id);
             saveMessageToJson(sender_login, message, out, time, fulldate, message_id, dialog_id,sender_id,fileUrl);
         }
     }

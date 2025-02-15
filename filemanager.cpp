@@ -83,8 +83,6 @@ void FileManager::uploadAvatar(const QJsonObject &avatarDataJson)
     QJsonArray avatarCheckerArray = loadJsonArrayFromFile(avatarChecker);
 
     QJsonObject newAvatarDataJson;
-    //qDebug()<< "uploadAvatar::user_id: " << QString::number(avatarDataJson["user_id"].toInt());
-    //qDebug()<< "uploadAvatar::avatar_url: " << avatarDataJson["avatar_url"].toString();
     newAvatarDataJson["user_id"] = avatarDataJson["user_id"].toInt();
     newAvatarDataJson["avatar_url"] = avatarDataJson["avatar_url"].toString();
     avatarCheckerArray.append(newAvatarDataJson);

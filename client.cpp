@@ -77,6 +77,8 @@ Client::Client(QObject *parent)
     connect(this,&Client::getFile,networkManager,&NetworkManager::getFile);
     connect(fileManager,&FileManager::sendToFileServer,networkManager,&NetworkManager::sendToFileServer);
     connect(accountManager,&AccountManager::sendAvatarUrl,fileManager,&FileManager::sendAvatarUrl);
+    connect(messageManager,&MessageManager::checkAndSendAvatarUpdate,accountManager,&AccountManager::checkAndSendAvatarUpdate);
+
     connect(this,&Client::setLoggers,this,&Client::setLogger);
     connect(this,&Client::setLoggers,accountManager,&AccountManager::setLogger);
     connect(this,&Client::setLoggers,messageManager,&MessageManager::setLogger);

@@ -193,6 +193,14 @@ void AccountManager::createConfigFile(const QString &userLogin, const QString &u
     checkConfigFile(settings);
 }
 
+void AccountManager::checkAndSendAvatarUpdate(const QString &avatar_url, const int &user_id)
+{
+    logger->log(Logger::INFO,"accountmanager.cpp::checkAndSendAvatarUpdate","checkAndSendAvatarUpdate starts");
+    if(!isAvatarUpToDate(avatar_url,user_id)) {
+        emit sendAvatarUrl(avatar_url,user_id);
+    }
+}
+
 void AccountManager::processingLoginResultsFromServer(const QJsonObject &loginResultsJson)
 {
     QString success = loginResultsJson["success"].toString();
@@ -204,9 +212,7 @@ void AccountManager::processingLoginResultsFromServer(const QJsonObject &loginRe
 
     if(success == "ok")
     {
-        if(!isAvatarUpToDate(avatar_url,userId)) {
-        emit sendAvatarUrl(avatar_url,userId);
-        }
+        checkAndSendAvatarUpdate(avatar_url,userId);
 
         QDir dir(QCoreApplication::applicationDirPath() + "/resources/messages");
         if (!dir.exists()) {
@@ -273,6 +279,7 @@ void AccountManager::processingPersonalMessageFromServer(const QJsonObject &pers
     }
     QString login;
     QString out = "";
+    QString avatar_url;
     QString fullDate = "not:done(processingPersonalMessageFromServer)";
     int id;
 
@@ -282,6 +289,7 @@ void AccountManager::processingPersonalMessageFromServer(const QJsonObject &pers
     {
         login = personalMessageJson["receiver_login"].toString();
         id = personalMessageJson["receiver_id"].toInt();
+        avatar_url = personalMessageJson["receiver_avatar_url"].toString();
         out = "out";
         emit saveMessageToJson(login, message, out, time,fullDate, message_id,dialog_id,id,fileUrl);
     }
@@ -289,8 +297,12 @@ void AccountManager::processingPersonalMessageFromServer(const QJsonObject &pers
     {
         login = personalMessageJson["sender_login"].toString();
         id = personalMessageJson["sender_id"].toInt();
+        avatar_url = personalMessageJson["sender_avatar_url"].toString();
+
         emit saveMessageToJson(login, message, out, time, fullDate, message_id,dialog_id,id,fileUrl);
     }
+
+    checkAndSendAvatarUpdate(avatar_url,id);
 
     QString fileName = "";
     if(fileUrl != "") {
@@ -311,6 +323,9 @@ void AccountManager::processingSearchDataFromServer(const QJsonObject &searchDat
         QJsonObject userObj = value.toObject();
         int id = userObj.value("id").toInt();
         QString userlogin = userObj.value("userlogin").toString();
+        QString avatar_url = userObj.value("avatar_url").toString();
+        checkAndSendAvatarUpdate(avatar_url,id);
+
         emit newSearchUser(userlogin,id);
     }
 }
