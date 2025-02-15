@@ -235,6 +235,8 @@ void NetworkManager::onFileServerReceived()
             emit sendPersonalMessageWithFile(fileUrl);
         } else if (receivedFromServerJson["flag"].toString() == "fileData") {
             emit uploadFiles(receivedFromServerJson);
+        } else if (receivedFromServerJson["flag"].toString() == "avatarData") {
+            emit uploadAvatar(receivedFromServerJson);
         }
 
     } else {

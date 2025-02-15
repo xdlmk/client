@@ -12,7 +12,7 @@ Window {
 
     property bool isProfileExtended: false
     property bool isSearchListExtended: false
-    property string avatarSource: "../images/avatar.png"
+    property string avatarSource: "../../avatars/" + userlogin + "/"
 
     Rectangle {
         id: leftLine

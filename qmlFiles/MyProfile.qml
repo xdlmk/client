@@ -18,6 +18,7 @@ Dialog {
     height: 500
 
     property string login: userlogin
+    property int user_id: user_id
 
     Text{
         id:myProfileText
@@ -92,7 +93,7 @@ Dialog {
         clip: true
         Image {
             anchors.fill: parent
-            source: avatarSource
+            source: avatarSource + user_id + ".png"
             fillMode: Image.PreserveAspectFit
         }
     }

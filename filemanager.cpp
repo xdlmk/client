@@ -21,6 +21,16 @@ QString FileManager::openFile()
     return filePath;
 }
 
+void FileManager::sendAvatarUrl(const QString &avatar_url,const int& user_id)
+{
+    QJsonObject avatarUrlJson;
+    avatarUrlJson["flag"] = "avatar";
+    avatarUrlJson["avatar_url"] = avatar_url;
+    avatarUrlJson["user_id"] = user_id;
+    QJsonDocument doc(avatarUrlJson);
+    emit sendToFileServer(doc);
+}
+
 void FileManager::setLogger(Logger *logger)
 {
     this->logger = logger;
@@ -62,6 +72,44 @@ void FileManager::uploadFiles(const QJsonObject &fileDataJson)
     }
 }
 
+void FileManager::uploadAvatar(const QJsonObject &avatarDataJson)
+{
+    logger->log(Logger::INFO,"filemanager.cpp::uploadAvatar", "uploadAvatar start");
+    QString avatarDataString = avatarDataJson["avatarData"].toString();
+    QByteArray avatarData = QByteArray::fromBase64(avatarDataString.toUtf8());
+
+    checkingForFileChecker();
+    QFile avatarChecker(QCoreApplication::applicationDirPath() + "/.fileChecker/" + activeUserName + "/avatarChecker.json");
+    QJsonArray avatarCheckerArray = loadJsonArrayFromFile(avatarChecker);
+
+    QJsonObject newAvatarDataJson;
+    //qDebug()<< "uploadAvatar::user_id: " << QString::number(avatarDataJson["user_id"].toInt());
+    //qDebug()<< "uploadAvatar::avatar_url: " << avatarDataJson["avatar_url"].toString();
+    newAvatarDataJson["user_id"] = avatarDataJson["user_id"].toInt();
+    newAvatarDataJson["avatar_url"] = avatarDataJson["avatar_url"].toString();
+    avatarCheckerArray.append(newAvatarDataJson);
+
+    if (!avatarChecker.open(QIODevice::WriteOnly)) {
+        logger->log(Logger::WARN,"filemanager.cpp::uploadAvatar", "Failed to save avatarChecker");
+        return;
+    }
+    QJsonDocument jsonDoc(avatarCheckerArray);
+    avatarChecker.write(jsonDoc.toJson());
+    avatarChecker.close();
+    QDir avatarDir(QCoreApplication::applicationDirPath() + "/avatars/" + activeUserName);
+    if (!avatarDir.exists()) {
+        avatarDir.mkpath(".");
+    }
+    QFile avatar(QCoreApplication::applicationDirPath() + "/avatars/" + activeUserName + "/" + QString::number(avatarDataJson["user_id"].toInt()) + ".png");
+
+    if (!avatar.open(QIODevice::WriteOnly)) {
+        logger->log(Logger::WARN,"filemanager.cpp::uploadAvatar", "Failed to save avatar");
+        return;
+    }
+    avatar.write(avatarData);
+    avatar.close();
+}
+
 QString FileManager::replaceAfterUnderscore(const QString &url, const QString &newString)
 {
     int underscoreIndex = url.indexOf('_');
@@ -101,6 +149,7 @@ void FileManager::checkingForFileChecker()
 {
     logger->log(Logger::INFO,"filemanager.cpp::checkingForFileChecker", "checkingForFileChecker starts");
     QFile fileChecker(QCoreApplication::applicationDirPath() + "/.fileChecker/" + activeUserName + "/checker.json");
+    QFile avatarChecker(QCoreApplication::applicationDirPath() + "/.fileChecker/" + activeUserName + "/avatarChecker.json");
     QDir dirFileChecker(QCoreApplication::applicationDirPath() + "/.fileChecker/" + activeUserName);
     QDir dirUploadFiles(QCoreApplication::applicationDirPath() + "/uploads/" + activeUserName);
     if (dirFileChecker.exists()) {
@@ -111,6 +160,11 @@ void FileManager::checkingForFileChecker()
                 fileChecker.close();
             } else {
                 logger->log(Logger::WARN,"filemanager.cpp::checkingForFileChecker", "Failed to create fileChecker");
+            }
+            if(avatarChecker.open(QIODevice::WriteOnly)){
+                avatarChecker.close();
+            } else {
+                logger->log(Logger::WARN,"filemanager.cpp::checkingForFileChecker", "Failed to create avatarChecker");
             }
         }
     } else {

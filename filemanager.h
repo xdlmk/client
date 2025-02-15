@@ -28,10 +28,13 @@ public:
 
     Q_INVOKABLE QString openFile();
 signals:
+    void sendToFileServer(const QJsonDocument& avatarUrlDoc);
 
 public slots:
+    void sendAvatarUrl(const QString& avatar_url,const int& user_id);
     void setLogger(Logger* logger);
     void uploadFiles(const QJsonObject &fileDataJson);
+    void uploadAvatar(const QJsonObject &avatarDataJson);
 
 private:
     QString replaceAfterUnderscore(const QString &url, const QString &newString);

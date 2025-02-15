@@ -43,7 +43,7 @@ signals:
     void connectionSuccess();
     void connectionError();
 
-    void loginSuccess(QString &name);
+    void loginSuccess(QString &name, int &user_id);
     void loginFail();
 
     void registrationSuccess();

@@ -35,6 +35,7 @@ public slots:
 signals:
     void dataReceived(const QJsonDocument &doc);
     void uploadFiles(const QJsonObject &fileDataJson);
+    void uploadAvatar(const QJsonObject &avatarDataJson);
 
     void messageReceived(const QJsonObject &receivedMessageJson);
     void loginResultsReceived(const QJsonObject &loginResultsJson);

@@ -200,16 +200,12 @@ void AccountManager::processingLoginResultsFromServer(const QJsonObject &loginRe
     QString password = loginResultsJson["password"].toString();
     int userId = loginResultsJson["user_id"].toInt();
 
-    QString imageString = loginResultsJson["profileImage"].toString();
-    QByteArray imageData = QByteArray::fromBase64(imageString.toLatin1());
+    QString avatar_url = loginResultsJson["avatar_url"].toString();
 
     if(success == "ok")
     {
-        QImage image;
-        image.loadFromData(imageData);
-        QString filePath(QCoreApplication::applicationDirPath() + "/resources/images/avatar.png");
-        if (!image.save(filePath)) {
-            logger->log(Logger::ERROR,"accountmanager.cpp::processingLoginResultsFromServer","Failed to save image");
+        if(!isAvatarUpToDate(avatar_url,userId)) {
+        emit sendAvatarUrl(avatar_url,userId);
         }
 
         QDir dir(QCoreApplication::applicationDirPath() + "/resources/messages");
@@ -237,7 +233,7 @@ void AccountManager::processingLoginResultsFromServer(const QJsonObject &loginRe
             logger->log(Logger::INFO,"accountmanager.cpp::processingLoginResultsFromServer","File exist");
         }
 
-        emit loginSuccess(name);
+        emit loginSuccess(name, userId);
         emit newAccountLoginSuccessful(pathToMessages);
         createConfigFile(name,password);
         updatingChats();
@@ -363,6 +359,38 @@ void AccountManager::setActiveUser(const QString &userName, const int &userId)
 void AccountManager::setLogger(Logger *logger)
 {
     this->logger = logger;
+}
+
+bool AccountManager::isAvatarUpToDate(QString avatar_url, int user_id)
+{
+    QFile avatar(QCoreApplication::applicationDirPath() + "/avatars/" + activeUserName + "/" + QString::number(user_id) + ".png");
+    if(!avatar.open(QIODevice::ReadWrite)) {
+        logger->log(Logger::INFO,"accountmanager.cpp::isAvatarUpToDate", "Avatar not downloaded");
+        return false;
+    }
+
+    QFile avatarChecker(QCoreApplication::applicationDirPath() + "/.fileChecker/" + activeUserName + "/avatarChecker.json");
+    if(!avatarChecker.open(QIODevice::ReadWrite)) {
+        logger->log(Logger::WARN,"accountmanager.cpp::isAvatarUpToDate", "Failed to open avatarChecker");
+        return false;
+    }
+    QByteArray avatarCheckerData = avatarChecker.readAll();
+    avatarChecker.close();
+    QJsonDocument avatarCheckerDoc = QJsonDocument::fromJson(avatarCheckerData);
+    QJsonArray avatarCheckerArray = avatarCheckerDoc.array();
+
+    for (const auto &item : avatarCheckerArray) {
+        if (item.isObject()) {
+            QJsonObject jsonObject = item.toObject();
+
+            if (jsonObject.contains("user_id") && jsonObject.contains("avatar_url")) {
+                if ((jsonObject["user_id"].toInt() == user_id) and (jsonObject["avatar_url"].toString() == avatar_url)) {
+                    return true;
+                }
+            }
+        }
+    }
+    return false;
 }
 
 void AccountManager::updatingChats()

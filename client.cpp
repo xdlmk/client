@@ -20,6 +20,8 @@ Client::Client(QObject *parent)
     connect(networkManager,&NetworkManager::editResultsReceived,accountManager,&AccountManager::processingEditProfileFromServer);
     connect(networkManager,&NetworkManager::sendPersonalMessageWithFile,messageManager,&MessageManager::sendPersonalMessageWithFile);
     connect(networkManager,&NetworkManager::uploadFiles,fileManager,&FileManager::uploadFiles);
+    connect(networkManager,&NetworkManager::uploadAvatar,fileManager,&FileManager::uploadAvatar);
+
     connect(accountManager,&AccountManager::loginSuccess,this,&Client::loginSuccess);
     connect(accountManager,&AccountManager::loginFail,this,&Client::loginFail);
     connect(accountManager,&AccountManager::registrationSuccess,this,&Client::registrationSuccess);
@@ -72,9 +74,9 @@ Client::Client(QObject *parent)
     connect(this,&Client::changeActiveAccount,accountManager,&AccountManager::changeActiveAccount);
 
     connect(accountManager,&AccountManager::getFile,networkManager,&NetworkManager::getFile);
-    connect(messageManager,&MessageManager::getFile,networkManager,&NetworkManager::getFile); 
     connect(this,&Client::getFile,networkManager,&NetworkManager::getFile);
-
+    connect(fileManager,&FileManager::sendToFileServer,networkManager,&NetworkManager::sendToFileServer);
+    connect(accountManager,&AccountManager::sendAvatarUrl,fileManager,&FileManager::sendAvatarUrl);
     connect(this,&Client::setLoggers,this,&Client::setLogger);
     connect(this,&Client::setLoggers,accountManager,&AccountManager::setLogger);
     connect(this,&Client::setLoggers,messageManager,&MessageManager::setLogger);

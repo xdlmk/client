@@ -69,7 +69,7 @@ int main(int argc, char *argv[])
         }
     });
 
-    QObject::connect(&client, &Client::loginSuccess, [&engine, mainUrl](QString userLogin) {
+    QObject::connect(&client, &Client::loginSuccess, [&engine, mainUrl](QString userLogin, int user_id) {
         QList<QObject*> rootObjects = engine.rootObjects();
         for (QObject *rootObject : rootObjects) {
             if (rootObject) {
@@ -78,6 +78,7 @@ int main(int argc, char *argv[])
         }
         engine.clearComponentCache();
         engine.rootContext()->setContextProperty("userlogin", userLogin);
+        engine.rootContext()->setContextProperty("activeUserId", user_id);
         engine.load(mainUrl);
     });
 

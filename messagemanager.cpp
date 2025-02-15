@@ -140,10 +140,6 @@ void MessageManager::saveMessageFromDatabase(QJsonObject &json)
         QString sender_login = json["sender_login"].toString();
         int sender_id = json["sender_id"].toInt();
         QString fileUrl = json["fileUrl"].toString();
-        if(fileUrl != "")
-        {
-            //getFile(fileUrl);
-        }
         QString out = "";
 
         if(sender_login == activeUserName) {

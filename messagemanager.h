@@ -45,7 +45,6 @@ signals:
 
     void sendMessageJson(const QJsonObject &messageJson);
     void sendFile(const QString& filePath);
-    void getFile(const QString& fileUrl);
 
 private:
     QString activeUserName;
