@@ -4,7 +4,7 @@ project(clientDes VERSION 0.1 LANGUAGES CXX)
 
 set(CMAKE_CXX_STANDARD_REQUIRED ON)
 
-find_package(Qt6 6.4 REQUIRED COMPONENTS Quick Core Network Gui QuickControls2)
+find_package(Qt6 6.4 REQUIRED COMPONENTS Quick Core Network Gui QuickControls2 Widgets)
 
 qt_standard_project_setup()
 
@@ -32,17 +32,18 @@ qt_add_qml_module(regagram
         qmlFiles/UsersSearchList.qml
         qmlFiles/PersonalChatsList.qml
         qmlFiles/ChatBubble.qml
+
     SOURCES
         client.h client.cpp
         networkmanager.h networkmanager.cpp
         messagemanager.h messagemanager.cpp
         accountmanager.h accountmanager.cpp
+        filemanager.h filemanager.cpp
         Logger/logger.cpp Logger/logger.h
     RESOURCES
         images/logo.png
         images/logo2.png
         images/profile.png
-
 )
 
 # Qt for iOS sets MACOSX_BUNDLE_GUI_IDENTIFIER automatically since Qt 6.1.
@@ -58,7 +59,7 @@ set_target_properties(regagram PROPERTIES
 
 target_link_libraries(regagram
     PRIVATE Qt6::Quick
-    Qt${QT_VERSION_MAJOR}::Core Qt${QT_VERSION_MAJOR}::Network Qt${QT_VERSION_MAJOR}::Gui Qt${QT_VERSION_MAJOR}::QuickControls2
+    Qt${QT_VERSION_MAJOR}::Core Qt${QT_VERSION_MAJOR}::Network Qt${QT_VERSION_MAJOR}::Gui Qt${QT_VERSION_MAJOR}::QuickControls2 Qt${QT_VERSION_MAJOR}::Widgets
 )
 
 include(GNUInstallDirs)

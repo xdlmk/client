@@ -10,7 +10,8 @@ Rectangle{
     width: parent.width/2 + parent.width/4
 
     property alias textColor: edtText.color
-    signal newMessage(string msg)
+    property bool fileLoad: false
+    property string filePath: ""
 
     anchors.right:  parent.right
     anchors.bottom: parent.bottom
@@ -47,28 +48,42 @@ Rectangle{
 
                 height: Math.min(implicitHeight, maxHeight)
 
-                Keys.onPressed: {
+                Keys.onPressed: function(event) {
                     if (event.key === Qt.Key_Return || event.key === Qt.Key_Enter) {
                         if (event.modifiers & Qt.ShiftModifier) {
+                            edtText.text = edtText.text.slice(0, edtText.cursorPosition) + "\n" + edtText.text.slice(edtText.cursorPosition);
+                            edtText.cursorPosition += 1;
                         } else {
-
-                            if (edtText.text.trim() !== "") {
-                                if(upLine.currentState == "default"){
-
-                                }
-                                else if (upLine.currentState == "personal") {
-                                    var newMsg = {};
-                                    newMsg.text = edtText.text;
-                                    newMsg.time = Qt.formatTime(new Date(), "hh:mm");
-                                    newMsg.name = userlogin;
-                                    newMsg.isOutgoing = true;
-                                    client.sendPersonalMessage(edtText.text, nameText.text,upLine.user_id);
-                                }
-
-                                edtText.clear();
-                            }
+                            wordProcessing();
                         }
                         event.accepted = true;
+                    }
+                }
+            }
+        }
+
+        Rectangle {
+            id: btnFileItem
+            width: 50
+            height: 50
+            color: downLine.color
+            Text {
+                id: buttonFileImage
+                text: "\u{1F4CE}"
+                color: "grey"
+                font.pixelSize: 24
+                rotation: 45
+                anchors.centerIn: parent
+            }
+            MouseArea {
+                anchors.fill: parent
+                onClicked:{
+                    filePath = fileManager.openFile();
+                    if (filePath !== "") {
+                        console.log("Selected file path:", filePath);
+                        fileLoad = true;
+                    } else {
+                        console.log("No file selected");
                     }
                 }
             }
@@ -93,20 +108,7 @@ Rectangle{
                 cursorShape: Qt.PointingHandCursor
 
                 onClicked: {
-                    if (edtText.text.trim() !== "") {
-                        if(upLine.currentState == "default"){
-                        }
-                        else if (upLine.currentState == "personal") {
-                            var newMsg = {};
-                            newMsg.text = edtText.text;
-                            newMsg.time = Qt.formatTime(new Date(), "hh:mm");
-                            newMsg.name = userlogin;
-                            newMsg.isOutgoing = true;
-                            client.sendPersonalMessage(edtText.text, nameText.text,upLine.user_id);
-                        }
-
-                        edtText.clear();
-                    }
+                    wordProcessing();
                 }
 
                 onPressed: {
@@ -118,6 +120,22 @@ Rectangle{
                 }
             }
 
+        }
+    }
+
+    function wordProcessing() {
+        if (edtText.text.trim() !== "") {
+            if(upLine.currentState == "default"){
+            }
+            else if (upLine.currentState == "personal") {
+                if(fileLoad) {
+                    client.sendPersonalMessageWithFile(edtText.text, nameText.text,upLine.user_id,filePath)
+                } else {
+                    client.sendPersonalMessage(edtText.text, nameText.text,upLine.user_id);
+                }
+            }
+
+            edtText.clear();
         }
     }
 }

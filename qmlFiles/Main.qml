@@ -12,24 +12,28 @@ Window {
 
     property bool isProfileExtended: false
     property bool isSearchListExtended: false
-    property string avatarSource: "../images/avatar.png"
+    property string avatarSource: "../../avatars/" + userlogin + "/"
 
     Rectangle {
         id: leftLine
         color: "#0e1621"
         height: root.height
         width: 54
-        anchors.left:  parent.left
-        anchors.bottom: parent.bottom
-        anchors.top: parent.top
+        anchors{
+            left:  parent.left
+            bottom: parent.bottom
+            top: parent.top
+        }
 
         Rectangle {
             id: profile
             color: "#0e1621"
             height: 54
-            anchors.left:  parent.left
-            anchors.right: parent.right
-            anchors.top: parent.top
+            anchors{
+                left:  parent.left
+                right: parent.right
+                top: parent.top
+            }
 
             Rectangle {
                 id: colorOverlayProfile
@@ -37,15 +41,8 @@ Window {
                 anchors.margins: 1
                 color: "#262d37"
                 opacity: 0
-
                 visible: false
-
-                Behavior on opacity {
-                    NumberAnimation {
-                        duration: 300
-                        easing.type: Easing.OutQuad
-                    }
-                }
+                Behavior on opacity { NumberAnimation { duration: 300; easing.type: Easing.OutQuad } }
             }
             Image {
                 id: listImage
@@ -60,9 +57,7 @@ Window {
                 cursorShape: enabled ? Qt.PointingHandCursor : Qt.ArrowCursor
                 enabled: !isProfileExtended
 
-                onClicked: {
-                    isProfileExtended = !isProfileExtended
-                }
+                onClicked: isProfileExtended = !isProfileExtended
 
                 onPressed: {
                     colorOverlayProfile.visible = true
@@ -84,38 +79,34 @@ Window {
 
     ListView {
         id: listView
-        anchors.topMargin: 5
-        anchors.top : upLine.bottom
-        anchors.left: centerLine.right
-        anchors.leftMargin: 5
-        anchors.right: parent.right
-        anchors.bottom: downLine.top
         spacing: 5
-        boundsBehavior: Flickable.StopAtBounds
-
+        anchors{
+            topMargin: 5
+            top : upLine.bottom
+            left: centerLine.right
+            leftMargin: 5
+            right: parent.right
+            bottom: downLine.top
+        }
         ScrollBar.vertical: ScrollBar {
             visible: upLine.currentState === "default" ? false : true
-            background: Rectangle {
-                implicitWidth: 10
-                color: root.color
-            }
-            contentItem: Rectangle {
-                implicitWidth: 10
-                color: "gray"
-                radius: 5
-            }
+            background: Rectangle { implicitWidth: 10; color: root.color }
+            contentItem: Rectangle { implicitWidth: 10; color: "gray"; radius: 5 }
         }
 
+        boundsBehavior: Flickable.StopAtBounds
         model: listModel
 
         delegate: ChatBubble {
             id:chatBubble
-            anchors.margins: 10 * 2
+            anchors.margins: 20
             width: Math.min(root.width, listView.width * 0.45)
             property string message: model.text
             property string time: model.time
             property string name: model.name
             property bool isOutgoing: model.isOutgoing
+            property string fileUrl: model.fileUrl
+            property string fileName: model.fileName
         }
     }
 
@@ -127,28 +118,31 @@ Window {
         id: upLine
         color: "#17212b"
         height: 55
-        anchors.left:  centerLine.right
-        anchors.top: parent.top
-        anchors.right: parent.right
+        anchors{
+            left:  centerLine.right
+            top: parent.top
+            right: parent.right
+        }
+        visible: currentState === "default" ? false : true
         property string currentState: "default"
         property int user_id: 0
-        visible: currentState === "default" ? false : true
 
         Text {
             id: nameText
-            anchors.left: parent.left
-            anchors.leftMargin: 10
-            anchors.top: parent.top
-            anchors.topMargin: 10
             text: "Chat"
             font.pointSize: 10
             color: "white"
+            anchors{
+                left: parent.left
+                leftMargin: 10
+                top: parent.top
+                topMargin: 10
+            }
             MouseArea {
                 id: openProfileMouseArea
                 anchors.fill: parent
                 hoverEnabled: true
                 cursorShape: Qt.PointingHandCursor
-
                 onClicked: {
                     overlay.visible = true
                     myProfileWindow.open()
@@ -159,39 +153,38 @@ Window {
 
         Text {
             id: valueText
-            anchors.left: parent.left
-            anchors.leftMargin: 10
-            anchors.bottom: parent.bottom
-            anchors.bottomMargin: 10
             text: "5 participants"
             font.pointSize: 8
             color: "grey"
+            anchors{
+                left: parent.left
+                leftMargin: 10
+                bottom: parent.bottom
+                bottomMargin: 10
+            }
         }
     }
 
     MessageLine { id: downLine }
 
-    function onNewMessage(name,message,time,isOutgoing) {
-        //logger.qmlLog("INFO","Main.qml::onNewMessage","Upload new message to listModel");
-        listModel.append({text: message, time: time, name: name, isOutgoing: isOutgoing});
-        listView.positionViewAtIndex(listModel.count - 1, ListView.End);
-    }
 
     Rectangle {
         id: connectRect
         visible: false
-        anchors.left: parent.left
-        anchors.top: parent.top
-        anchors.right: parent.right
         color: "#9945464f"
         height: 25
+        anchors{
+            left: parent.left
+            top: parent.top
+            right: parent.right
+        }
 
         Text {
             id: textConnect
-            anchors.centerIn: parent
-            color: "#99FFFFFF"
-            font.pointSize: 10
             text: "Connection unsuccessful, try connecting again"
+            color: "#99FFFFFF"
+            anchors.centerIn: parent
+            font.pointSize: 10
         }
     }
 
@@ -199,27 +192,21 @@ Window {
         id:profileWindow
         anchors.top: parent.top
         anchors.bottom: parent.bottom
-
         x: isProfileExtended ? 0 : -width
-        Behavior on x {
-            NumberAnimation {
-                duration: 500
-                easing.type: Easing.InOutQuad
-            }
-        }
+
+        Behavior on x { NumberAnimation { duration: 500; easing.type: Easing.InOutQuad } }
     }
 
     MouseArea{
         id:leaveProfileArea
-        anchors.left: profileWindow.right
-        anchors.right: parent.right
-        anchors.top: parent.top
-        anchors.bottom: parent.bottom
         enabled: isProfileExtended
-
-        onClicked: {
-            isProfileExtended = !isProfileExtended
+        anchors{
+            left: profileWindow.right
+            right: parent.right
+            top: parent.top
+            bottom: parent.bottom
         }
+        onClicked: isProfileExtended = !isProfileExtended
     }
 
     MouseArea{
@@ -231,10 +218,7 @@ Window {
             bottom: parent.bottom
         }
         enabled: isSearchListExtended
-
-        onClicked: {
-            isSearchListExtended = !isSearchListExtended
-        }
+        onClicked: isSearchListExtended = !isSearchListExtended
     }
 
     Rectangle {
@@ -252,31 +236,30 @@ Window {
         id: myProfileWindow
     }
 
-    function connectError() {
-        connectRect.visible = true;
+    function onNewMessage(name,message,time,fileName,fileUrl,isOutgoing) {
+
+        listModel.append({text: message, time: time, name: name, isOutgoing: isOutgoing,fileName: fileName, fileUrl: fileUrl});
+        listView.positionViewAtIndex(listModel.count - 1, ListView.End);
     }
 
-    function connectSuccess() {
-        connectRect.visible = false;
-    }
+    function connectError() { connectRect.visible = true; }
 
-    function onCheckActiveDialog(login,message,out,time)
+    function connectSuccess() { connectRect.visible = false; }
+
+    function onCheckActiveDialog(login,message,out,time,fileName,fileUrl)
     {
         logger.qmlLog("INFO","Main.qml::onCheckActiveDialog","Dialog active: " + (nameText.text === login));
         if (nameText.text === login)
         {
             if(out === "out") {
-                onNewMessage(userlogin,message,time,true);
+                onNewMessage(userlogin,message,time,fileName,fileUrl,true);
             } else {
-                onNewMessage(login,message,time,false);
+                onNewMessage(login,message,time,fileName,fileUrl,false);
             }
         }
     }
 
-    function onClearMainListView()
-    {
-        listModel.clear();
-    }
+    function onClearMainListView() { listModel.clear(); }
 
     Component.onCompleted: {
         clearMainListView.connect(onClearMainListView);

@@ -193,6 +193,14 @@ void AccountManager::createConfigFile(const QString &userLogin, const QString &u
     checkConfigFile(settings);
 }
 
+void AccountManager::checkAndSendAvatarUpdate(const QString &avatar_url, const int &user_id)
+{
+    logger->log(Logger::INFO,"accountmanager.cpp::checkAndSendAvatarUpdate","checkAndSendAvatarUpdate starts");
+    if(!isAvatarUpToDate(avatar_url,user_id)) {
+        emit sendAvatarUrl(avatar_url,user_id);
+    }
+}
+
 void AccountManager::processingLoginResultsFromServer(const QJsonObject &loginResultsJson)
 {
     QString success = loginResultsJson["success"].toString();
@@ -200,17 +208,11 @@ void AccountManager::processingLoginResultsFromServer(const QJsonObject &loginRe
     QString password = loginResultsJson["password"].toString();
     int userId = loginResultsJson["user_id"].toInt();
 
-    QString imageString = loginResultsJson["profileImage"].toString();
-    QByteArray imageData = QByteArray::fromBase64(imageString.toLatin1());
+    QString avatar_url = loginResultsJson["avatar_url"].toString();
 
     if(success == "ok")
     {
-        QImage image;
-        image.loadFromData(imageData);
-        QString filePath(QCoreApplication::applicationDirPath() + "/resources/images/avatar.png");
-        if (!image.save(filePath)) {
-            logger->log(Logger::ERROR,"accountmanager.cpp::processingLoginResultsFromServer","Failed to save image");
-        }
+        checkAndSendAvatarUpdate(avatar_url,userId);
 
         QDir dir(QCoreApplication::applicationDirPath() + "/resources/messages");
         if (!dir.exists()) {
@@ -237,8 +239,7 @@ void AccountManager::processingLoginResultsFromServer(const QJsonObject &loginRe
             logger->log(Logger::INFO,"accountmanager.cpp::processingLoginResultsFromServer","File exist");
         }
 
-
-        emit loginSuccess(name);
+        emit loginSuccess(name, userId);
         emit newAccountLoginSuccessful(pathToMessages);
         createConfigFile(name,password);
         updatingChats();
@@ -271,8 +272,14 @@ void AccountManager::processingPersonalMessageFromServer(const QJsonObject &pers
     QString time = personalMessageJson["time"].toString();
     int message_id = personalMessageJson["message_id"].toInt();
     int dialog_id = personalMessageJson["dialog_id"].toInt();
+    QString fileUrl = "";
+    if(personalMessageJson.contains("fileUrl"))
+    {
+        fileUrl = personalMessageJson["fileUrl"].toString();
+    }
     QString login;
     QString out = "";
+    QString avatar_url;
     QString fullDate = "not:done(processingPersonalMessageFromServer)";
     int id;
 
@@ -282,16 +289,30 @@ void AccountManager::processingPersonalMessageFromServer(const QJsonObject &pers
     {
         login = personalMessageJson["receiver_login"].toString();
         id = personalMessageJson["receiver_id"].toInt();
+        avatar_url = personalMessageJson["receiver_avatar_url"].toString();
         out = "out";
-        emit saveMessageToJson(login, message, out, time,fullDate, message_id,dialog_id,id);
+        emit saveMessageToJson(login, message, out, time,fullDate, message_id,dialog_id,id,fileUrl);
     }
     else
     {
         login = personalMessageJson["sender_login"].toString();
         id = personalMessageJson["sender_id"].toInt();
-        emit saveMessageToJson(login, message, out, time, fullDate, message_id,dialog_id,id);
+        avatar_url = personalMessageJson["sender_avatar_url"].toString();
+
+        emit saveMessageToJson(login, message, out, time, fullDate, message_id,dialog_id,id,fileUrl);
     }
-    emit checkActiveDialog(login,message,out,time);
+
+    checkAndSendAvatarUpdate(avatar_url,id);
+
+    QString fileName = "";
+    if(fileUrl != "") {
+        int underscoreIndex = fileUrl.indexOf('_');
+        if (underscoreIndex != -1 && underscoreIndex + 1 < fileUrl.length()) {
+            fileName = fileUrl.mid(underscoreIndex + 1);
+        }
+    }
+
+    emit checkActiveDialog(login,message,out,time,fileName,fileUrl);
 }
 
 void AccountManager::processingSearchDataFromServer(const QJsonObject &searchDataJson)
@@ -302,6 +323,9 @@ void AccountManager::processingSearchDataFromServer(const QJsonObject &searchDat
         QJsonObject userObj = value.toObject();
         int id = userObj.value("id").toInt();
         QString userlogin = userObj.value("userlogin").toString();
+        QString avatar_url = userObj.value("avatar_url").toString();
+        checkAndSendAvatarUpdate(avatar_url,id);
+
         emit newSearchUser(userlogin,id);
     }
 }
@@ -350,6 +374,38 @@ void AccountManager::setActiveUser(const QString &userName, const int &userId)
 void AccountManager::setLogger(Logger *logger)
 {
     this->logger = logger;
+}
+
+bool AccountManager::isAvatarUpToDate(QString avatar_url, int user_id)
+{
+    QFile avatar(QCoreApplication::applicationDirPath() + "/avatars/" + activeUserName + "/" + QString::number(user_id) + ".png");
+    if(!avatar.open(QIODevice::ReadWrite)) {
+        logger->log(Logger::INFO,"accountmanager.cpp::isAvatarUpToDate", "Avatar not downloaded");
+        return false;
+    }
+
+    QFile avatarChecker(QCoreApplication::applicationDirPath() + "/.fileChecker/" + activeUserName + "/avatarChecker.json");
+    if(!avatarChecker.open(QIODevice::ReadWrite)) {
+        logger->log(Logger::WARN,"accountmanager.cpp::isAvatarUpToDate", "Failed to open avatarChecker");
+        return false;
+    }
+    QByteArray avatarCheckerData = avatarChecker.readAll();
+    avatarChecker.close();
+    QJsonDocument avatarCheckerDoc = QJsonDocument::fromJson(avatarCheckerData);
+    QJsonArray avatarCheckerArray = avatarCheckerDoc.array();
+
+    for (const auto &item : avatarCheckerArray) {
+        if (item.isObject()) {
+            QJsonObject jsonObject = item.toObject();
+
+            if (jsonObject.contains("user_id") && jsonObject.contains("avatar_url")) {
+                if ((jsonObject["user_id"].toInt() == user_id) and (jsonObject["avatar_url"].toString() == avatar_url)) {
+                    return true;
+                }
+            }
+        }
+    }
+    return false;
 }
 
 void AccountManager::updatingChats()

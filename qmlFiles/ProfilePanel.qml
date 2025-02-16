@@ -11,6 +11,15 @@ Rectangle {
     anchors.top: parent.top
     anchors.bottom: parent.bottom
 
+    Timer {
+        interval: 1000
+        running: true
+        repeat: true
+        onTriggered: {
+            profileImage.source = avatarSource + activeUserId + ".png?" + new Date().getTime();
+        }
+    }
+
     Column {
         anchors.top: parent.top
         anchors.topMargin: 20
@@ -30,7 +39,7 @@ Rectangle {
             clip: true
             Image {
                 id: profileImage
-                source: "../images/avatar.png"
+                source: avatarSource + activeUserId + ".png?" + new Date().getTime()
                 width: parent.width
                 height: parent.height
                 cache: false
@@ -71,6 +80,7 @@ Rectangle {
                     width: userListView.width
                     color: "#1e2a36"
                     height: 30
+                    property int user_id: id
 
                     Item {
                         anchors.fill: parent
@@ -87,7 +97,7 @@ Rectangle {
                             clip: true
                             Image {
                                 anchors.fill: parent
-                                source: avatarSource
+                                source: avatarSource + user_id + ".png"
                                 fillMode: Image.PreserveAspectFit
                             }
                         }
@@ -315,13 +325,13 @@ Rectangle {
     }
 
     function clearUserList() {
-    userListModel.clear();
-}
+        userListModel.clear();
+    }
 
     Component.onCompleted: {
-    newUser.connect(onNewUser);
-    clearUserListModel.connect(clearUserList);
-}
+        newUser.connect(onNewUser);
+        clearUserListModel.connect(clearUserList);
+    }
 
 
 }

@@ -24,6 +24,8 @@ public:
     void createConfigFile(const QString &userLogin, const QString &userPassword);
 
 public slots:
+    void checkAndSendAvatarUpdate(const QString &avatar_url,const int &user_id);
+
     void checkConfigFile(const QSettings& settings);
 
     void processingLoginResultsFromServer(const QJsonObject &loginResultsJson);
@@ -50,11 +52,12 @@ signals:
 
     void saveMessageFromDatabase(QJsonObject &chatsUpdateDataJson);
     void saveMessageToJson(QString &userlogin, QString &message, QString &out, QString &time,
-                           QString &fullDate, int message_id, int dialog_id, int id);
+                           QString &fullDate, int message_id, int dialog_id, int id, QString &fileUrl);
 
-    void checkActiveDialog(QString login,QString message, QString out,QString time);
+    void checkActiveDialog(QString login,QString message, QString out,
+                           QString time,QString fileName,QString fileUrl);
 
-    void loginSuccess(QString &name);
+    void loginSuccess(QString &name, int &user_id);
     void loginFail();
     void transferUserNameAndIdAfterLogin(const QString &activeUserName,const int &activeUserId);
 
@@ -69,8 +72,13 @@ signals:
 
     void clientLogout();
 
+    void getFile(const QString& fileUrl);
+    void sendAvatarUrl(const QString &avatar_url,const int& user_id);
+
     void newSearchUser(QString &userlogin,int &id);
 private:
+    bool isAvatarUpToDate(QString avatar_url,int user_id);
+
     int user_id;
     QString activeUserName;
 

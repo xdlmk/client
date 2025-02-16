@@ -3,9 +3,8 @@ import QtQuick.Controls
 
 Item {
     id: root
-
     width: Math.min(lblText.implicitWidth + 20, listView.width * 0.75)
-    height: lblText.implicitHeight + lblTime.implicitHeight + nameText.implicitHeight + 5
+    height: lblText.implicitHeight + lblTime.implicitHeight + nameText.implicitHeight + (fileText.visible ? fileText.implicitHeight + 10 : 0) + 10
 
     Rectangle {
         id: rectBubble
@@ -28,13 +27,38 @@ Item {
             color: generateColor(name)
             wrapMode: Text.WrapAnywhere
         }
+
+        Text {
+            id: fileText
+            visible: fileName !== ""
+            text: fileName
+            height: fileText.visible ? implicitHeight : 0
+            width: fileText.visible ? implicitWidth : 0
+            anchors {
+                left: parent.left
+                leftMargin: 5
+                top: nameText.bottom
+                topMargin: fileText.visible ? 5 : 0
+            }
+            font.pointSize: 10
+            color: isOutgoing ? "white" : "#e4ecf2"
+            font.bold: true
+            MouseArea {
+                anchors.fill: parent
+                cursorShape: Qt.PointingHandCursor
+                onClicked: {
+                    client.getFile(fileUrl);
+                }
+            }
+        }
+
         Text{
             id: lblText
             anchors{
                 left: parent.left
                 leftMargin: 5
-                top: nameText.top
-                topMargin: 15
+                top: fileText.visible ? fileText.bottom : nameText.bottom
+                topMargin: 5
             }
             text: message
             width: parent.width - 20
@@ -42,6 +66,7 @@ Item {
             color: isOutgoing ? "white" : "#e4ecf2"
             wrapMode: Text.WrapAnywhere
         }
+
         Text {
             id: lblTime
             anchors{

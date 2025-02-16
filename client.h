@@ -23,6 +23,7 @@
 #include "accountmanager.h"
 #include "messagemanager.h"
 #include "networkmanager.h"
+#include "filemanager.h"
 #include "Logger/logger.h"
 
 class Client : public QObject
@@ -33,14 +34,16 @@ public:
     explicit Client(QObject *parent = nullptr);
 
     AccountManager* getAccountManager();
+    FileManager *getFileManager();
 
 signals:
-    void newMessage(QString username,QString message,QString time, bool isOutgoing);
+    void newMessage(QString username,QString message,QString time,
+                    QString fileUrl,QString fileName, bool isOutgoing);
 
     void connectionSuccess();
     void connectionError();
 
-    void loginSuccess(QString &name);
+    void loginSuccess(QString &name, int &user_id);
     void loginFail();
 
     void registrationSuccess();
@@ -51,7 +54,8 @@ signals:
     void loadingPersonalChat(const QString userlogin);
 
     void showPersonalChat(QString login,QString message, int id, QString out);
-    void checkActiveDialog(QString login,QString message, QString out,QString time);
+    void checkActiveDialog(QString login,QString message, QString out,
+                           QString time,QString fileName,QString fileUrl);
 
     void changeReceiverUserSignal(QString userlogin,int id);
 
@@ -60,6 +64,7 @@ signals:
     void addAccount();
 
     void sendPersonalMessage(const QString &message, const QString &receiver_login, const int &receiver_id);
+    void sendPersonalMessageWithFile(const QString &message, const QString &receiver_login, const int &receiver_id, const QString& filePath);
     void sendSearchToServer(const QString &searchable);
     void sendLoginRequest(QString userlogin,QString password);
     void sendRegisterRequest(const QString login, const QString password);
@@ -78,12 +83,15 @@ signals:
 
     void changeActiveAccount(QString username);
 
+    void getFile(const QString& fileUrl);
+
     void setLoggers(Logger* logger);
 private:
     Logger* logger;
     NetworkManager *networkManager;
     MessageManager *messageManager;
     AccountManager *accountManager;
+    FileManager *fileManager;
 
     void setLogger(Logger* logger);
 };

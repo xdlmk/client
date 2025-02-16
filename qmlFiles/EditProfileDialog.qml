@@ -100,7 +100,7 @@ Dialog {
             clip: true
             Image {
                 anchors.fill: parent
-                source: avatarSource
+                source: avatarSource + user_id + ".png"
                 fillMode: Image.PreserveAspectFit
             }
         }

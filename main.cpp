@@ -1,4 +1,4 @@
-#include <QGuiApplication>
+#include <QApplication>
 #include <QQmlApplicationEngine>
 
 #include <QQmlEngine>
@@ -13,11 +13,12 @@
 #include "accountmanager.h"
 #include "messagemanager.h"
 #include "networkmanager.h"
+#include "filemanager.h"
 #include "Logger/logger.h"
 
 int main(int argc, char *argv[])
 {
-    QGuiApplication app(argc, argv);
+    QApplication app(argc, argv);
     QQuickStyle::setStyle("Basic");
 
     QQmlApplicationEngine engine;
@@ -30,6 +31,8 @@ int main(int argc, char *argv[])
 
     Client client;
     Logger logger;
+    FileManager* fileManager = client.getFileManager();
+
     client.setLoggers(&logger);
 
     AccountManager* accountManager = client.getAccountManager();
@@ -40,6 +43,7 @@ int main(int argc, char *argv[])
 
     engine.rootContext()->setContextObject(&client);
     engine.rootContext()->setContextProperty("client",&client);
+    engine.rootContext()->setContextProperty("fileManager",fileManager);
     engine.rootContext()->setContextProperty("logger",&logger);
 
     QObject::connect(
@@ -65,7 +69,7 @@ int main(int argc, char *argv[])
         }
     });
 
-    QObject::connect(&client, &Client::loginSuccess, [&engine, mainUrl](QString userLogin) {
+    QObject::connect(&client, &Client::loginSuccess, [&engine, mainUrl](QString userLogin, int user_id) {
         QList<QObject*> rootObjects = engine.rootObjects();
         for (QObject *rootObject : rootObjects) {
             if (rootObject) {
@@ -74,6 +78,7 @@ int main(int argc, char *argv[])
         }
         engine.clearComponentCache();
         engine.rootContext()->setContextProperty("userlogin", userLogin);
+        engine.rootContext()->setContextProperty("activeUserId", user_id);
         engine.load(mainUrl);
     });
 

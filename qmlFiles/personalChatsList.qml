@@ -21,6 +21,16 @@ Rectangle {
             height: 60
             property int user_id: id
             property string currentState: currentStateText
+
+            Timer {
+                interval: 1000
+                running: true
+                repeat: true
+                onTriggered: {
+                    profileImage.source = avatarSource + user_id + ".png?" + new Date().getTime();
+                }
+            }
+
             Item {
                 anchors.fill: parent
                 anchors.leftMargin: 10
@@ -40,8 +50,9 @@ Rectangle {
                         topMargin: 6
                     }
                     Image {
+                        id:profileImage
                         anchors.fill: parent
-                        source: avatarSource
+                        source: avatarSource + user_id + ".png?" + new Date().getTime()
                         fillMode: Image.PreserveAspectFit
                     }
                 }
