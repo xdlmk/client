@@ -69,6 +69,10 @@ void FileManager::uploadFiles(const QJsonObject &fileDataJson)
 
         file.write(fileData);
         file.close();
+    } else {
+        if (!QDesktopServices::openUrl(QUrl::fromLocalFile(QCoreApplication::applicationDirPath() + "/uploads/" + activeUserName + "/" + fileUrl))) {
+            logger->log(Logger::WARN,"filemanager.cpp::uploadFiles", "Failed to open file");
+        }
     }
 }
 
@@ -200,6 +204,7 @@ bool FileManager::checkJsonForMatches(QJsonArray &checkerArray, const QByteArray
                 QString localFileName = jsonObject["fileName"].toString();
                 QFile file(filesDir + "/" + localFileName);
                 if(file.exists()) {
+                    fileUrl = localFileName;
                     return true;
                 } else {
                     checkerArray.removeAt(i);

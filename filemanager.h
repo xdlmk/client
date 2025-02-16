@@ -10,6 +10,8 @@
 
 #include <QFile>
 #include <QFileDialog>
+#include <QDesktopServices>
+#include <QUrl>
 
 #include <QJsonObject>
 #include <QJsonArray>
