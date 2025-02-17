@@ -29,13 +29,16 @@ public slots:
     void sendData(const QJsonObject &jsonToSend);
     void sendToFileServer(const QJsonDocument &doc);
     void sendFile(const QString &filePath);
+    void sendAvatar(const QString &avatarPath);
     void getFile(const QString& fileUrl);
 
+    void setActiveUser(const QString &userName,const int &userId);
     void setLogger(Logger *logger);
 signals:
     void dataReceived(const QJsonDocument &doc);
     void uploadFiles(const QJsonObject &fileDataJson);
     void uploadAvatar(const QJsonObject &avatarDataJson);
+    void sendAvatarUrl(const QString &avatar_url,const int& user_id);
 
     void messageReceived(const QJsonObject &receivedMessageJson);
     void loginResultsReceived(const QJsonObject &loginResultsJson);
@@ -58,6 +61,9 @@ private slots:
     void onFileServerReceived();
 
 private:
+    QString activeUserLogin;
+    int activeUserId;
+
     QTcpSocket* fileSocket;
     QTcpSocket* socket;
     QTimer reconnectTimer;

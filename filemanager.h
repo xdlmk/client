@@ -28,7 +28,7 @@ public:
     explicit FileManager(QObject *parent = nullptr);
     void setActiveUser(const QString &userName, const int &userId);
 
-    Q_INVOKABLE QString openFile();
+    Q_INVOKABLE QString openFile(QString type);
 signals:
     void sendToFileServer(const QJsonDocument& avatarUrlDoc);
 

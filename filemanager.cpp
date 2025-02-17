@@ -10,21 +10,32 @@ void FileManager::setActiveUser(const QString &userName, const int &userId)
     activeUserId = userId;
 }
 
-QString FileManager::openFile()
+QString FileManager::openFile(QString type)
 {
-    QString filePath = QFileDialog::getOpenFileName(
-        nullptr,
-        "Select file",
-        "~",
-        "All files (*)"
-        );
-    return filePath;
+    if ( type == "Image") {
+        QString filePath = QFileDialog::getOpenFileName(
+            nullptr,
+            "Select an image file",
+            "~",
+            "Image files (*.png *.jpeg *.jpg)"
+            );
+        return filePath;
+    } else {
+        QString filePath = QFileDialog::getOpenFileName(
+            nullptr,
+            "Select file",
+            "~",
+            "All files (*)"
+            );
+        return filePath;
+    }
+    return "";
 }
 
 void FileManager::sendAvatarUrl(const QString &avatar_url,const int& user_id)
 {
     QJsonObject avatarUrlJson;
-    avatarUrlJson["flag"] = "avatar";
+    avatarUrlJson["flag"] = "avatarUrl";
     avatarUrlJson["avatar_url"] = avatar_url;
     avatarUrlJson["user_id"] = user_id;
     QJsonDocument doc(avatarUrlJson);

@@ -58,6 +58,7 @@ Client::Client(QObject *parent)
 
     connect(accountManager,&AccountManager::transferUserNameAndIdAfterLogin,messageManager,&MessageManager::setActiveUser);
     connect(accountManager,&AccountManager::transferUserNameAndIdAfterLogin,accountManager,&AccountManager::setActiveUser);
+    connect(accountManager,&AccountManager::transferUserNameAndIdAfterLogin,networkManager,&NetworkManager::setActiveUser);
     connect(accountManager,&AccountManager::transferUserNameAndIdAfterLogin,fileManager,&FileManager::setActiveUser);
 
     connect(messageManager,&MessageManager::newMessage,this,&Client::newMessage);
@@ -77,7 +78,9 @@ Client::Client(QObject *parent)
     connect(this,&Client::getFile,networkManager,&NetworkManager::getFile);
     connect(fileManager,&FileManager::sendToFileServer,networkManager,&NetworkManager::sendToFileServer);
     connect(accountManager,&AccountManager::sendAvatarUrl,fileManager,&FileManager::sendAvatarUrl);
+    connect(networkManager,&NetworkManager::sendAvatarUrl,fileManager,&FileManager::sendAvatarUrl);
     connect(messageManager,&MessageManager::checkAndSendAvatarUpdate,accountManager,&AccountManager::checkAndSendAvatarUpdate);
+    connect(this,&Client::sendNewAvatar,networkManager,&NetworkManager::sendAvatar);
 
     connect(this,&Client::setLoggers,this,&Client::setLogger);
     connect(this,&Client::setLoggers,accountManager,&AccountManager::setLogger);

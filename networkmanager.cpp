@@ -25,7 +25,18 @@ NetworkManager::NetworkManager(QObject *parent)
 
 void NetworkManager::connectToServer()
 {
-    socket->connectToHost("127.0.0.1",2020);
+    //
+    QFile file("ip.txt");
+    if (!file.exists() || file.size() == 0) {
+        file.open(QIODevice::WriteOnly | QIODevice::Text);
+        file.write("127.0.0.1\n");
+        file.close();
+    }
+    file.open(QIODevice::ReadOnly | QIODevice::Text);
+    QString ip = QString::fromUtf8(file.readLine()).trimmed();
+    file.close();
+    //
+    socket->connectToHost(ip,2020);
 }
 
 void NetworkManager::sendData(const QJsonObject &jsonToSend)
@@ -55,7 +66,18 @@ void NetworkManager::sendToFileServer(const QJsonDocument &doc)
     out.writeRawData(fileDataOut.data(),fileDataOut.size());
 
     if(fileSocket->state() == QAbstractSocket::UnconnectedState){
-        fileSocket->connectToHost("127.0.0.1",2021);
+        //
+        QFile file("ip.txt");
+        if (!file.exists() || file.size() == 0) {
+            file.open(QIODevice::WriteOnly | QIODevice::Text);
+            file.write("127.0.0.1\n");
+            file.close();
+        }
+        file.open(QIODevice::ReadOnly | QIODevice::Text);
+        QString ip = QString::fromUtf8(file.readLine()).trimmed();
+        file.close();
+        //
+        fileSocket->connectToHost(ip,2021);
         if (!fileSocket->waitForConnected(5000)) {
             logger->log(Logger::WARN,"networkmanager.cpp::sendFile","Failed to connect to fileServer");
         }
@@ -79,6 +101,30 @@ void NetworkManager::sendFile(const QString &filePath)
     file.close();
 
     QJsonObject fileDataJson;
+    fileDataJson["flag"] = "file";
+    fileDataJson["fileName"] = fileInfo.baseName();
+    fileDataJson["fileExtension"] = fileInfo.suffix();
+    fileDataJson["fileData"] = QString(fileData.toBase64());
+
+    QJsonDocument doc(fileDataJson);
+    sendToFileServer(doc);
+}
+
+void NetworkManager::sendAvatar(const QString &avatarPath)
+{
+    logger->log(Logger::INFO,"networkmanager.cpp::sendAvatar","Sending avatar");
+    QFile file(avatarPath);
+    QFileInfo fileInfo(avatarPath);
+    if (!file.open(QIODevice::ReadOnly)) {
+        logger->log(Logger::WARN,"networkmanager.cpp::sendAvatar","Failed open avatar");
+    }
+
+    QByteArray fileData = file.readAll();
+    file.close();
+
+    QJsonObject fileDataJson;
+    fileDataJson["flag"] = "newAvatarData";
+    fileDataJson["user_id"] = activeUserId;
     fileDataJson["fileName"] = fileInfo.baseName();
     fileDataJson["fileExtension"] = fileInfo.suffix();
     fileDataJson["fileData"] = QString(fileData.toBase64());
@@ -91,9 +137,16 @@ void NetworkManager::getFile(const QString &fileUrl)
 {
     logger->log(Logger::INFO,"networkmanager.cpp::getFile","getFile starts");
     QJsonObject fileUrlJson;
+    fileUrlJson["flag"] = "fileUrl";
     fileUrlJson["fileUrl"] = fileUrl;
     QJsonDocument doc(fileUrlJson);
     sendToFileServer(doc);
+}
+
+void NetworkManager::setActiveUser(const QString &userName, const int &userId)
+{
+    activeUserId = userId;
+    activeUserLogin = userName;
 }
 
 void NetworkManager::setLogger(Logger *logger)
@@ -230,6 +283,9 @@ void NetworkManager::onFileServerReceived()
         }
 
         QJsonObject receivedFromServerJson = doc.object();
+        qDebug() << "Flag FileJson to read:" << receivedFromServerJson["flag"].toString();
+        qDebug() << "Flag user_id to read:" << receivedFromServerJson["user_id"].toInt();
+        qDebug() << "Flag avatarUrl to read:" << receivedFromServerJson["avatar_url"].toString();
         if(receivedFromServerJson["flag"].toString() == "fileUrl") {
             QString fileUrl = receivedFromServerJson["fileUrl"].toString();
             emit sendPersonalMessageWithFile(fileUrl);
@@ -237,12 +293,12 @@ void NetworkManager::onFileServerReceived()
             emit uploadFiles(receivedFromServerJson);
         } else if (receivedFromServerJson["flag"].toString() == "avatarData") {
             emit uploadAvatar(receivedFromServerJson);
+        } else if (receivedFromServerJson["flag"].toString() == "avatarUrl") {
+            emit sendAvatarUrl(receivedFromServerJson["avatar_url"].toString(),receivedFromServerJson["user_id"].toInt());
         }
 
     } else {
         logger->log(Logger::ERROR, "networkmanager.cpp::onFileServerReceived", "Error reading data from socket: " + QString::number(in.status()));
     }
-
-    fileSocket->disconnect();
     blockSize = 0;
 }

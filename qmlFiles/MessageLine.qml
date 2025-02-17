@@ -78,12 +78,9 @@ Rectangle{
             MouseArea {
                 anchors.fill: parent
                 onClicked:{
-                    filePath = fileManager.openFile();
+                    filePath = fileManager.openFile("All");
                     if (filePath !== "") {
-                        console.log("Selected file path:", filePath);
                         fileLoad = true;
-                    } else {
-                        console.log("No file selected");
                     }
                 }
             }
@@ -130,6 +127,8 @@ Rectangle{
             else if (upLine.currentState == "personal") {
                 if(fileLoad) {
                     client.sendPersonalMessageWithFile(edtText.text, nameText.text,upLine.user_id,filePath)
+                    fileLoad = false;
+                    filePath = "";
                 } else {
                     client.sendPersonalMessage(edtText.text, nameText.text,upLine.user_id);
                 }

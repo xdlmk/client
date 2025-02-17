@@ -80,15 +80,15 @@ Rectangle {
 
     function onShowPersonalChat(userlogin,message,id,out)
     {
-            var exists = false;
-            for (var i = 0; i < personalChatsListModel.count; i++) {
-                var item = personalChatsListModel.get(i);
-                if (item.id === id) {
-                    exists = true;
-                    personalChatsListModel.remove(i);
-                    break;
-                }
+        var exists = false;
+        for (var i = 0; i < personalChatsListModel.count; i++) {
+            var item = personalChatsListModel.get(i);
+            if (item.id === id) {
+                exists = true;
+                personalChatsListModel.remove(i);
+                break;
             }
+        }
         var newPersChat;
         if(out === "out") {
             newPersChat = {"userlogin":userlogin,"currentStateText": "static", "message": "You: " + message , "id":id};

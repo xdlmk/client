@@ -17,6 +17,7 @@ Dialog {
     width: 400
     height: 500
     property string login: userlogin
+    property string newAvatarPath: ""
 
     Text{
         id:information
@@ -100,8 +101,37 @@ Dialog {
             clip: true
             Image {
                 anchors.fill: parent
-                source: avatarSource + user_id + ".png"
+                source: avatarSource + activeUserId + ".png?" + timestamp
                 fillMode: Image.PreserveAspectFit
+            }
+        }
+        Rectangle {
+            id:changeUserAvatarButton
+            width: 30
+            height: 30
+            radius: 15
+            anchors{
+                right: userAvatar.right
+                bottom: userAvatar.bottom
+            }
+            color: "#2b5278"
+            border.color: "#182533"
+            Text {
+                text: "\u270E"
+                color:"#182533"
+                font.pointSize: 15
+                font.bold: true
+                anchors.centerIn: parent
+            }
+            MouseArea {
+                anchors.fill: parent
+                onClicked: {
+                    newAvatarPath = fileManager.openFile("Image");
+                    if (newAvatarPath != "") {
+                        client.sendNewAvatar(newAvatarPath);
+                        newAvatarPath = "";
+                    }
+                }
             }
         }
         Text{
@@ -235,6 +265,7 @@ Dialog {
     onOpened: {
         myProfileWindow.opacity = 0
         myProfileEdit.opacity = 1
+        informationListModel.clear();
         informationListModel.append({ iconSource: "", informationName: "Name", information: "name" });
         informationListModel.append({ iconSource: "", informationName: "Phone number", information: "+810128919" });
         informationListModel.append({ iconSource: "", informationName: "Username", information: login });

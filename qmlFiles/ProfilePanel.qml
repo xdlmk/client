@@ -11,15 +11,6 @@ Rectangle {
     anchors.top: parent.top
     anchors.bottom: parent.bottom
 
-    Timer {
-        interval: 1000
-        running: true
-        repeat: true
-        onTriggered: {
-            profileImage.source = avatarSource + activeUserId + ".png?" + new Date().getTime();
-        }
-    }
-
     Column {
         anchors.top: parent.top
         anchors.topMargin: 20
@@ -39,7 +30,7 @@ Rectangle {
             clip: true
             Image {
                 id: profileImage
-                source: avatarSource + activeUserId + ".png?" + new Date().getTime()
+                source: avatarSource + activeUserId + ".png?" + timestamp
                 width: parent.width
                 height: parent.height
                 cache: false
@@ -97,7 +88,7 @@ Rectangle {
                             clip: true
                             Image {
                                 anchors.fill: parent
-                                source: avatarSource + user_id + ".png"
+                                //source: avatarSource + user_id + ".png?" + timestamp
                                 fillMode: Image.PreserveAspectFit
                             }
                         }
@@ -222,6 +213,7 @@ Rectangle {
                     onClicked: {
                         isProfileExtended = false
                         overlay.visible = true
+                        myProfileWindow.setUserId(activeUserId)
                         myProfileWindow.open()
                     }
 

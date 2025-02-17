@@ -13,6 +13,7 @@ Window {
     property bool isProfileExtended: false
     property bool isSearchListExtended: false
     property string avatarSource: "../../avatars/" + userlogin + "/"
+    property int timestamp: new Date().getTime()
 
     Rectangle {
         id: leftLine
@@ -145,6 +146,7 @@ Window {
                 cursorShape: Qt.PointingHandCursor
                 onClicked: {
                     overlay.visible = true
+                    myProfileWindow.setUserId(upLine.user_id);
                     myProfileWindow.open()
                     myProfileWindow.userProfile(nameText.text)
                 }
@@ -234,6 +236,17 @@ Window {
 
     MyProfile{
         id: myProfileWindow
+        user_id: 0
+    }
+
+    Timer {
+        id: updateAvatarsTimer
+        interval: 1000
+        running: true
+        repeat: true
+        onTriggered: {
+            timestamp = new Date().getTime();
+        }
     }
 
     function onNewMessage(name,message,time,fileName,fileUrl,isOutgoing) {

@@ -93,7 +93,8 @@ Dialog {
         clip: true
         Image {
             anchors.fill: parent
-            source: avatarSource + user_id + ".png"
+            source: user_id !== 0 ? avatarSource + user_id + ".png?" + timestamp : ""
+            visible: source !== ""
             fillMode: Image.PreserveAspectFit
         }
     }
@@ -187,12 +188,18 @@ Dialog {
         myProfileWindow.opacity = 0
         login = userlogin
         editButton.visible = true
+        myProfileText.text = "My profile";
 
+    }
+
+    function setUserId(userId) {
+        user_id = userId;
     }
 
     function userProfile(userlogin)
     {
         login = userlogin
         editButton.visible = false
+        myProfileText.text = "Profile";
     }
 }
