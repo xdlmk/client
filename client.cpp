@@ -8,6 +8,7 @@ Client::Client(QObject *parent)
     messageManager = new MessageManager(this);
     fileManager = new FileManager(this);
     accountManager = new AccountManager(networkManager, this);
+    audioManager = new AudioManager(this);
 
     connect(networkManager,&NetworkManager::connectionSuccess,this,&Client::connectionSuccess);
     connect(networkManager,&NetworkManager::connectionError,this,&Client::connectionError);
@@ -87,6 +88,9 @@ Client::Client(QObject *parent)
     connect(this,&Client::setLoggers,messageManager,&MessageManager::setLogger);
     connect(this,&Client::setLoggers,networkManager,&NetworkManager::setLogger);
     connect(this,&Client::setLoggers,fileManager,&FileManager::setLogger);
+
+    connect(this,&Client::startRecording,audioManager,&AudioManager::startRecording, Qt::DirectConnection);
+    connect(this,&Client::stopRecording,audioManager,&AudioManager::stopRecording);
 }
 
 AccountManager* Client::getAccountManager() {

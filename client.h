@@ -24,6 +24,7 @@
 #include "messagemanager.h"
 #include "networkmanager.h"
 #include "filemanager.h"
+#include "audiomanager.h"
 #include "Logger/logger.h"
 
 class Client : public QObject
@@ -75,7 +76,10 @@ signals:
     void editName(QString editInformation);
     void editUniqueError();
     void unknownError();
-
+    ///////
+    void startRecording();
+    void stopRecording();
+    //////
     void clearMainListView();
     void newUser(QString username);
     void configCheck(const QSettings& settings);
@@ -93,6 +97,7 @@ private:
     MessageManager *messageManager;
     AccountManager *accountManager;
     FileManager *fileManager;
+    AudioManager *audioManager;
 
     void setLogger(Logger* logger);
 };

@@ -283,9 +283,6 @@ void NetworkManager::onFileServerReceived()
         }
 
         QJsonObject receivedFromServerJson = doc.object();
-        qDebug() << "Flag FileJson to read:" << receivedFromServerJson["flag"].toString();
-        qDebug() << "Flag user_id to read:" << receivedFromServerJson["user_id"].toInt();
-        qDebug() << "Flag avatarUrl to read:" << receivedFromServerJson["avatar_url"].toString();
         if(receivedFromServerJson["flag"].toString() == "fileUrl") {
             QString fileUrl = receivedFromServerJson["fileUrl"].toString();
             emit sendPersonalMessageWithFile(fileUrl);

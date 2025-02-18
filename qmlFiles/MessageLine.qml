@@ -11,6 +11,7 @@ Rectangle{
 
     property alias textColor: edtText.color
     property bool fileLoad: false
+    property bool isRecording: false
     property string filePath: ""
 
     anchors.right:  parent.right
@@ -94,9 +95,30 @@ Rectangle{
 
             Image {
                 id: buttonImage
+                visible: edtText.text.trim() !== ""
                 source: "../images/logo.png"
                 anchors.centerIn: parent
                 fillMode: Image.PreserveAspectFit
+            }
+
+            Rectangle {
+                id:showRecord
+                color: "#2b5278"
+                visible: isRecording
+                anchors.centerIn: buttonVoice
+                width: isRecording ? 30 : 0
+                height: isRecording ? 30 : 0
+                radius: isRecording ? 15 : 0
+                Behavior on width { NumberAnimation{duration:500} }
+                Behavior on height { NumberAnimation{duration:500} }
+                Behavior on radius { NumberAnimation{duration:500} }
+            }
+            Text {
+                id: buttonVoice
+                visible: edtText.text.trim() === ""
+                text: "\u{1F3A4}"
+                font.pointSize: 15
+                anchors.centerIn: parent
             }
 
             MouseArea {
@@ -105,7 +127,18 @@ Rectangle{
                 cursorShape: Qt.PointingHandCursor
 
                 onClicked: {
-                    wordProcessing();
+                    console.log(isRecording);
+                    /////////
+                    if (edtText.text.trim() === "" && !isRecording) {
+                        client.startRecording();
+                        isRecording = !isRecording;
+                    } else if (isRecording) {
+                        client.stopRecording();
+                        isRecording = !isRecording;
+                        filePath = "../../voiceMessage.wav";
+                        client.sendPersonalMessageWithFile("", nameText.text,upLine.user_id,filePath)
+                        /////////
+                    } else wordProcessing();
                 }
 
                 onPressed: {
