@@ -64,7 +64,6 @@ void FileManager::uploadFiles(const QJsonObject &fileDataJson)
             dir.mkpath(".");
         }
         fileUrl = extractFileName(fileUrl);
-        qDebug() << "File name from upload: "<<fileUrl;
         QFile file(QCoreApplication::applicationDirPath() + "/uploads/" + activeUserName + "/" + fileUrl);
         if (!file.open(QIODevice::WriteOnly)) {
             logger->log(Logger::WARN,"filemanager.cpp::uploadFiles", "Failed to save file");
@@ -84,6 +83,43 @@ void FileManager::uploadFiles(const QJsonObject &fileDataJson)
         if (!QDesktopServices::openUrl(QUrl::fromLocalFile(QCoreApplication::applicationDirPath() + "/uploads/" + activeUserName + "/" + fileUrl))) {
             logger->log(Logger::WARN,"filemanager.cpp::uploadFiles", "Failed to open file");
         }
+    }
+}
+
+void FileManager::uploadVoiceFile(const QJsonObject &fileDataJson)
+{
+    logger->log(Logger::INFO,"filemanager.cpp::uploadVoiceFile", "uploadVoiceFile start");
+    QString fileDataString = fileDataJson["fileData"].toString();
+    QByteArray fileData = QByteArray::fromBase64(fileDataString.toUtf8());
+    QString fileUrl = fileDataJson["fileName"].toString();
+
+    checkingForFileChecker();
+    QFile fileChecker(QCoreApplication::applicationDirPath() + "/.fileChecker/" + activeUserName + "/checker.json");
+    QJsonArray checkerArray = loadJsonArrayFromFile(fileChecker);
+
+    if(!checkJsonForMatches(checkerArray,fileData,fileUrl)) {
+        QDir dir(QCoreApplication::applicationDirPath() + "/uploads/" + activeUserName);
+        if (!dir.exists()) {
+            dir.mkpath(".");
+        }
+        fileUrl = extractFileName(fileUrl);
+        QFile file(QCoreApplication::applicationDirPath() + "/uploads/" + activeUserName + "/" + fileUrl);
+        if (!file.open(QIODevice::WriteOnly)) {
+            logger->log(Logger::WARN,"filemanager.cpp::uploadVoiceFile", "Failed to save voiceFile");
+            return;
+        }
+        if (!fileChecker.open(QIODevice::WriteOnly)) {
+            logger->log(Logger::WARN,"filemanager.cpp::uploadVoiceFile", "Failed to save fileChecker");
+            return;
+        }
+        QJsonDocument jsonDoc(checkerArray);
+        fileChecker.write(jsonDoc.toJson());
+        fileChecker.close();
+
+        file.write(fileData);
+        file.close();
+    } else {
+        emit playVoiceMessage(QCoreApplication::applicationDirPath() + "/uploads/" + activeUserName + "/" + fileUrl);
     }
 }
 
@@ -229,9 +265,7 @@ bool FileManager::checkJsonForMatches(QJsonArray &checkerArray, const QByteArray
     newFileObject["fileUrl"] = fileUrl;
     QString uniqName = generateUniqueFileName(extractFileName(fileUrl),filesDir);
     newFileObject["fileName"] = uniqName;
-    qDebug() << "1 File url from checkJson: " << fileUrl;
     fileUrl = replaceAfterUnderscore(fileUrl,uniqName);
-    qDebug() << "2 File url from checkJson: " << fileUrl;
     newFileObject["fileHash"] = calculateDataHash(fileData);
     checkerArray.append(newFileObject);
 

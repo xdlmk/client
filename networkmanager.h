@@ -31,12 +31,14 @@ public slots:
     void sendFile(const QString &filePath);
     void sendAvatar(const QString &avatarPath);
     void getFile(const QString& fileUrl);
+    void getVoice(const QString& fileUrl);
 
     void setActiveUser(const QString &userName,const int &userId);
     void setLogger(Logger *logger);
 signals:
     void dataReceived(const QJsonDocument &doc);
     void uploadFiles(const QJsonObject &fileDataJson);
+    void uploadVoiceFile(const QJsonObject &fileDataJson);
     void uploadAvatar(const QJsonObject &avatarDataJson);
     void sendAvatarUrl(const QString &avatar_url,const int& user_id);
 

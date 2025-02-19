@@ -21,6 +21,7 @@ Client::Client(QObject *parent)
     connect(networkManager,&NetworkManager::editResultsReceived,accountManager,&AccountManager::processingEditProfileFromServer);
     connect(networkManager,&NetworkManager::sendPersonalMessageWithFile,messageManager,&MessageManager::sendPersonalMessageWithFile);
     connect(networkManager,&NetworkManager::uploadFiles,fileManager,&FileManager::uploadFiles);
+    connect(networkManager,&NetworkManager::uploadVoiceFile,fileManager,&FileManager::uploadVoiceFile);
     connect(networkManager,&NetworkManager::uploadAvatar,fileManager,&FileManager::uploadAvatar);
 
     connect(accountManager,&AccountManager::loginSuccess,this,&Client::loginSuccess);
@@ -77,6 +78,7 @@ Client::Client(QObject *parent)
 
     connect(accountManager,&AccountManager::getFile,networkManager,&NetworkManager::getFile);
     connect(this,&Client::getFile,networkManager,&NetworkManager::getFile);
+    connect(this,&Client::getVoice,networkManager,&NetworkManager::getVoice);
     connect(fileManager,&FileManager::sendToFileServer,networkManager,&NetworkManager::sendToFileServer);
     connect(accountManager,&AccountManager::sendAvatarUrl,fileManager,&FileManager::sendAvatarUrl);
     connect(networkManager,&NetworkManager::sendAvatarUrl,fileManager,&FileManager::sendAvatarUrl);
@@ -89,8 +91,9 @@ Client::Client(QObject *parent)
     connect(this,&Client::setLoggers,networkManager,&NetworkManager::setLogger);
     connect(this,&Client::setLoggers,fileManager,&FileManager::setLogger);
 
-    connect(this,&Client::startRecording,audioManager,&AudioManager::startRecording, Qt::DirectConnection);
+    connect(this,&Client::startRecording,audioManager,&AudioManager::startRecording);
     connect(this,&Client::stopRecording,audioManager,&AudioManager::stopRecording);
+    connect(fileManager,&FileManager::playVoiceMessage,audioManager,&AudioManager::playAudio);
 }
 
 AccountManager* Client::getAccountManager() {

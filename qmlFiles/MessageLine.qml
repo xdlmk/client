@@ -1,5 +1,6 @@
 import QtQuick 2.15
 import QtQuick.Controls 2.15
+import QtCore
 import QtQuick.Layouts
 
 Rectangle{
@@ -127,7 +128,6 @@ Rectangle{
                 cursorShape: Qt.PointingHandCursor
 
                 onClicked: {
-                    console.log(isRecording);
                     /////////
                     if (edtText.text.trim() === "" && !isRecording) {
                         client.startRecording();
@@ -135,8 +135,7 @@ Rectangle{
                     } else if (isRecording) {
                         client.stopRecording();
                         isRecording = !isRecording;
-                        filePath = "../../voiceMessage.wav";
-                        client.sendPersonalMessageWithFile("", nameText.text,upLine.user_id,filePath)
+                        client.sendPersonalMessageWithFile("", nameText.text,upLine.user_id,"_voice")
                         /////////
                     } else wordProcessing();
                 }

@@ -47,7 +47,11 @@ Item {
                 anchors.fill: parent
                 cursorShape: Qt.PointingHandCursor
                 onClicked: {
-                    client.getFile(fileUrl);
+                    if(lblText.text !== "") {
+                        client.getFile(fileUrl);
+                    } else {
+                        client.getVoice(fileUrl);
+                    }
                 }
             }
         }

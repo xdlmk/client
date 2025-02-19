@@ -243,7 +243,8 @@ void MessageManager::saveMessageAndSendFile(const QString &message, const QStrin
         file.write(jsonData);
         file.close();
 
-        emit sendFile(filePath);
+        if(filePath == "_voice") emit sendFile(QCoreApplication::applicationDirPath() + "/voiceMessage.wav");
+        else emit sendFile(filePath);
     } else {
         logger->log(Logger::ERROR,"messagemanager.cpp::saveMessageAndSendFile", "File with message do not save");
     }
@@ -261,6 +262,7 @@ void MessageManager::sendPersonalMessageWithFile(const QString &fileUrl)
 
     QJsonObject personalMessageJson;
 
+    logger->log(Logger::DEBUG,"messagemanager.cpp::sendPersonalMessageWithFile","FileUrl = " + fileUrl);
     personalMessageJson["flag"] = "personal_message";
     personalMessageJson["message"] = jsonObject["message"].toString();
     personalMessageJson["fileUrl"] = fileUrl;

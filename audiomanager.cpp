@@ -21,9 +21,8 @@ void AudioManager::stopRecording() {
     recorder->stop();
 }
 
-void AudioManager::playAudio() {
-    QString tempPath = QDir::tempPath() + "/voice.wav";
-    player->setSource(QUrl::fromLocalFile(tempPath));
+void AudioManager::playAudio(const QString &voicePath) {
+    player->setSource(QUrl::fromLocalFile(voicePath));
     player->play();
     emit playbackStarted();
 

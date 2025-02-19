@@ -79,7 +79,7 @@ void NetworkManager::sendToFileServer(const QJsonDocument &doc)
         //
         fileSocket->connectToHost(ip,2021);
         if (!fileSocket->waitForConnected(5000)) {
-            logger->log(Logger::WARN,"networkmanager.cpp::sendFile","Failed to connect to fileServer");
+            logger->log(Logger::WARN,"networkmanager.cpp::sendToFileServer","Failed to connect to fileServer");
         }
     }
 
@@ -91,6 +91,7 @@ void NetworkManager::sendToFileServer(const QJsonDocument &doc)
 void NetworkManager::sendFile(const QString &filePath)
 {
     logger->log(Logger::INFO,"networkmanager.cpp::sendFile","Sending file");
+    logger->log(Logger::INFO,"networkmanager.cpp::sendFile","filePath = " + filePath);
     QFile file(filePath);
     QFileInfo fileInfo(filePath);
     if (!file.open(QIODevice::ReadOnly)) {
@@ -138,6 +139,16 @@ void NetworkManager::getFile(const QString &fileUrl)
     logger->log(Logger::INFO,"networkmanager.cpp::getFile","getFile starts");
     QJsonObject fileUrlJson;
     fileUrlJson["flag"] = "fileUrl";
+    fileUrlJson["fileUrl"] = fileUrl;
+    QJsonDocument doc(fileUrlJson);
+    sendToFileServer(doc);
+}
+
+void NetworkManager::getVoice(const QString &fileUrl)
+{
+    logger->log(Logger::INFO,"networkmanager.cpp::getVoice","getVoice starts");
+    QJsonObject fileUrlJson;
+    fileUrlJson["flag"] = "voiceFileUrl";
     fileUrlJson["fileUrl"] = fileUrl;
     QJsonDocument doc(fileUrlJson);
     sendToFileServer(doc);
@@ -292,6 +303,8 @@ void NetworkManager::onFileServerReceived()
             emit uploadAvatar(receivedFromServerJson);
         } else if (receivedFromServerJson["flag"].toString() == "avatarUrl") {
             emit sendAvatarUrl(receivedFromServerJson["avatar_url"].toString(),receivedFromServerJson["user_id"].toInt());
+        } else if (receivedFromServerJson["flag"].toString() == "voiceFileData") {
+            emit uploadVoiceFile(receivedFromServerJson);
         }
 
     } else {

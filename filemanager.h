@@ -31,11 +31,13 @@ public:
     Q_INVOKABLE QString openFile(QString type);
 signals:
     void sendToFileServer(const QJsonDocument& avatarUrlDoc);
+    void playVoiceMessage(const QString &voicePath);
 
 public slots:
     void sendAvatarUrl(const QString& avatar_url,const int& user_id);
     void setLogger(Logger* logger);
     void uploadFiles(const QJsonObject &fileDataJson);
+    void uploadVoiceFile(const QJsonObject &fileDataJson);
     void uploadAvatar(const QJsonObject &avatarDataJson);
 
 private:

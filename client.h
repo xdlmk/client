@@ -88,6 +88,7 @@ signals:
     void changeActiveAccount(QString username);
 
     void getFile(const QString& fileUrl);
+    void getVoice(const QString& fileUrl);
     void sendNewAvatar(const QString& avatarPath);
 
     void setLoggers(Logger* logger);
