@@ -275,7 +275,6 @@ bool FileManager::isFileDownloaded(const QString &fileUrl,QString &filePath,cons
 
         if (jsonFileUrl == fileUrl) {
             QFile file(downloadFilesDir + jsonFileUrl);
-            //logger->log(Logger::DEBUG,"filemanager.cpp::isFileDownloaded", "file path: " + downloadFilesDir + jsonFileUrl);
             if(file.exists()){
                 if (!file.open(QIODevice::ReadOnly)) {
                     logger->log(Logger::WARN,"filemanager.cpp::isFileDownloaded", "Failed to open file: " + file.errorString());

@@ -89,6 +89,7 @@ Client::Client(QObject *parent)
     connect(this,&Client::setLoggers,messageManager,&MessageManager::setLogger);
     connect(this,&Client::setLoggers,networkManager,&NetworkManager::setLogger);
     connect(this,&Client::setLoggers,fileManager,&FileManager::setLogger);
+    connect(this,&Client::setLoggers,audioManager,&AudioManager::setLogger);
 
     connect(messageManager,&MessageManager::sendToFileServer,networkManager,&NetworkManager::sendToFileServer);
 

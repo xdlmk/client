@@ -108,10 +108,8 @@ Item {
                             client.getFile(fileUrl,"voiceFileUrl");
                         } else if (audioPlayer.playbackState === MediaPlayer.PlayingState) {
                             audioPlayer.pause();
-                            playButtonText.text = "⏸";
                         } else if (audioPlayer.playbackState === MediaPlayer.PausedState) {
                             audioPlayer.play();
-                            playButtonText.text = "▶";
                         }
                     }
                 }
@@ -142,6 +140,30 @@ Item {
                 height: 5
                 color: "#182533"
                 radius: 2
+                MouseArea {
+                    id: dragArea
+                    anchors.fill: parent
+                    hoverEnabled: true
+                    cursorShape: Qt.SizeHorCursor
+                    property bool isDragging: false
+                    onPressed: {
+                        if (mouse.x > voiceLineTime.width - 5) {
+                            isDragging = true
+                            audioPlayer.pause();
+                        }
+                    }
+                    onPositionChanged: {
+                        if (isDragging) {
+                            let newWidth = Math.min(Math.max(mouse.x, 0), voiceLine.width)
+                            voiceLineTime.width = newWidth
+                            audioPlayer.position = audioPlayer.duration * (newWidth / voiceLine.width)
+                        }
+                    }
+
+                    onReleased: {
+                        isDragging = false
+                    }
+                }
             }
             Text {
                 id: lblCurrentTime
@@ -209,17 +231,21 @@ Item {
         onDurationChanged: lblDuration.text = formatTime(audioPlayer.duration)
         onPositionChanged: {
             lblCurrentTime.text = formatTime(audioPlayer.position);
-            //voiceLineTime.width = voiceLine.width * (audioPlayer.position/audioPlayer.duration);
+            voiceLineTime.width = voiceLine.width * (audioPlayer.position/audioPlayer.duration);
         }
         onPlaybackStateChanged: {
             if (playbackState === MediaPlayer.StoppedState) {
                 audioPlayer.position = 0;
                 lblCurrentTime.text = "00:00";
+            } else if (playbackState === MediaPlayer.PlayingState) {
+                playButtonText.text = "▶";
+            } else if (playbackState === MediaPlayer.PausedState) {
+                playButtonText.text = "⏸";
             }
         }
         onErrorOccurred: {
             if(error !== 1){
-            console.error("MediaPlayer error:", error, errorString);
+                console.error("MediaPlayer error:", error, errorString);
             }
         }
     }

@@ -7,7 +7,7 @@ Rectangle{
     readonly property int defMargin: 10
     property int maxHeight: 150
     color: "#17212b"
-    height: Math.max(Math.min(edtText.implicitHeight,maxHeight),54)
+    height: Math.max(Math.min(edtText.implicitHeight,maxHeight),54) + file.height + (file.visible ? 10 : 0)
     width: parent.width/2 + parent.width/4
 
     property alias textColor: edtText.color
@@ -20,8 +20,87 @@ Rectangle{
 
     visible: upLine.currentState === "default" ? false : true
 
+    Rectangle {
+        id:file
+        visible: fileLoad
+        enabled: visible
+        height: visible ? 60 : 0
+        width: visible ? 150 : 0
+        color: "#2b5278"
+        radius: 15
+        anchors{
+            top:parent.top
+            topMargin: 10
+            left: parent.left
+            leftMargin: 10
+        }
+        Rectangle {
+                id: fileIcon
+                width: 40
+                height: parent.height - 20
+                color: "#1e3a5f"
+                radius: 5
+                anchors {
+                    left: parent.left
+                    leftMargin: 5
+                    verticalCenter: parent.verticalCenter
+                }
+
+                Text {
+                    id: extensionText
+                    anchors.centerIn: parent
+                    text: getExtension(filePath)
+                    font.pointSize: 10
+                    color: "white"
+                }
+            }
+
+        Text {
+            id:fileName
+            text: shortenText(getFileNameFromPath(filePath), 15)
+            width: parent.width - fileIcon.width - closeButton.width - 20
+            anchors {
+                right: parent.right
+                rightMargin: 5
+                verticalCenter: parent.verticalCenter
+            }
+
+            font.pointSize: 10
+            color: "white"
+            elide: Text.ElideRight
+        }
+        Text{
+            id:closeButton
+            text: "✕"
+            color: "White"
+            font.pointSize: 9
+            font.bold: true
+            anchors{
+                right: parent.right
+                rightMargin: 5
+                top: parent.top
+                topMargin: 5
+            }
+            MouseArea {
+                anchors.fill: parent
+                hoverEnabled: true
+                cursorShape: Qt.PointingHandCursor
+                onClicked: {
+                    filePath = "";
+                    fileLoad = false;
+                }
+            }
+        }
+    }
+
     RowLayout {
-        anchors.fill: parent
+        anchors{
+            top:fileVisible ? file.bottom : parent.top
+            topMargin: 10
+            left:parent.left
+            right: parent.right
+            bottom: parent.bottom
+        }
         spacing: defMargin
 
         Layout.leftMargin: defMargin
@@ -83,6 +162,9 @@ Rectangle{
                     filePath = fileManager.openFile("All");
                     if (filePath !== "") {
                         fileLoad = true;
+                        extensionText.text = getExtension(filePath);
+                        fileName.text = shortenText(getFileNameFromPath(filePath),15);
+
                     }
                 }
             }
@@ -168,5 +250,31 @@ Rectangle{
 
             edtText.clear();
         }
+    }
+
+    function getFileNameFromPath(filePath) {
+        if (!filePath || filePath.trim() === "") {
+            return "";
+        }
+
+        var parts = filePath.split(/[\\/]/);
+        var fileName = parts[parts.length - 1];
+        return fileName;
+    }
+
+    function getExtension(fullPath) {
+        var fileName = getFileNameFromPath(fullPath);
+        var parts = fileName.split(".");
+        if (parts.length > 1) {
+            return "." + parts[parts.length - 1].substring(0, 4);
+        }
+        return "";
+    }
+
+    function shortenText(text, maxLength) {
+        if (text.length > maxLength) {
+            return text.substring(0, maxLength) + "...";
+        }
+        return text;
     }
 }
