@@ -242,9 +242,7 @@ void MessageManager::saveMessageAndSendFile(const QString &message, const QStrin
     if (file.open(QIODevice::WriteOnly | QIODevice::Text)) {
         file.write(jsonData);
         file.close();
-
-        if(filePath == "_voice") emit sendFile(QCoreApplication::applicationDirPath() + "/voiceMessage.wav");
-        else emit sendFile(filePath);
+        emit sendFile(filePath);
     } else {
         logger->log(Logger::ERROR,"messagemanager.cpp::saveMessageAndSendFile", "File with message do not save");
     }
@@ -274,6 +272,35 @@ void MessageManager::sendPersonalMessageWithFile(const QString &fileUrl)
     personalMessageJson["receiver_id"] = jsonObject["receiver_id"].toInt();
 
     emit sendMessageJson(personalMessageJson);
+}
+
+void MessageManager::sendVoiceMessage(const QString &receiver_login, const int &receiver_id)
+{
+    logger->log(Logger::DEBUG,"messagemanager.cpp::sendVoiceMessage", "sendVoiceMessage starts");
+
+    QJsonObject voiceMessageJson;
+    voiceMessageJson["flag"] = "voice_message";
+    QString voicePath = QCoreApplication::applicationDirPath() + "/.tempData/" + activeUserName + "/voice_messages" + "/voiceMessage.wav";
+    QFile file(voicePath);
+    QFileInfo fileInfo(voicePath);
+    if (!file.open(QIODevice::ReadOnly)) {
+        logger->log(Logger::WARN,"messagemanager.cpp::sendVoiceMessage","Failed open file");
+    }
+    QByteArray voiceData = file.readAll();
+    file.close();
+
+    voiceMessageJson["fileName"] = fileInfo.baseName();
+    voiceMessageJson["fileExtension"] = fileInfo.suffix();
+    voiceMessageJson["fileData"] = QString(voiceData.toBase64());
+
+    voiceMessageJson["sender_login"] = activeUserName;
+    voiceMessageJson["sender_id"] = activeUserId;
+    voiceMessageJson["receiver_login"] = receiver_login;
+    voiceMessageJson["receiver_id"] = receiver_id;
+
+    QJsonDocument doc(voiceMessageJson);
+
+    emit sendToFileServer(doc);
 }
 
 void MessageManager::setLogger(Logger *logger)

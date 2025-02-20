@@ -62,6 +62,7 @@ Client::Client(QObject *parent)
     connect(accountManager,&AccountManager::transferUserNameAndIdAfterLogin,accountManager,&AccountManager::setActiveUser);
     connect(accountManager,&AccountManager::transferUserNameAndIdAfterLogin,networkManager,&NetworkManager::setActiveUser);
     connect(accountManager,&AccountManager::transferUserNameAndIdAfterLogin,fileManager,&FileManager::setActiveUser);
+    connect(accountManager,&AccountManager::transferUserNameAndIdAfterLogin,audioManager,&AudioManager::setActiveUser);
 
     connect(messageManager,&MessageManager::newMessage,this,&Client::newMessage);
 
@@ -76,9 +77,7 @@ Client::Client(QObject *parent)
 
     connect(this,&Client::changeActiveAccount,accountManager,&AccountManager::changeActiveAccount);
 
-    connect(accountManager,&AccountManager::getFile,networkManager,&NetworkManager::getFile);
-    connect(this,&Client::getFile,networkManager,&NetworkManager::getFile);
-    connect(this,&Client::getVoice,networkManager,&NetworkManager::getVoice);
+    connect(this,&Client::getFile,fileManager,&FileManager::getFile);
     connect(fileManager,&FileManager::sendToFileServer,networkManager,&NetworkManager::sendToFileServer);
     connect(accountManager,&AccountManager::sendAvatarUrl,fileManager,&FileManager::sendAvatarUrl);
     connect(networkManager,&NetworkManager::sendAvatarUrl,fileManager,&FileManager::sendAvatarUrl);
@@ -91,9 +90,12 @@ Client::Client(QObject *parent)
     connect(this,&Client::setLoggers,networkManager,&NetworkManager::setLogger);
     connect(this,&Client::setLoggers,fileManager,&FileManager::setLogger);
 
+    connect(messageManager,&MessageManager::sendToFileServer,networkManager,&NetworkManager::sendToFileServer);
+
+    connect(this,&Client::sendVoiceMessage,messageManager,&MessageManager::sendVoiceMessage);
+    connect(fileManager,&FileManager::voiceExists,this,&Client::voiceExists);
     connect(this,&Client::startRecording,audioManager,&AudioManager::startRecording);
     connect(this,&Client::stopRecording,audioManager,&AudioManager::stopRecording);
-    connect(fileManager,&FileManager::playVoiceMessage,audioManager,&AudioManager::playAudio);
 }
 
 AccountManager* Client::getAccountManager() {

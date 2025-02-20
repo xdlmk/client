@@ -1,5 +1,6 @@
 import QtQuick
 import QtQuick.Controls
+import QtMultimedia
 
 Item {
     id: root
@@ -30,7 +31,7 @@ Item {
 
         Text {
             id: fileText
-            visible: fileName !== ""
+            visible: fileName !== "" && lblText.text !== ""
             text: fileName
             height: fileText.visible ? implicitHeight : 0
             width: fileText.visible ? implicitWidth : 0
@@ -47,11 +48,7 @@ Item {
                 anchors.fill: parent
                 cursorShape: Qt.PointingHandCursor
                 onClicked: {
-                    if(lblText.text !== "") {
-                        client.getFile(fileUrl);
-                    } else {
-                        client.getVoice(fileUrl);
-                    }
+                    client.getFile(fileUrl,"fileUrl");
                 }
             }
         }
@@ -66,9 +63,123 @@ Item {
             }
             text: message
             width: parent.width - 20
+            height: lblText.visible ? implicitHeight : 0
             font.pointSize: 10
+            enabled: lblText.text !== ""
+            visible: lblText.text !== ""
             color: isOutgoing ? "white" : "#e4ecf2"
             wrapMode: Text.WrapAnywhere
+        }
+
+        Item {
+            id: voiceMessage
+            visible: lblText.text === ""
+            anchors {
+                top:nameText.bottom
+                left: parent.left
+                right: parent.right
+                bottom: parent.bottom
+            }
+
+            Rectangle {
+                anchors {
+                    left:parent.left
+                    leftMargin: 5
+                    top:parent.top
+                }
+                id: playButton
+                width: 30
+                height: 30
+                radius: 15
+                color: "#2b5278"
+                Text {
+                    id:playButtonText
+                    text: "▶"
+                    font.pointSize: 15
+                    anchors.centerIn: parent
+                    color:"#ffffff"
+                }
+                MouseArea {
+                    anchors.fill: parent
+                    cursorShape: Qt.PointingHandCursor
+                    onClicked: {
+                        if(audioPlayer.playbackState === MediaPlayer.StoppedState){
+                            isWaitingForVoice = true;
+                            client.getFile(fileUrl,"voiceFileUrl");
+                        } else if (audioPlayer.playbackState === MediaPlayer.PlayingState) {
+                            audioPlayer.pause();
+                            playButtonText.text = "⏸";
+                        } else if (audioPlayer.playbackState === MediaPlayer.PausedState) {
+                            audioPlayer.play();
+                            playButtonText.text = "▶";
+                        }
+                    }
+                }
+
+            }
+            Rectangle {
+                id:voiceLine
+                anchors {
+                    left: playButton.right
+                    leftMargin: 10
+                    top:playButton.top
+                    topMargin: 5
+                }
+                width: parent.width - 100
+                height: 5
+                color: "#488dd3"
+                radius: 2
+            }
+            Rectangle {
+                id:voiceLineTime
+                anchors {
+                    left: playButton.right
+                    leftMargin: 10
+                    top:playButton.top
+                    topMargin: 5
+                }
+                width: voiceLine.width * (audioPlayer.position/audioPlayer.duration)
+                height: 5
+                color: "#182533"
+                radius: 2
+            }
+            Text {
+                id: lblCurrentTime
+                anchors {
+                    left: playButton.right
+                    leftMargin: 10
+                    top:voiceLine.bottom
+                    topMargin: 5
+                }
+                text: "00:00"
+                color: "white"
+                font.pointSize: 8
+            }
+            Text {
+                id: betweenLbls
+                anchors {
+                    left: lblCurrentTime.right
+                    leftMargin: 5
+                    top:voiceLine.bottom
+                    topMargin: 5
+                }
+                text: "/"
+                color: "white"
+                font.pointSize: 8
+            }
+
+            Text {
+                id: lblDuration
+                anchors {
+                    left: betweenLbls.right
+                    leftMargin: 5
+                    top:voiceLine.bottom
+                    topMargin: 5
+                }
+                text: "00:00"
+                color: "white"
+                font.pointSize: 8
+            }
         }
 
         Text {
@@ -86,6 +197,40 @@ Item {
             horizontalAlignment: Text.AlignRight
         }
     }
+
+    AudioOutput {
+        id: audioOutput
+    }
+
+    MediaPlayer {
+        id: audioPlayer
+        audioOutput: audioOutput
+        source: appPath + "/.voiceFiles/" + userlogin + "/" + fileUrl
+        onDurationChanged: lblDuration.text = formatTime(audioPlayer.duration)
+        onPositionChanged: {
+            lblCurrentTime.text = formatTime(audioPlayer.position);
+            //voiceLineTime.width = voiceLine.width * (audioPlayer.position/audioPlayer.duration);
+        }
+        onPlaybackStateChanged: {
+            if (playbackState === MediaPlayer.StoppedState) {
+                audioPlayer.position = 0;
+                lblCurrentTime.text = "00:00";
+            }
+        }
+        onErrorOccurred: {
+            if(error !== 1){
+            console.error("MediaPlayer error:", error, errorString);
+            }
+        }
+    }
+
+    function formatTime(ms) {
+        var totalSeconds = Math.floor(ms / 1000);
+        var minutes = Math.floor(totalSeconds / 60);
+        var seconds = totalSeconds % 60;
+        return minutes + ":" + (seconds < 10 ? "0" : "") + seconds;
+    }
+
     function generateColor(text) {
         let hash = 0;
         for (let i = 0; i < text.length; i++) {
@@ -95,5 +240,16 @@ Item {
         const g = (hash >> 8) & 0xFF;
         const b = hash & 0xFF;
         return Qt.rgba(r / 255, g / 255, b / 255, 1);
+    }
+
+    function onVoiceExists(){
+        if(isWaitingForVoice) {
+            audioPlayer.play();
+            isWaitingForVoice = false;
+        }
+    }
+
+    Component.onCompleted: {
+        voiceExists.connect(onVoiceExists);
     }
 }

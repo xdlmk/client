@@ -31,7 +31,7 @@ public:
     Q_INVOKABLE QString openFile(QString type);
 signals:
     void sendToFileServer(const QJsonDocument& avatarUrlDoc);
-    void playVoiceMessage(const QString &voicePath);
+    void voiceExists();
 
 public slots:
     void sendAvatarUrl(const QString& avatar_url,const int& user_id);
@@ -40,12 +40,15 @@ public slots:
     void uploadVoiceFile(const QJsonObject &fileDataJson);
     void uploadAvatar(const QJsonObject &avatarDataJson);
 
+    void getFile(const QString &fileUrl,const QString &flag);
+
 private:
     QString replaceAfterUnderscore(const QString &url, const QString &newString);
     QString generateUniqueFileName(const QString &baseName, const QString &directoryPath);
 
     void checkingForFileChecker();
     QString calculateDataHash(const QByteArray& data);
+    bool isFileDownloaded(const QString &fileUrl,QString &filePath,const QString &downloadFilesDir);
     bool checkJsonForMatches(QJsonArray &checkerArray, const QByteArray &fileData, QString &fileUrl);
 
     QJsonArray loadJsonArrayFromFile(QFile &fileChecker);

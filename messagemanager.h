@@ -34,7 +34,7 @@ public slots:
     void sendPersonalMessage(const QString &message, const QString &receiver_login, const int &receiver_id);
     void saveMessageAndSendFile(const QString &message, const QString &receiver_login, const int &receiver_id,const QString& filePath);
     void sendPersonalMessageWithFile(const QString &fileUrl);
-
+    void sendVoiceMessage(const QString &receiver_login, const int &receiver_id);
 
     void setLogger(Logger* logger);
 signals:
@@ -47,6 +47,7 @@ signals:
 
     void sendMessageJson(const QJsonObject &messageJson);
     void sendFile(const QString& filePath);
+    void sendToFileServer(const QJsonDocument &doc);
 
 private:
     QString activeUserName;

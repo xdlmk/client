@@ -135,7 +135,7 @@ Rectangle{
                     } else if (isRecording) {
                         client.stopRecording();
                         isRecording = !isRecording;
-                        client.sendPersonalMessageWithFile("", nameText.text,upLine.user_id,"_voice")
+                        client.sendVoiceMessage(nameText.text,upLine.user_id);
                         /////////
                     } else wordProcessing();
                 }

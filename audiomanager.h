@@ -21,7 +21,6 @@ public:
 
     void startRecording();
     void stopRecording();
-    void playAudio(const QString &voicePath);
 
 public slots:
     void setActiveUser(const QString &userName,const int &userId);

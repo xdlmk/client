@@ -134,26 +134,6 @@ void NetworkManager::sendAvatar(const QString &avatarPath)
     sendToFileServer(doc);
 }
 
-void NetworkManager::getFile(const QString &fileUrl)
-{
-    logger->log(Logger::INFO,"networkmanager.cpp::getFile","getFile starts");
-    QJsonObject fileUrlJson;
-    fileUrlJson["flag"] = "fileUrl";
-    fileUrlJson["fileUrl"] = fileUrl;
-    QJsonDocument doc(fileUrlJson);
-    sendToFileServer(doc);
-}
-
-void NetworkManager::getVoice(const QString &fileUrl)
-{
-    logger->log(Logger::INFO,"networkmanager.cpp::getVoice","getVoice starts");
-    QJsonObject fileUrlJson;
-    fileUrlJson["flag"] = "voiceFileUrl";
-    fileUrlJson["fileUrl"] = fileUrl;
-    QJsonDocument doc(fileUrlJson);
-    sendToFileServer(doc);
-}
-
 void NetworkManager::setActiveUser(const QString &userName, const int &userId)
 {
     activeUserId = userId;

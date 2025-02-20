@@ -66,6 +66,7 @@ signals:
 
     void sendPersonalMessage(const QString &message, const QString &receiver_login, const int &receiver_id);
     void sendPersonalMessageWithFile(const QString &message, const QString &receiver_login, const int &receiver_id, const QString& filePath);
+    void sendVoiceMessage(const QString &receiver_login, const int &receiver_id);
     void sendSearchToServer(const QString &searchable);
     void sendLoginRequest(QString userlogin,QString password);
     void sendRegisterRequest(const QString login, const QString password);
@@ -86,9 +87,8 @@ signals:
     void clearUserListModel();
 
     void changeActiveAccount(QString username);
-
-    void getFile(const QString& fileUrl);
-    void getVoice(const QString& fileUrl);
+    void voiceExists();
+    void getFile(const QString& fileUrl,const QString& flag);
     void sendNewAvatar(const QString& avatarPath);
 
     void setLoggers(Logger* logger);

@@ -30,8 +30,6 @@ public slots:
     void sendToFileServer(const QJsonDocument &doc);
     void sendFile(const QString &filePath);
     void sendAvatar(const QString &avatarPath);
-    void getFile(const QString& fileUrl);
-    void getVoice(const QString& fileUrl);
 
     void setActiveUser(const QString &userName,const int &userId);
     void setLogger(Logger *logger);

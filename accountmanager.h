@@ -71,8 +71,6 @@ signals:
     void unknownError();
 
     void clientLogout();
-
-    void getFile(const QString& fileUrl);
     void sendAvatarUrl(const QString &avatar_url,const int& user_id);
 
     void newSearchUser(QString &userlogin,int &id);

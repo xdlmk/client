@@ -12,25 +12,19 @@ void AudioManager::startRecording() {
     captureSession->setRecorder(recorder);
     recorder->setQuality(QMediaRecorder::HighQuality);
     recorder->setMediaFormat(QMediaFormat(QMediaFormat::Wave));
-    QString filePath = QDir::cleanPath(QCoreApplication::applicationDirPath()) + "/voiceMessage.wav";
+    QDir dir(QCoreApplication::applicationDirPath() + "/.tempData/" + activeUserLogin + "/voice_messages");
+    if (!dir.exists()) {
+        dir.mkpath(".");
+    }
+    qDebug() << dir;
+    QString filePath = QDir::cleanPath(QCoreApplication::applicationDirPath()) + "/.tempData/" + activeUserLogin + "/voice_messages" + "/voiceMessage.wav";
+    qDebug() << filePath;
     recorder->setOutputLocation(QUrl::fromLocalFile(filePath));
     recorder->record();
 }
 
 void AudioManager::stopRecording() {
     recorder->stop();
-}
-
-void AudioManager::playAudio(const QString &voicePath) {
-    player->setSource(QUrl::fromLocalFile(voicePath));
-    player->play();
-    emit playbackStarted();
-
-    connect(player, &QMediaPlayer::mediaStatusChanged, this, [this](QMediaPlayer::MediaStatus status) {
-        if (status == QMediaPlayer::EndOfMedia) {
-            emit playbackFinished();
-        }
-    });
 }
 
 void AudioManager::setActiveUser(const QString &userName, const int &userId)
