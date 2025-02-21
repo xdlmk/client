@@ -79,7 +79,7 @@ void NetworkManager::sendToFileServer(const QJsonDocument &doc)
         //
         fileSocket->connectToHost(ip,2021);
         if (!fileSocket->waitForConnected(5000)) {
-            logger->log(Logger::WARN,"networkmanager.cpp::sendFile","Failed to connect to fileServer");
+            logger->log(Logger::WARN,"networkmanager.cpp::sendToFileServer","Failed to connect to fileServer");
         }
     }
 
@@ -91,6 +91,7 @@ void NetworkManager::sendToFileServer(const QJsonDocument &doc)
 void NetworkManager::sendFile(const QString &filePath)
 {
     logger->log(Logger::INFO,"networkmanager.cpp::sendFile","Sending file");
+    logger->log(Logger::INFO,"networkmanager.cpp::sendFile","filePath = " + filePath);
     QFile file(filePath);
     QFileInfo fileInfo(filePath);
     if (!file.open(QIODevice::ReadOnly)) {
@@ -130,16 +131,6 @@ void NetworkManager::sendAvatar(const QString &avatarPath)
     fileDataJson["fileData"] = QString(fileData.toBase64());
 
     QJsonDocument doc(fileDataJson);
-    sendToFileServer(doc);
-}
-
-void NetworkManager::getFile(const QString &fileUrl)
-{
-    logger->log(Logger::INFO,"networkmanager.cpp::getFile","getFile starts");
-    QJsonObject fileUrlJson;
-    fileUrlJson["flag"] = "fileUrl";
-    fileUrlJson["fileUrl"] = fileUrl;
-    QJsonDocument doc(fileUrlJson);
     sendToFileServer(doc);
 }
 
@@ -283,9 +274,6 @@ void NetworkManager::onFileServerReceived()
         }
 
         QJsonObject receivedFromServerJson = doc.object();
-        qDebug() << "Flag FileJson to read:" << receivedFromServerJson["flag"].toString();
-        qDebug() << "Flag user_id to read:" << receivedFromServerJson["user_id"].toInt();
-        qDebug() << "Flag avatarUrl to read:" << receivedFromServerJson["avatar_url"].toString();
         if(receivedFromServerJson["flag"].toString() == "fileUrl") {
             QString fileUrl = receivedFromServerJson["fileUrl"].toString();
             emit sendPersonalMessageWithFile(fileUrl);
@@ -295,6 +283,8 @@ void NetworkManager::onFileServerReceived()
             emit uploadAvatar(receivedFromServerJson);
         } else if (receivedFromServerJson["flag"].toString() == "avatarUrl") {
             emit sendAvatarUrl(receivedFromServerJson["avatar_url"].toString(),receivedFromServerJson["user_id"].toInt());
+        } else if (receivedFromServerJson["flag"].toString() == "voiceFileData") {
+            emit uploadVoiceFile(receivedFromServerJson);
         }
 
     } else {

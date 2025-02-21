@@ -24,6 +24,7 @@
 #include "messagemanager.h"
 #include "networkmanager.h"
 #include "filemanager.h"
+#include "audiomanager.h"
 #include "Logger/logger.h"
 
 class Client : public QObject
@@ -65,6 +66,7 @@ signals:
 
     void sendPersonalMessage(const QString &message, const QString &receiver_login, const int &receiver_id);
     void sendPersonalMessageWithFile(const QString &message, const QString &receiver_login, const int &receiver_id, const QString& filePath);
+    void sendVoiceMessage(const QString &receiver_login, const int &receiver_id);
     void sendSearchToServer(const QString &searchable);
     void sendLoginRequest(QString userlogin,QString password);
     void sendRegisterRequest(const QString login, const QString password);
@@ -75,15 +77,18 @@ signals:
     void editName(QString editInformation);
     void editUniqueError();
     void unknownError();
-
+    ///////
+    void startRecording();
+    void stopRecording();
+    //////
     void clearMainListView();
     void newUser(QString username);
     void configCheck(const QSettings& settings);
     void clearUserListModel();
 
     void changeActiveAccount(QString username);
-
-    void getFile(const QString& fileUrl);
+    void voiceExists();
+    void getFile(const QString& fileUrl,const QString& flag);
     void sendNewAvatar(const QString& avatarPath);
 
     void setLoggers(Logger* logger);
@@ -93,6 +98,7 @@ private:
     MessageManager *messageManager;
     AccountManager *accountManager;
     FileManager *fileManager;
+    AudioManager *audioManager;
 
     void setLogger(Logger* logger);
 };

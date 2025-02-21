@@ -79,6 +79,7 @@ int main(int argc, char *argv[])
         engine.clearComponentCache();
         engine.rootContext()->setContextProperty("userlogin", userLogin);
         engine.rootContext()->setContextProperty("activeUserId", user_id);
+        engine.rootContext()->setContextProperty("appPath", QCoreApplication::applicationDirPath());
         engine.load(mainUrl);
     });
 
