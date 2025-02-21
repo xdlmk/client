@@ -95,7 +95,7 @@ Rectangle{
 
     RowLayout {
         anchors{
-            top:fileVisible ? file.bottom : parent.top
+            top:file.visible ? file.bottom : parent.top
             topMargin: 10
             left:parent.left
             right: parent.right
@@ -250,31 +250,5 @@ Rectangle{
 
             edtText.clear();
         }
-    }
-
-    function getFileNameFromPath(filePath) {
-        if (!filePath || filePath.trim() === "") {
-            return "";
-        }
-
-        var parts = filePath.split(/[\\/]/);
-        var fileName = parts[parts.length - 1];
-        return fileName;
-    }
-
-    function getExtension(fullPath) {
-        var fileName = getFileNameFromPath(fullPath);
-        var parts = fileName.split(".");
-        if (parts.length > 1) {
-            return "." + parts[parts.length - 1].substring(0, 4);
-        }
-        return "";
-    }
-
-    function shortenText(text, maxLength) {
-        if (text.length > maxLength) {
-            return text.substring(0, maxLength) + "...";
-        }
-        return text;
     }
 }

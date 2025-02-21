@@ -99,7 +99,7 @@ void FileManager::uploadVoiceFile(const QJsonObject &fileDataJson)
 
     QJsonObject newFileObject;
     newFileObject["fileUrl"] = fileUrl;
-    newFileObject["fileName"] = extractFileName(fileUrl);
+    newFileObject["fileName"] = fileUrl;
     newFileObject["fileHash"] = calculateDataHash(fileData);
     checkerArray.append(newFileObject);
 
@@ -272,9 +272,10 @@ bool FileManager::isFileDownloaded(const QString &fileUrl,QString &filePath,cons
 
         QJsonObject jsonObject = item.toObject();
         QString jsonFileUrl = jsonObject["fileUrl"].toString();
+        QString localFileName = jsonObject["fileName"].toString();
 
         if (jsonFileUrl == fileUrl) {
-            QFile file(downloadFilesDir + jsonFileUrl);
+            QFile file(downloadFilesDir + localFileName);
             if(file.exists()){
                 if (!file.open(QIODevice::ReadOnly)) {
                     logger->log(Logger::WARN,"filemanager.cpp::isFileDownloaded", "Failed to open file: " + file.errorString());
@@ -285,7 +286,7 @@ bool FileManager::isFileDownloaded(const QString &fileUrl,QString &filePath,cons
                 QByteArray fileData = file.readAll();
                 file.close();
                 if (jsonObject["fileHash"].toString() == calculateDataHash(fileData)) {
-                    filePath = downloadFilesDir + jsonFileUrl;
+                    filePath = downloadFilesDir + localFileName;
                     logger->log(Logger::DEBUG,"filemanager.cpp::isFileDownloaded", "File downloaded");
                     return true;
                 }
