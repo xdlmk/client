@@ -46,6 +46,7 @@ signals:
     void searchDataReceived(const QJsonObject &searchDataJson);
     void chatsUpdateDataReceived(QJsonObject &chatsUpdateDataJson);
     void editResultsReceived(const QJsonObject &editResultsJson);
+    void avatarsUpdateReceived(const QJsonObject &avatarsUpdateJson);
 
     void sendPersonalMessageWithFile(const QString& fileUrl);
 

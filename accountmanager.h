@@ -34,7 +34,9 @@ public slots:
     void processingSearchDataFromServer(const QJsonObject &searchDataJson);
     void processingChatsUpdateDataFromServer(QJsonObject &chatsUpdateDataJson);
     void processingEditProfileFromServer(const QJsonObject &editResultsJson);
+    void processingAvatarsUpdateFromServer(const QJsonObject &avatarsUpdateJson);
 
+    void sendAvatarsUpdate();
     void sendSearchToServer(const QString &searchable);
     void sendEditProfileRequest(const QString editable,const QString editInformation);
 

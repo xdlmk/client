@@ -38,13 +38,12 @@ public slots:
 
     void setLogger(Logger* logger);
 signals:
-    void checkAndSendAvatarUpdate(const QString &avatar_url, const int &user_id);
-
     void newMessage(QString username,QString message,QString time,
                     QString fileUrl,QString fileName, bool isOutgoing);
     void clearMainListView();
     void showPersonalChat(QString login,QString message,int id,QString out);
 
+    void sendAvatarsUpdate();
     void sendMessageJson(const QJsonObject &messageJson);
     void sendFile(const QString& filePath);
     void sendToFileServer(const QJsonDocument &doc);

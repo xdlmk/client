@@ -19,6 +19,7 @@ Client::Client(QObject *parent)
     connect(networkManager,&NetworkManager::searchDataReceived,accountManager,&AccountManager::processingSearchDataFromServer);
     connect(networkManager,&NetworkManager::chatsUpdateDataReceived,accountManager,&AccountManager::processingChatsUpdateDataFromServer);
     connect(networkManager,&NetworkManager::editResultsReceived,accountManager,&AccountManager::processingEditProfileFromServer);
+    connect(networkManager,&NetworkManager::avatarsUpdateReceived,accountManager,&AccountManager::processingAvatarsUpdateFromServer);
     connect(networkManager,&NetworkManager::sendPersonalMessageWithFile,messageManager,&MessageManager::sendPersonalMessageWithFile);
     connect(networkManager,&NetworkManager::uploadFiles,fileManager,&FileManager::uploadFiles);
     connect(networkManager,&NetworkManager::uploadVoiceFile,fileManager,&FileManager::uploadVoiceFile);
@@ -79,9 +80,9 @@ Client::Client(QObject *parent)
 
     connect(this,&Client::getFile,fileManager,&FileManager::getFile);
     connect(fileManager,&FileManager::sendToFileServer,networkManager,&NetworkManager::sendToFileServer);
+    connect(messageManager,&MessageManager::sendAvatarsUpdate,accountManager,&AccountManager::sendAvatarsUpdate);
     connect(accountManager,&AccountManager::sendAvatarUrl,fileManager,&FileManager::sendAvatarUrl);
     connect(networkManager,&NetworkManager::sendAvatarUrl,fileManager,&FileManager::sendAvatarUrl);
-    connect(messageManager,&MessageManager::checkAndSendAvatarUpdate,accountManager,&AccountManager::checkAndSendAvatarUpdate);
     connect(this,&Client::sendNewAvatar,networkManager,&NetworkManager::sendAvatar);
 
     connect(this,&Client::setLoggers,this,&Client::setLogger);

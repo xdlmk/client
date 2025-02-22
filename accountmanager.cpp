@@ -212,15 +212,13 @@ void AccountManager::processingLoginResultsFromServer(const QJsonObject &loginRe
 
     if(success == "ok")
     {
+        emit transferUserNameAndIdAfterLogin(name,userId);
         checkAndSendAvatarUpdate(avatar_url,userId);
 
         QDir dir(QCoreApplication::applicationDirPath() + "/resources/messages");
         if (!dir.exists()) {
             dir.mkpath(".");
         }
-
-        emit transferUserNameAndIdAfterLogin(name,userId);
-
         QString pathToMessages = QCoreApplication::applicationDirPath() + "/resources/messages/message_" + activeUserName + ".json";
         QFile file(pathToMessages);
 
@@ -302,6 +300,8 @@ void AccountManager::processingPersonalMessageFromServer(const QJsonObject &pers
         emit saveMessageToJson(login, message, out, time, fullDate, message_id,dialog_id,id,fileUrl);
     }
 
+
+    logger->log(Logger::INFO,"accountmanager.cpp::processingPersonalMessageFromServer","Message: " + message +" from: " + login);
     checkAndSendAvatarUpdate(avatar_url,id);
 
     QString fileName = "";
@@ -365,9 +365,80 @@ void AccountManager::processingEditProfileFromServer(const QJsonObject &editResu
     }
 }
 
+void AccountManager::processingAvatarsUpdateFromServer(const QJsonObject &avatarsUpdateJson)
+{
+    QJsonArray avatarsArray = avatarsUpdateJson["avatars"].toArray();
+    if (avatarsArray.isEmpty()) {
+        logger->log(Logger::ERROR,"accountmanager.cpp::processingAvatarsUpdateFromServer","Urls json array is empty");
+        return;
+    }
+
+    for (const QJsonValue &value : avatarsArray) {
+        QJsonObject avatarObject = value.toObject();
+
+        int id = avatarObject["id"].toInt();
+        QString avatarUrl = avatarObject["avatar_url"].toString();
+
+        checkAndSendAvatarUpdate(avatarUrl,id);
+    }
+}
+
+void AccountManager::sendAvatarsUpdate()
+{
+    QString appDir = QCoreApplication::applicationDirPath();
+    QString personalDirPath = appDir + "/resources/" + activeUserName + "/personal";
+    QDir personalDir(personalDirPath);
+    if (!personalDir.exists()) {
+        logger->log(Logger::WARN,"accountmanager.cpp::sendAvatarsUpdate","Dir with messages files not exists");
+        return;
+    }
+    QStringList filters;
+    filters << "message_*.json";
+    QStringList fileList = personalDir.entryList(filters, QDir::Files);
+    QList<int> idList;
+
+    for (const QString &fileName : fileList) {
+        QString filePath = personalDirPath + "/" + fileName;
+
+        QFile file(filePath);
+        if (!file.open(QIODevice::ReadOnly)) {
+            logger->log(Logger::WARN,"accountmanager.cpp::sendAvatarsUpdate","Failed to open file: " + filePath);
+            continue;
+        }
+
+        QByteArray jsonData = file.readAll();
+        file.close();
+
+        QJsonDocument doc = QJsonDocument::fromJson(jsonData);
+
+        if (!doc.isArray()) {
+            logger->log(Logger::WARN,"accountmanager.cpp::sendAvatarsUpdate", "File does not contain a JSON array: " + fileName);
+            continue;
+        }
+
+        QJsonArray jsonArray = doc.array();
+        if (jsonArray.isEmpty()) {
+            logger->log(Logger::WARN,"accountmanager.cpp::sendAvatarsUpdate", "Empty JSON array in file: " + fileName);
+            continue;
+        }
+        QJsonObject lastObject = jsonArray.last().toObject();
+        int id = lastObject["id"].toInt();
+        idList.append(id);
+    }
+
+    QJsonObject avatarsUpdateJson;
+    avatarsUpdateJson["flag"] = "avatars_update";
+    QJsonArray idArray;
+    for (int id : idList) {
+        idArray.append(id);
+    }
+    avatarsUpdateJson["ids"] = idArray;
+    networkManager->sendData(avatarsUpdateJson);
+}
+
 void AccountManager::setActiveUser(const QString &userName, const int &userId)
 {
-    activeUserName=userName;
+    activeUserName = userName;
     user_id = userId;
 }
 
@@ -378,13 +449,14 @@ void AccountManager::setLogger(Logger *logger)
 
 bool AccountManager::isAvatarUpToDate(QString avatar_url, int user_id)
 {
+    logger->log(Logger::INFO,"accountmanager.cpp::isAvatarUpToDate", "isAvatarUpToDate starts");
     QFile avatar(QCoreApplication::applicationDirPath() + "/avatars/" + activeUserName + "/" + QString::number(user_id) + ".png");
     if(!avatar.open(QIODevice::ReadWrite)) {
         logger->log(Logger::INFO,"accountmanager.cpp::isAvatarUpToDate", "Avatar not downloaded");
         return false;
     }
-
-    QFile avatarChecker(QCoreApplication::applicationDirPath() + "/.fileChecker/" + activeUserName + "/avatarChecker.json");
+    QString avatarCheckerPath = QCoreApplication::applicationDirPath() + "/.fileChecker/" + activeUserName + "/avatarChecker.json";
+    QFile avatarChecker(avatarCheckerPath);
     if(!avatarChecker.open(QIODevice::ReadWrite)) {
         logger->log(Logger::WARN,"accountmanager.cpp::isAvatarUpToDate", "Failed to open avatarChecker");
         return false;
@@ -393,18 +465,15 @@ bool AccountManager::isAvatarUpToDate(QString avatar_url, int user_id)
     avatarChecker.close();
     QJsonDocument avatarCheckerDoc = QJsonDocument::fromJson(avatarCheckerData);
     QJsonArray avatarCheckerArray = avatarCheckerDoc.array();
-
     for (const auto &item : avatarCheckerArray) {
-        if (item.isObject()) {
-            QJsonObject jsonObject = item.toObject();
-
-            if (jsonObject.contains("user_id") && jsonObject.contains("avatar_url")) {
-                if ((jsonObject["user_id"].toInt() == user_id) and (jsonObject["avatar_url"].toString() == avatar_url)) {
-                    return true;
-                }
+        QJsonObject jsonObject = item.toObject();
+        if (jsonObject.contains("user_id") && jsonObject.contains("avatar_url")) {
+            if ((jsonObject["user_id"].toInt() == user_id) and (jsonObject["avatar_url"].toString() == avatar_url)) {
+                return true;
             }
         }
     }
+    logger->log(Logger::DEBUG,"accountmanager.cpp::isAvatarUpToDate", "isAvatarUpToDate return false");
     return false;
 }
 

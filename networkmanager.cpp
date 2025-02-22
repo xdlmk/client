@@ -200,9 +200,9 @@ void NetworkManager::onDataReceived()
         }
 
         QJsonObject receivedFromServerJson = doc.object();
-        logger->log(Logger::INFO,"networkmanager.cpp::onDataReceived","Readings JSON for " + receivedFromServerJson["flag"].toString());
 
         QString flag = receivedFromServerJson["flag"].toString();
+        logger->log(Logger::INFO,"networkmanager.cpp::onDataReceived","Readings JSON for " + flag);
 
         if(flag == "login")
         {
@@ -227,6 +227,10 @@ void NetworkManager::onDataReceived()
         else if(flag == "edit")
         {
             emit editResultsReceived(receivedFromServerJson);
+        }
+        else if(flag == "avatars_update")
+        {
+            emit avatarsUpdateReceived(receivedFromServerJson);
         }
 
         blockSize = 0;

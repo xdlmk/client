@@ -6,6 +6,7 @@ Item {
     id: root
     width: Math.min(lblText.implicitWidth + 20, listView.width * 0.75)
     height: lblText.implicitHeight + lblTime.implicitHeight + nameText.implicitHeight + (fileText.visible ? fileText.implicitHeight + 10 : 0) + 10
+    property bool isWaitingForVoice: false
 
     Rectangle {
         id: rectBubble
@@ -104,7 +105,7 @@ Item {
                     cursorShape: Qt.PointingHandCursor
                     onClicked: {
                         if(audioPlayer.playbackState === MediaPlayer.StoppedState){
-                            isWaitingForVoice = true;
+                            root.isWaitingForVoice = true;
                             client.getFile(fileUrl,"voiceFileUrl");
                         } else if (audioPlayer.playbackState === MediaPlayer.PlayingState) {
                             audioPlayer.pause();
@@ -243,11 +244,6 @@ Item {
                 playButtonText.text = "⏸";
             }
         }
-        onErrorOccurred: {
-            if(error !== 1){
-                console.error("MediaPlayer error:", error, errorString);
-            }
-        }
     }
 
     function formatTime(ms) {
@@ -269,10 +265,11 @@ Item {
     }
 
     function onVoiceExists(){
-        if(isWaitingForVoice) {
+        if(root.isWaitingForVoice) {
             audioPlayer.play();
-            isWaitingForVoice = false;
+            root.isWaitingForVoice = false;
         }
+        root.isWaitingForVoice = false;
     }
 
     Component.onCompleted: {

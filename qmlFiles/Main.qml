@@ -108,7 +108,6 @@ Window {
             property bool isOutgoing: model.isOutgoing
             property string fileUrl: model.fileUrl
             property string fileName: model.fileName
-            property bool isWaitingForVoice: false
         }
     }
 
