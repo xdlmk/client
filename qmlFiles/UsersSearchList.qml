@@ -35,7 +35,7 @@ Rectangle {
                     clip: true
                     Image {
                         anchors.fill: parent
-                        //source: avatarSource
+                        source: avatarSource + user_id + ".png?" + timestamp
                         fillMode: Image.PreserveAspectFit
                     }
                 }

@@ -21,7 +21,7 @@ void AccountManager::checkConfigFile(const QSettings& settings)
     int total = settings.value("total",0).toInt();
     for( int i = 1; i<=total;i++)
     {
-        emit newUser(settings.value("login"+QString::number(i), "").toString());
+        emit newUser(settings.value("login"+QString::number(i), "").toString(), settings.value("id"+QString::number(i), "").toInt());
     }
 }
 
@@ -144,7 +144,7 @@ void AccountManager::clientChangeAccount()
     networkManager->sendData(json);
 }
 
-void AccountManager::createConfigFile(const QString &userLogin, const QString &userPassword)
+void AccountManager::createConfigFile(const QString &userLogin, const QString &userPassword,const int &user_id)
 {
     QString configFilePath = QStandardPaths::writableLocation(QStandardPaths::AppConfigLocation);
     configFilePath = configFilePath + "/config.ini";
@@ -167,6 +167,7 @@ void AccountManager::createConfigFile(const QString &userLogin, const QString &u
             settings.setValue("active_account",1);
             settings.setValue("success1","ok");
             settings.setValue("login1", userLogin);
+            settings.setValue("id1", user_id);
             settings.setValue("password1", userPassword);
             logger->log(Logger::INFO,"accountmanager.cpp::createConfigFile","Config file created! 1 users");
         }
@@ -176,6 +177,7 @@ void AccountManager::createConfigFile(const QString &userLogin, const QString &u
             settings.setValue("active_account",2);
             settings.setValue("success2","ok");
             settings.setValue("login2", userLogin);
+            settings.setValue("id2", user_id);
             settings.setValue("password2", userPassword);
             logger->log(Logger::INFO,"accountmanager.cpp::createConfigFile","Config file created! 2 users");
         }
@@ -185,6 +187,7 @@ void AccountManager::createConfigFile(const QString &userLogin, const QString &u
             settings.setValue("active_account",3);
             settings.setValue("success3","ok");
             settings.setValue("login3", userLogin);
+            settings.setValue("id3", user_id);
             settings.setValue("password3", userPassword);
             logger->log(Logger::INFO,"accountmanager.cpp::createConfigFile","Config file created! 3 users");
         }
@@ -239,7 +242,7 @@ void AccountManager::processingLoginResultsFromServer(const QJsonObject &loginRe
 
         emit loginSuccess(name, userId);
         emit newAccountLoginSuccessful(pathToMessages);
-        createConfigFile(name,password);
+        createConfigFile(name,password,userId);
         updatingChats();
     }
     else if(success == "poor")
@@ -424,6 +427,17 @@ void AccountManager::sendAvatarsUpdate()
         QJsonObject lastObject = jsonArray.last().toObject();
         int id = lastObject["id"].toInt();
         idList.append(id);
+    }
+
+    QString configFilePath = QStandardPaths::writableLocation(QStandardPaths::AppConfigLocation) + "/config.ini";
+    QSettings settings(configFilePath, QSettings::IniFormat);
+
+    int total = settings.value("total", 0).toInt();
+    for (int i = 1; i <= total; ++i) {
+        int configId = settings.value("id" + QString::number(i), -1).toInt();
+        if (configId != -1 && !idList.contains(configId)) {
+            idList.append(configId);
+        }
     }
 
     QJsonObject avatarsUpdateJson;

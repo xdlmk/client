@@ -82,7 +82,7 @@ signals:
     void stopRecording();
     //////
     void clearMainListView();
-    void newUser(QString username);
+    void newUser(QString username,int user_id);
     void configCheck(const QSettings& settings);
     void clearUserListModel();
 

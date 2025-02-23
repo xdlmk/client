@@ -21,7 +21,7 @@ public:
     void registerAccount(const QString login, const QString password);
     void logout();
     void clientChangeAccount();
-    void createConfigFile(const QString &userLogin, const QString &userPassword);
+    void createConfigFile(const QString &userLogin, const QString &userPassword,const int &user_id);
 
 public slots:
     void checkAndSendAvatarUpdate(const QString &avatar_url,const int &user_id);
@@ -46,7 +46,7 @@ public slots:
     void setLogger(Logger* logger);
 
 signals:
-    void newUser(QString username);
+    void newUser(QString username,int user_id);
     void changeAccount(QString username,QString password);
     void newAccountLoginSuccessful(QString& pathToMessagesOnLocal);
 

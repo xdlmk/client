@@ -2,6 +2,7 @@ import QtQuick
 import QtQuick.Controls
 import QtQuick.Layouts
 
+
 Rectangle {
     id: profileWindow
     width: 250
@@ -23,7 +24,7 @@ Rectangle {
             id: profileImageContainer
             width: 50
             height: 50
-            radius: 25
+            radius: width/2
             color: "transparent"
             anchors.left: parent.left
             anchors.leftMargin: 10
@@ -35,6 +36,7 @@ Rectangle {
                 height: parent.height
                 cache: false
                 anchors.fill: parent
+                smooth: true
                 fillMode: Image.PreserveAspectCrop
             }
         }
@@ -71,7 +73,6 @@ Rectangle {
                     width: userListView.width
                     color: "#1e2a36"
                     height: 30
-                    property int user_id: id
 
                     Item {
                         anchors.fill: parent
@@ -88,7 +89,7 @@ Rectangle {
                             clip: true
                             Image {
                                 anchors.fill: parent
-                                //source: avatarSource + user_id + ".png?" + timestamp
+                                source: avatarSource + id + ".png?" + timestamp
                                 fillMode: Image.PreserveAspectFit
                             }
                         }
@@ -284,8 +285,8 @@ Rectangle {
         }
     }
 
-    function onNewUser(name) {
-        var newUsr = {"username":name,"isSpecial": false};
+    function onNewUser(name,id) {
+        var newUsr = {"username":name,"isSpecial": false, "id": id};
         userListModel.append(newUsr);
         userListView.positionViewAtIndex(userListModel.count - 1, ListView.End);
 
