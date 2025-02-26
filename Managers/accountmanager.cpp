@@ -4,6 +4,10 @@ AccountManager::AccountManager(NetworkManager* networkManager,QObject *parent)
     : QObject{parent}
 {
     this->networkManager = networkManager;
+    connect(&configManager,&ConfigManager::checkConfigFile,this,&AccountManager::checkConfigFile);
+    connect(&configManager,&ConfigManager::sendLoginAfterLogout,this,&AccountManager::login);
+    connect(&configManager,&ConfigManager::changeAccount,this,&AccountManager::changeAccount);
+    connect(this,&AccountManager::changeActiveAccount,&configManager,&ConfigManager::changeActiveAccount);
 }
 
 void AccountManager::login(const QString login, const QString password)
@@ -39,61 +43,8 @@ void AccountManager::logout()
     QJsonObject json;
     json["flag"]= "logout";
     networkManager->sendData(json);
-
     logger->log(Logger::INFO,"accountmanager.cpp::logout","Client logout process has begun");
-
-    QString configFilePath = QStandardPaths::writableLocation(QStandardPaths::AppConfigLocation);
-    configFilePath = configFilePath + "/config.ini";
-    QSettings configFile(configFilePath, QSettings::IniFormat);
-    int active_account = configFile.value("active_account",0).toInt();
-    configFile.remove("success"+QString::number(active_account));
-    configFile.remove("login"+QString::number(active_account));
-    configFile.remove("password"+QString::number(active_account));
-
-    for (int i = active_account + 1; i <= configFile.value("total",0).toInt(); ++i) {
-        QString success = configFile.value("success" + QString::number(i), "").toString();
-        QString login = configFile.value("login" + QString::number(i), "").toString();
-        QString password = configFile.value("password" + QString::number(i), "").toString();
-
-        configFile.setValue("success" + QString::number(i - 1), success);
-        configFile.setValue("login" + QString::number(i - 1), login);
-        configFile.setValue("password" + QString::number(i - 1), password);
-
-        configFile.remove("success" + QString::number(i));
-        configFile.remove("login" + QString::number(i));
-        configFile.remove("password" + QString::number(i));
-    }
-
-
-
-    if(configFile.value("total",0).toInt()>=2)
-    {
-        configFile.setValue("total",configFile.value("total",0).toInt()-1);
-        configFile.setValue("active_account",1);
-        active_account = configFile.value("active_account",0).toInt();
-
-        QString success = configFile.value("success"+QString::number(active_account),"").toString();
-        if(success == "ok")
-        {
-            QString login = configFile.value("login"+QString::number(active_account), "").toString();
-            QString password = configFile.value("password"+QString::number(active_account), "").toString();
-
-            this->login(login,password);
-        }
-    }
-    else
-    {
-        QFile confFile(configFilePath);
-        if (confFile.exists()) {
-            if (confFile.remove()) {
-                logger->log(Logger::INFO,"accountmanager.cpp::logout","Config file removed successfully");
-            } else {
-                logger->log(Logger::ERROR,"accountmanager.cpp::logout","Failed to remove config file");
-            }
-        } else {
-            logger->log(Logger::INFO,"accountmanager.cpp::logout","Config file does not exist");
-        }
-    }
+    configManager.removeAccount(configManager.getActiveAccount());
 }
 
 void AccountManager::sendSearchToServer(const QString &searchable)
@@ -114,86 +65,11 @@ void AccountManager::sendEditProfileRequest(const QString editable, const QStrin
     networkManager->sendData(dataEditProfile);
 }
 
-void AccountManager::changeActiveAccount(QString username)
-{
-    QString configFilePath = QStandardPaths::writableLocation(QStandardPaths::AppConfigLocation);
-    configFilePath = configFilePath + "/config.ini";
-    QSettings configFile(configFilePath, QSettings::IniFormat);
-
-    int total = configFile.value("total", 0).toInt();
-
-    for (int i = 1; i <= total; ++i) {
-        QString currentLogin = configFile.value("login"+ QString::number(i), "").toString();
-
-        if (currentLogin == username) {
-            configFile.setValue("active_account", i);
-            logger->log(Logger::INFO,"accountmanager.cpp::changeActiveAccount","Active account changed to: " + QString::number(i));
-            QString password = configFile.value("password"+ QString::number(i),"").toString();
-            emit changeAccount(username,password);
-
-            return;
-        }
-    }
-    logger->log(Logger::WARN,"accountmanager.cpp::changeActiveAccount","User not found: " + username);
-}
-
 void AccountManager::clientChangeAccount()
 {
     QJsonObject json;
     json["flag"]= "logout";
     networkManager->sendData(json);
-}
-
-void AccountManager::createConfigFile(const QString &userLogin, const QString &userPassword,const int &user_id)
-{
-    QString configFilePath = QStandardPaths::writableLocation(QStandardPaths::AppConfigLocation);
-    configFilePath = configFilePath + "/config.ini";
-    QSettings settings(configFilePath,QSettings::IniFormat);
-    int total = settings.value("total",0).toInt();
-    bool already_exists = false;
-    for( int i = 1; i<=total; i++ )
-    {
-        if (userLogin == settings.value("login"+ QString::number(i)))
-        {
-            already_exists = true;
-            break;
-        }
-    }
-    if (!already_exists)
-    {
-        if(settings.value("total",0).toInt() == 0)
-        {
-            settings.setValue("total", 1);
-            settings.setValue("active_account",1);
-            settings.setValue("success1","ok");
-            settings.setValue("login1", userLogin);
-            settings.setValue("id1", user_id);
-            settings.setValue("password1", userPassword);
-            logger->log(Logger::INFO,"accountmanager.cpp::createConfigFile","Config file created! 1 users");
-        }
-        else if(settings.value("total",0).toInt() == 1)
-        {
-            settings.setValue("total", 2);
-            settings.setValue("active_account",2);
-            settings.setValue("success2","ok");
-            settings.setValue("login2", userLogin);
-            settings.setValue("id2", user_id);
-            settings.setValue("password2", userPassword);
-            logger->log(Logger::INFO,"accountmanager.cpp::createConfigFile","Config file created! 2 users");
-        }
-        else if(settings.value("total",0).toInt() == 2)
-        {
-            settings.setValue("total", 3);
-            settings.setValue("active_account",3);
-            settings.setValue("success3","ok");
-            settings.setValue("login3", userLogin);
-            settings.setValue("id3", user_id);
-            settings.setValue("password3", userPassword);
-            logger->log(Logger::INFO,"accountmanager.cpp::createConfigFile","Config file created! 3 users");
-        }
-    }
-    else logger->log(Logger::INFO,"accountmanager.cpp::createConfigFile","Account is recorded in the config");
-    checkConfigFile(settings);
 }
 
 void AccountManager::checkAndSendAvatarUpdate(const QString &avatar_url, const int &user_id)
@@ -242,7 +118,7 @@ void AccountManager::processingLoginResultsFromServer(const QJsonObject &loginRe
 
         emit loginSuccess(name, userId);
         emit newAccountLoginSuccessful(pathToMessages);
-        createConfigFile(name,password,userId);
+        configManager.addAccount(name,password,userId);
         updatingChats();
     }
     else if(success == "poor")
@@ -459,6 +335,7 @@ void AccountManager::setActiveUser(const QString &userName, const int &userId)
 void AccountManager::setLogger(Logger *logger)
 {
     this->logger = logger;
+    configManager.setLogger(logger);
 }
 
 bool AccountManager::isAvatarUpToDate(QString avatar_url, int user_id)

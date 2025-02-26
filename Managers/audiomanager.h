@@ -11,7 +11,7 @@
 #include <QAudioOutput>
 #include <QDir>
 
-#include "Logger/logger.h"
+#include "Core/logger.h"
 
 class AudioManager : public QObject
 {

@@ -10,7 +10,7 @@
 #include <QJsonArray>
 #include <QCoreApplication>
 
-#include "Logger/logger.h"
+#include "Core/logger.h"
 
 class MessageManager : public QObject
 {

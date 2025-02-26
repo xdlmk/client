@@ -25,7 +25,6 @@ NetworkManager::NetworkManager(QObject *parent)
 
 void NetworkManager::connectToServer()
 {
-    //
     QFile file("ip.txt");
     if (!file.exists() || file.size() == 0) {
         file.open(QIODevice::WriteOnly | QIODevice::Text);
@@ -35,7 +34,6 @@ void NetworkManager::connectToServer()
     file.open(QIODevice::ReadOnly | QIODevice::Text);
     QString ip = QString::fromUtf8(file.readLine()).trimmed();
     file.close();
-    //
     socket->connectToHost(ip,2020);
 }
 
@@ -66,7 +64,6 @@ void NetworkManager::sendToFileServer(const QJsonDocument &doc)
     out.writeRawData(fileDataOut.data(),fileDataOut.size());
 
     if(fileSocket->state() == QAbstractSocket::UnconnectedState){
-        //
         QFile file("ip.txt");
         if (!file.exists() || file.size() == 0) {
             file.open(QIODevice::WriteOnly | QIODevice::Text);
@@ -76,7 +73,6 @@ void NetworkManager::sendToFileServer(const QJsonDocument &doc)
         file.open(QIODevice::ReadOnly | QIODevice::Text);
         QString ip = QString::fromUtf8(file.readLine()).trimmed();
         file.close();
-        //
         fileSocket->connectToHost(ip,2021);
         if (!fileSocket->waitForConnected(5000)) {
             logger->log(Logger::WARN,"networkmanager.cpp::sendToFileServer","Failed to connect to fileServer");

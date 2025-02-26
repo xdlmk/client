@@ -20,12 +20,12 @@
 
 #include <QImage>
 
-#include "accountmanager.h"
-#include "messagemanager.h"
-#include "networkmanager.h"
-#include "filemanager.h"
-#include "audiomanager.h"
-#include "Logger/logger.h"
+#include "Managers/accountmanager.h"
+#include "Managers/audiomanager.h"
+#include "Managers/filemanager.h"
+#include "Managers/messagemanager.h"
+#include "Network/networkmanager.h"
+#include "Core/logger.h"
 
 class Client : public QObject
 {
@@ -77,10 +77,10 @@ signals:
     void editName(QString editInformation);
     void editUniqueError();
     void unknownError();
-    ///////
+
     void startRecording();
     void stopRecording();
-    //////
+
     void clearMainListView();
     void newUser(QString username,int user_id);
     void configCheck(const QSettings& settings);
@@ -93,6 +93,14 @@ signals:
 
     void setLoggers(Logger* logger);
 private:
+    void setupConnections();
+    void setupNetworkConnections();
+    void setupAccountConnections();
+    void setupMessageConnections();
+    void setupFileConnections();
+    void setupLoggingConnections();
+    void setupAudioConnections();
+
     Logger* logger;
     NetworkManager *networkManager;
     MessageManager *messageManager;

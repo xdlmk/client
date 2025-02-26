@@ -35,15 +35,15 @@ qt_add_qml_module(regagram
         qmlFiles/UsersSearchList.qml
         qmlFiles/PersonalChatsList.qml
         qmlFiles/ChatBubble.qml
-
     SOURCES
-        client.h client.cpp
-        networkmanager.h networkmanager.cpp
-        messagemanager.h messagemanager.cpp
-        accountmanager.h accountmanager.cpp
-        filemanager.h filemanager.cpp
-        audiomanager.h audiomanager.cpp
-        Logger/logger.cpp Logger/logger.h
+        Core/client.h Core/client.cpp
+        Core/logger.h Core/logger.cpp
+        Core/configmanager.h Core/configmanager.cpp
+        Network/networkmanager.h Network/networkmanager.cpp
+        Managers/accountmanager.h Managers/accountmanager.cpp
+        Managers/audiomanager.h Managers/audiomanager.cpp
+        Managers/filemanager.h Managers/filemanager.cpp
+        Managers/messagemanager.h Managers/messagemanager.cpp
     RESOURCES
         images/logo.png
         images/logo2.png

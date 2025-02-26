@@ -9,8 +9,9 @@
 #include <QCoreApplication>
 #include <QDir>
 
-#include "networkmanager.h"
-#include "Logger/logger.h"
+#include "Network/networkmanager.h"
+#include "Core/configmanager.h"
+#include "Core/logger.h"
 
 class AccountManager : public QObject
 {
@@ -21,8 +22,6 @@ public:
     void registerAccount(const QString login, const QString password);
     void logout();
     void clientChangeAccount();
-    void createConfigFile(const QString &userLogin, const QString &userPassword,const int &user_id);
-
 public slots:
     void checkAndSendAvatarUpdate(const QString &avatar_url,const int &user_id);
 
@@ -40,14 +39,13 @@ public slots:
     void sendSearchToServer(const QString &searchable);
     void sendEditProfileRequest(const QString editable,const QString editInformation);
 
-    void changeActiveAccount(QString username);
-
     void setActiveUser(const QString &userName,const int &userId);
     void setLogger(Logger* logger);
 
 signals:
     void newUser(QString username,int user_id);
     void changeAccount(QString username,QString password);
+    void changeActiveAccount(QString username);
     void newAccountLoginSuccessful(QString& pathToMessagesOnLocal);
 
     void checkingChatAvailability(QString &login);
@@ -84,6 +82,7 @@ private:
 
     NetworkManager* networkManager;
     Logger* logger;
+    ConfigManager configManager;
 
     void updatingChats();
 };
