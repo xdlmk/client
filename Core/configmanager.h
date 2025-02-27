@@ -21,8 +21,9 @@ public:
     int getActiveAccount();
 public slots:
     void changeActiveAccount(QString username);
+    void checkConfigFile();
 signals:
-    void checkConfigFile(const QSettings& settings);
+    void newUser(QString username,int user_id);
     void sendLoginAfterLogout(const QString login, const QString password);
     void changeAccount(QString username,QString password);
 

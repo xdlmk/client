@@ -26,8 +26,8 @@ public slots:
                            QString &fullDate, int message_id, int dialog_id, int id, QString &fileUrl);
     void loadMessageToQml(const QString &username, const QString &message, const QString &out,
                           const QString &date, const QString &fileUrl = "");
-    void loadMessagesFromJson(const QString &filepath);
     void saveMessageFromDatabase(QJsonObject &json);
+    void savePersonalMessage(const QJsonObject &personalMessageJson);
 
     void loadingPersonalChat(const QString userlogin);
 
@@ -38,6 +38,10 @@ public slots:
 
     void setLogger(Logger* logger);
 signals:
+    void checkAndSendAvatarUpdate(const QString &avatar_url,const int &user_id);
+    void checkActiveDialog(QString login,QString message, QString out,
+                           QString time,QString fileName,QString fileUrl);
+
     void newMessage(QString username,QString message,QString time,
                     QString fileUrl,QString fileName, bool isOutgoing);
     void clearMainListView();

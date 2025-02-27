@@ -87,7 +87,7 @@ int main(int argc, char *argv[])
         settings.setValue("login"+QString::number(active_account), newUserLogin);
 
         client.clearUserListModel();
-        client.configCheck(settings);
+        client.configCheck();
 
     });
 

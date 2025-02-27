@@ -12,7 +12,7 @@ void ConfigManager::addAccount(const QString &login, const QString &password, in
     int total = settings.value("total", 0).toInt();
     for (int i = 1; i <= total; ++i) {
         if (login == settings.value("login" + QString::number(i))) {
-            emit checkConfigFile(settings);
+            checkConfigFile();
             logger->log(Logger::INFO, "configmanager.cpp::addAccount", "Account already exists");
             return;
         }
@@ -20,7 +20,7 @@ void ConfigManager::addAccount(const QString &login, const QString &password, in
     total++;
     if(total > 3) {
         logger->log(Logger::INFO, "configmanager.cpp::addAccount", "Account not exists, but total is 3");
-        emit checkConfigFile(settings);
+        checkConfigFile();
         return;
     }
     settings.setValue("total", total);
@@ -31,7 +31,7 @@ void ConfigManager::addAccount(const QString &login, const QString &password, in
     settings.setValue("password" + QString::number(total), password);
     logger->log(Logger::INFO, "configmanager.cpp::addAccount", "Added account: " + login);
 
-    emit checkConfigFile(settings);
+    checkConfigFile();
 }
 
 void ConfigManager::removeAccount(int accountIndex) {
@@ -40,9 +40,11 @@ void ConfigManager::removeAccount(int accountIndex) {
     for (int i = accountIndex; i < total; ++i) {
         settings.setValue("success" + QString::number(i), settings.value("success" + QString::number(i + 1)));
         settings.setValue("login" + QString::number(i), settings.value("login" + QString::number(i + 1)));
+        settings.setValue("id" + QString::number(i), settings.value("id" + QString::number(i + 1)));
         settings.setValue("password" + QString::number(i), settings.value("password" + QString::number(i + 1)));
         settings.remove("success" + QString::number(i + 1));
         settings.remove("login" + QString::number(i + 1));
+        settings.remove("id" + QString::number(i + 1));
         settings.remove("password" + QString::number(i + 1));
     }
     settings.setValue("total", total - 1);
@@ -72,6 +74,16 @@ void ConfigManager::changeActiveAccount(QString username) {
         }
     }
     if (logger) logger->log(Logger::WARN, "ConfigManager::changeActiveAccount", "User not found: " + username);
+}
+
+void ConfigManager::checkConfigFile()
+{
+    logger->log(Logger::INFO,"accountmanager.cpp::checkConfigFile","checkConfigFile has begun");
+    int total = settings.value("total",0).toInt();
+    for( int i = 1; i<=total;i++)
+    {
+        emit newUser(settings.value("login"+QString::number(i), "").toString(), settings.value("id"+QString::number(i), "").toInt());
+    }
 }
 
 int ConfigManager::getActiveAccount() {

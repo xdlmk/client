@@ -83,7 +83,7 @@ signals:
 
     void clearMainListView();
     void newUser(QString username,int user_id);
-    void configCheck(const QSettings& settings);
+    void configCheck();
     void clearUserListModel();
 
     void changeActiveAccount(QString username);

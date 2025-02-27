@@ -44,6 +44,7 @@ qt_add_qml_module(regagram
         Managers/audiomanager.h Managers/audiomanager.cpp
         Managers/filemanager.h Managers/filemanager.cpp
         Managers/messagemanager.h Managers/messagemanager.cpp
+        Managers/responsehandler.h Managers/responsehandler.cpp
     RESOURCES
         images/logo.png
         images/logo2.png
@@ -54,7 +55,7 @@ qt_add_qml_module(regagram
 # If you are developing for iOS or macOS you should consider setting an
 # explicit, fixed bundle identifier manually though.
 set_target_properties(regagram PROPERTIES
-#    MACOSX_BUNDLE_GUI_IDENTIFIER qmlqtdesign
+#    MACOSX_BUNDLE_GUI_IDENTIFIER regagram
     MACOSX_BUNDLE_BUNDLE_VERSION ${PROJECT_VERSION}
     MACOSX_BUNDLE_SHORT_VERSION_STRING ${PROJECT_VERSION_MAJOR}.${PROJECT_VERSION_MINOR}
     MACOSX_BUNDLE TRUE

@@ -28,9 +28,9 @@ void Client::setupNetworkConnections() {
 
     connect(networkManager, &NetworkManager::loginResultsReceived, accountManager, &AccountManager::processingLoginResultsFromServer);
     connect(networkManager, &NetworkManager::registrationResultsReceived, accountManager, &AccountManager::processingRegistrationResultsFromServer);
-    connect(networkManager, &NetworkManager::messageReceived, accountManager, &AccountManager::processingPersonalMessageFromServer);
+    connect(networkManager, &NetworkManager::messageReceived, messageManager, &MessageManager::savePersonalMessage);
     connect(networkManager, &NetworkManager::searchDataReceived, accountManager, &AccountManager::processingSearchDataFromServer);
-    connect(networkManager, &NetworkManager::chatsUpdateDataReceived, accountManager, &AccountManager::processingChatsUpdateDataFromServer);
+    connect(networkManager, &NetworkManager::chatsUpdateDataReceived, messageManager, &MessageManager::saveMessageFromDatabase);
     connect(networkManager, &NetworkManager::editResultsReceived, accountManager, &AccountManager::processingEditProfileFromServer);
     connect(networkManager, &NetworkManager::avatarsUpdateReceived, accountManager, &AccountManager::processingAvatarsUpdateFromServer);
 }
@@ -66,13 +66,10 @@ void Client::setupMessageConnections() {
 
     connect(messageManager, &MessageManager::sendMessageJson, networkManager, &NetworkManager::sendData);
     connect(messageManager, &MessageManager::sendFile, networkManager, &NetworkManager::sendFile);
+    connect(messageManager,&MessageManager::checkAndSendAvatarUpdate,accountManager,&AccountManager::checkAndSendAvatarUpdate);
 
-    connect(accountManager, &AccountManager::saveMessageToJson, messageManager, &MessageManager::saveMessageToJson);
     connect(accountManager, &AccountManager::checkingChatAvailability, messageManager, &MessageManager::checkingChatAvailability);
     connect(messageManager, &MessageManager::showPersonalChat, this, &Client::showPersonalChat);
-    connect(accountManager, &AccountManager::saveMessageFromDatabase, messageManager, &MessageManager::saveMessageFromDatabase);
-
-    connect(accountManager, &AccountManager::newAccountLoginSuccessful, messageManager, &MessageManager::loadMessagesFromJson);
 
     connect(accountManager, &AccountManager::transferUserNameAndIdAfterLogin, messageManager, &MessageManager::setActiveUser);
     connect(accountManager, &AccountManager::transferUserNameAndIdAfterLogin, accountManager, &AccountManager::setActiveUser);
@@ -84,7 +81,7 @@ void Client::setupMessageConnections() {
     connect(accountManager, &AccountManager::newSearchUser, this, &Client::newSearchUser);
     connect(messageManager, &MessageManager::clearMainListView, this, &Client::clearMainListView);
     connect(accountManager, &AccountManager::newUser, this, &Client::newUser);
-    connect(accountManager, &AccountManager::checkActiveDialog, this, &Client::checkActiveDialog);
+    connect(messageManager, &MessageManager::checkActiveDialog, this, &Client::checkActiveDialog);
 }
 
 void Client::setupFileConnections() {

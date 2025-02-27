@@ -4,10 +4,6 @@ AccountManager::AccountManager(NetworkManager* networkManager,QObject *parent)
     : QObject{parent}
 {
     this->networkManager = networkManager;
-    connect(&configManager,&ConfigManager::checkConfigFile,this,&AccountManager::checkConfigFile);
-    connect(&configManager,&ConfigManager::sendLoginAfterLogout,this,&AccountManager::login);
-    connect(&configManager,&ConfigManager::changeAccount,this,&AccountManager::changeAccount);
-    connect(this,&AccountManager::changeActiveAccount,&configManager,&ConfigManager::changeActiveAccount);
 }
 
 void AccountManager::login(const QString login, const QString password)
@@ -17,16 +13,6 @@ void AccountManager::login(const QString login, const QString password)
     loginDataJson["login"] = login;
     loginDataJson["password"] = password;
     networkManager->sendData(loginDataJson);
-}
-
-void AccountManager::checkConfigFile(const QSettings& settings)
-{
-    logger->log(Logger::INFO,"accountmanager.cpp::checkConfigFile","checkConfigFile has begun");
-    int total = settings.value("total",0).toInt();
-    for( int i = 1; i<=total;i++)
-    {
-        emit newUser(settings.value("login"+QString::number(i), "").toString(), settings.value("id"+QString::number(i), "").toInt());
-    }
 }
 
 void AccountManager::registerAccount(const QString login, const QString password)
@@ -77,188 +63,6 @@ void AccountManager::checkAndSendAvatarUpdate(const QString &avatar_url, const i
     logger->log(Logger::INFO,"accountmanager.cpp::checkAndSendAvatarUpdate","checkAndSendAvatarUpdate starts");
     if(!isAvatarUpToDate(avatar_url,user_id)) {
         emit sendAvatarUrl(avatar_url,user_id);
-    }
-}
-
-void AccountManager::processingLoginResultsFromServer(const QJsonObject &loginResultsJson)
-{
-    QString success = loginResultsJson["success"].toString();
-    QString name = loginResultsJson["name"].toString();
-    QString password = loginResultsJson["password"].toString();
-    int userId = loginResultsJson["user_id"].toInt();
-
-    QString avatar_url = loginResultsJson["avatar_url"].toString();
-
-    if(success == "ok")
-    {
-        emit transferUserNameAndIdAfterLogin(name,userId);
-        checkAndSendAvatarUpdate(avatar_url,userId);
-
-        QDir dir(QCoreApplication::applicationDirPath() + "/resources/messages");
-        if (!dir.exists()) {
-            dir.mkpath(".");
-        }
-        QString pathToMessages = QCoreApplication::applicationDirPath() + "/resources/messages/message_" + activeUserName + ".json";
-        QFile file(pathToMessages);
-
-        if (!file.exists()) {
-            logger->log(Logger::INFO,"accountmanager.cpp::processingLoginResultsFromServer","File does not exist, create a new one");
-
-            if (file.open(QIODevice::WriteOnly)) {
-                QJsonArray emptyArray;
-                QJsonDocument doc(emptyArray);
-                file.write(doc.toJson());
-                file.close();
-            } else {
-                logger->log(Logger::ERROR,"accountmanager.cpp::processingLoginResultsFromServer","The file is not created");
-            }
-        } else {
-            logger->log(Logger::INFO,"accountmanager.cpp::processingLoginResultsFromServer","File exist");
-        }
-
-        emit loginSuccess(name, userId);
-        emit newAccountLoginSuccessful(pathToMessages);
-        configManager.addAccount(name,password,userId);
-        updatingChats();
-    }
-    else if(success == "poor")
-    {
-        emit loginFail();
-    }
-
-}
-
-void AccountManager::processingRegistrationResultsFromServer(const QJsonObject &regResultsJson)
-{
-    logger->log(Logger::INFO,"accountmanager.cpp::processingRegistrationResultsFromServer","processingRegistrationResultsFromServer has begun");
-    QString success = regResultsJson["success"].toString();
-    if(success == "ok")
-    {
-        emit registrationSuccess() ;
-    }
-    else if (success == "poor")
-    {
-        QString error = regResultsJson["errorMes"].toString();
-        emit registrationFail(error);
-    }
-}
-
-void AccountManager::processingPersonalMessageFromServer(const QJsonObject &personalMessageJson)
-{
-    QString message = personalMessageJson["message"].toString();
-    QString time = personalMessageJson["time"].toString();
-    int message_id = personalMessageJson["message_id"].toInt();
-    int dialog_id = personalMessageJson["dialog_id"].toInt();
-    QString fileUrl = "";
-    if(personalMessageJson.contains("fileUrl"))
-    {
-        fileUrl = personalMessageJson["fileUrl"].toString();
-    }
-    QString login;
-    QString out = "";
-    QString avatar_url;
-    QString fullDate = "not:done(processingPersonalMessageFromServer)";
-    int id;
-
-    logger->log(Logger::INFO,"accountmanager.cpp::processingPersonalMessageFromServer","Personal message received");
-
-    if(personalMessageJson.contains("receiver_login"))
-    {
-        login = personalMessageJson["receiver_login"].toString();
-        id = personalMessageJson["receiver_id"].toInt();
-        avatar_url = personalMessageJson["receiver_avatar_url"].toString();
-        out = "out";
-        emit saveMessageToJson(login, message, out, time,fullDate, message_id,dialog_id,id,fileUrl);
-    }
-    else
-    {
-        login = personalMessageJson["sender_login"].toString();
-        id = personalMessageJson["sender_id"].toInt();
-        avatar_url = personalMessageJson["sender_avatar_url"].toString();
-
-        emit saveMessageToJson(login, message, out, time, fullDate, message_id,dialog_id,id,fileUrl);
-    }
-
-
-    logger->log(Logger::INFO,"accountmanager.cpp::processingPersonalMessageFromServer","Message: " + message +" from: " + login);
-    checkAndSendAvatarUpdate(avatar_url,id);
-
-    QString fileName = "";
-    if(fileUrl != "") {
-        int underscoreIndex = fileUrl.indexOf('_');
-        if (underscoreIndex != -1 && underscoreIndex + 1 < fileUrl.length()) {
-            fileName = fileUrl.mid(underscoreIndex + 1);
-        }
-    }
-
-    emit checkActiveDialog(login,message,out,time,fileName,fileUrl);
-}
-
-void AccountManager::processingSearchDataFromServer(const QJsonObject &searchDataJson)
-{
-    logger->log(Logger::INFO,"accountmanager.cpp::processingSearchDataFromServer","processingSearchDataFromServer has begun");
-    QJsonArray resultsArray = searchDataJson.value("results").toArray();
-    for (const QJsonValue &value : resultsArray) {
-        QJsonObject userObj = value.toObject();
-        int id = userObj.value("id").toInt();
-        QString userlogin = userObj.value("userlogin").toString();
-        QString avatar_url = userObj.value("avatar_url").toString();
-        checkAndSendAvatarUpdate(avatar_url,id);
-
-        emit newSearchUser(userlogin,id);
-    }
-}
-
-void AccountManager::processingChatsUpdateDataFromServer(QJsonObject &chatsUpdateDataJson)
-{
-    logger->log(Logger::INFO,"accountmanager.cpp::processingChatsUpdateDataFromServer","processingChatsUpdateDataFromServer has begun");
-    emit saveMessageFromDatabase(chatsUpdateDataJson);
-}
-
-void AccountManager::processingEditProfileFromServer(const QJsonObject &editResultsJson)
-{
-    logger->log(Logger::INFO,"accountmanager.cpp::processingEditProfileFromServer","processingEditProfileFromServer has begun");
-
-    QString status = editResultsJson["status"].toString();
-    if(status == "poor"){
-        QString error = editResultsJson["error"].toString();
-        if(error == "Unique error"){
-            emit editUniqueError();
-            logger->log(Logger::ERROR,"accountmanager.cpp::processingEditProfileFromServer","Information changed was not unique");
-            return;
-        }
-        logger->log(Logger::WARN,"accountmanager.cpp::processingEditProfileFromServer","Unknown request error");
-        emit unknownError();
-        return;
-    }
-
-    QString editable = editResultsJson["editable"].toString();
-    QString editInformation = editResultsJson["editInformation"].toString();
-
-    if(editable == "Username") {
-        emit editUserlogin(editInformation);
-    } else if (editable == "Phone number") {
-        emit editPhoneNumber(editInformation);
-    } else if (editable == "Name") {
-        emit editName(editInformation);
-    }
-}
-
-void AccountManager::processingAvatarsUpdateFromServer(const QJsonObject &avatarsUpdateJson)
-{
-    QJsonArray avatarsArray = avatarsUpdateJson["avatars"].toArray();
-    if (avatarsArray.isEmpty()) {
-        logger->log(Logger::ERROR,"accountmanager.cpp::processingAvatarsUpdateFromServer","Urls json array is empty");
-        return;
-    }
-
-    for (const QJsonValue &value : avatarsArray) {
-        QJsonObject avatarObject = value.toObject();
-
-        int id = avatarObject["id"].toInt();
-        QString avatarUrl = avatarObject["avatar_url"].toString();
-
-        checkAndSendAvatarUpdate(avatarUrl,id);
     }
 }
 
@@ -330,12 +134,14 @@ void AccountManager::setActiveUser(const QString &userName, const int &userId)
 {
     activeUserName = userName;
     user_id = userId;
+    responseHandler.setActiveUser(userName,userId);
 }
 
 void AccountManager::setLogger(Logger *logger)
 {
     this->logger = logger;
     configManager.setLogger(logger);
+    responseHandler.setLogger(logger);
 }
 
 bool AccountManager::isAvatarUpToDate(QString avatar_url, int user_id)
@@ -366,6 +172,43 @@ bool AccountManager::isAvatarUpToDate(QString avatar_url, int user_id)
     }
     logger->log(Logger::DEBUG,"accountmanager.cpp::isAvatarUpToDate", "isAvatarUpToDate return false");
     return false;
+}
+
+void AccountManager::setupConfigManager()
+{
+    connect(&configManager,&ConfigManager::sendLoginAfterLogout,this,&AccountManager::login);
+    connect(&configManager,&ConfigManager::changeAccount,this,&AccountManager::changeAccount);
+    connect(&configManager,&ConfigManager::newUser,this,&AccountManager::newUser);
+    connect(this,&AccountManager::changeActiveAccount,&configManager,&ConfigManager::changeActiveAccount);
+    connect(this,&AccountManager::checkConfigFile,&configManager,&ConfigManager::checkConfigFile);
+}
+
+void AccountManager::setupResponseHandler()
+{
+    connect(this,&AccountManager::processingLoginResultsFromServer,&responseHandler,&ResponseHandler::processingLoginResults);
+    connect(this,&AccountManager::processingRegistrationResultsFromServer,&responseHandler,&ResponseHandler::processingRegistrationResults);
+    connect(this,&AccountManager::processingRegistrationResultsFromServer,&responseHandler,&ResponseHandler::processingRegistrationResults);
+    connect(this,&AccountManager::processingSearchDataFromServer,&responseHandler,&ResponseHandler::processingSearchData);
+    connect(this,&AccountManager::processingEditProfileFromServer,&responseHandler,&ResponseHandler::processingEditProfile);
+    connect(this,&AccountManager::processingAvatarsUpdateFromServer,&responseHandler,&ResponseHandler::processingAvatarsUpdate);
+
+    connect(&responseHandler,&ResponseHandler::transferUserNameAndIdAfterLogin,this,&AccountManager::transferUserNameAndIdAfterLogin);
+    connect(&responseHandler,&ResponseHandler::checkAndSendAvatarUpdate,this,&AccountManager::checkAndSendAvatarUpdate);
+    connect(&responseHandler,&ResponseHandler::loginSuccess,this,&AccountManager::loginSuccess);
+    connect(&responseHandler,&ResponseHandler::loginFail,this,&AccountManager::loginFail);
+    connect(&responseHandler,&ResponseHandler::addAccount,&configManager,&ConfigManager::addAccount);
+    connect(&responseHandler,&ResponseHandler::updatingChats,this,&AccountManager::updatingChats);
+
+    connect(&responseHandler,&ResponseHandler::registrationSuccess,this,&AccountManager::registrationSuccess);
+    connect(&responseHandler,&ResponseHandler::registrationFail,this,&AccountManager::registrationFail);
+
+    connect(&responseHandler,&ResponseHandler::newSearchUser,this,&AccountManager::newSearchUser);
+
+    connect(&responseHandler,&ResponseHandler::editUniqueError,this,&AccountManager::editUniqueError);
+    connect(&responseHandler,&ResponseHandler::unknownError,this,&AccountManager::unknownError);
+    connect(&responseHandler,&ResponseHandler::editUserlogin,this,&AccountManager::editUserlogin);
+    connect(&responseHandler,&ResponseHandler::editPhoneNumber,this,&AccountManager::editPhoneNumber);
+    connect(&responseHandler,&ResponseHandler::editName,this,&AccountManager::editName);
 }
 
 void AccountManager::updatingChats()
