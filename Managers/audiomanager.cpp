@@ -1,16 +1,12 @@
 #include "audiomanager.h"
 
-AudioManager::AudioManager(QObject *parent) : QObject(parent) {
-}
+AudioManager::AudioManager(QObject *parent) : QObject(parent), captureSession(new QMediaCaptureSession(this)),
+    recorder(new QMediaRecorder(this)), audioInput(new QAudioInput(this))
+{ }
 
 void AudioManager::startRecording() {
-    if(!captureSession) {
-        captureSession = new QMediaCaptureSession(this);
-        recorder = new QMediaRecorder(this);
-        audioInput = new QAudioInput(this);
-        captureSession->setAudioInput(audioInput);
-        captureSession->setRecorder(recorder);
-    }
+    captureSession->setAudioInput(audioInput);
+    captureSession->setRecorder(recorder);
     recorder->setQuality(QMediaRecorder::HighQuality);
     recorder->setMediaFormat(QMediaFormat(QMediaFormat::Wave));
     QDir dir(QCoreApplication::applicationDirPath() + "/.tempData/" + activeUserLogin + "/voice_messages");

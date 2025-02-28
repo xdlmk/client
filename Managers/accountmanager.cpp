@@ -4,6 +4,8 @@ AccountManager::AccountManager(NetworkManager* networkManager,QObject *parent)
     : QObject{parent}
 {
     this->networkManager = networkManager;
+    setupConfigManager();
+    setupResponseHandler();
 }
 
 void AccountManager::login(const QString login, const QString password)

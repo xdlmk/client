@@ -40,9 +40,6 @@ private:
     QMediaCaptureSession *captureSession;
     QMediaRecorder *recorder;
     QAudioInput *audioInput;
-
-    QMediaPlayer *player;
-    QAudioOutput *audioOutput;
 };
 
 #endif // AUDIOMANAGER_H

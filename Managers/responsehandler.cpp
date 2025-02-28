@@ -17,6 +17,7 @@ void ResponseHandler::setActiveUser(const QString &userLogin, const int &userId)
 
 void ResponseHandler::processingLoginResults(const QJsonObject &loginResultsJson)
 {
+    logger->log(Logger::INFO,"responsehandler.cpp::processingLoginResults","processingLoginResults has begun");
     QString success = loginResultsJson["success"].toString();
     QString name = loginResultsJson["name"].toString();
     QString password = loginResultsJson["password"].toString();
