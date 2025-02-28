@@ -1,11 +1,8 @@
 #include "audiomanager.h"
 
-AudioManager::AudioManager(QObject *parent)
-    : QObject(parent), captureSession(new QMediaCaptureSession(this)),
-    recorder(new QMediaRecorder(this)), audioInput(new QAudioInput(this)),
-    player(new QMediaPlayer(this)), audioOutput(new QAudioOutput(this)) {
-    player->setAudioOutput(audioOutput);
-}
+AudioManager::AudioManager(QObject *parent) : QObject(parent), captureSession(new QMediaCaptureSession(this)),
+    recorder(new QMediaRecorder(this)), audioInput(new QAudioInput(this))
+{ }
 
 void AudioManager::startRecording() {
     captureSession->setAudioInput(audioInput);

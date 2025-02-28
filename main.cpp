@@ -9,12 +9,10 @@
 #include <QEventLoop>
 #include <QDir>
 
-#include "client.h"
-#include "accountmanager.h"
-#include "messagemanager.h"
-#include "networkmanager.h"
-#include "filemanager.h"
-#include "Logger/logger.h"
+#include "Core/client.h"
+#include "Managers/accountmanager.h"
+#include "Managers/filemanager.h"
+#include "Core/logger.h"
 
 int main(int argc, char *argv[])
 {
@@ -61,7 +59,6 @@ int main(int argc, char *argv[])
         }
         engine.load(switchUrl);
     });
-
     QObject::connect(&client, &Client::connectionError, [&engine, switchUrl]() {
         QList<QObject*> rootObjects = engine.rootObjects();
         if (rootObjects.isEmpty()) {
@@ -90,7 +87,7 @@ int main(int argc, char *argv[])
         settings.setValue("login"+QString::number(active_account), newUserLogin);
 
         client.clearUserListModel();
-        client.configCheck(settings);
+        client.configCheck();
 
     });
 

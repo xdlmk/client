@@ -83,39 +83,6 @@ void MessageManager::saveMessageToJson(QString &userlogin, QString &message, QSt
     emit showPersonalChat(userlogin, message, id, out);
 }
 
-void MessageManager::loadMessagesFromJson(const QString &filepath)
-{
-    QFile file(filepath);
-
-    if (!file.open(QIODevice::ReadWrite)) {
-        logger->log(Logger::ERROR,"messagemanager.cpp::loadMessagesFromJson","File did not open with error: " + file.errorString());
-        return;
-    }
-    emit clearMainListView();
-    QByteArray fileData = file.readAll();
-    if (!fileData.isEmpty()) {
-        QJsonDocument doc = QJsonDocument::fromJson(fileData);
-        QJsonArray chatHistory = doc.array();
-
-        logger->log(Logger::INFO,"messagemanager.cpp::loadMessagesFromJson","Loading messages from json");
-        for (const QJsonValue &value : chatHistory) {
-            QJsonObject messageObject = value.toObject();
-            QString user = messageObject["login"].toString();
-            QString message = messageObject["str"].toString();
-            QString out = messageObject["Out"].toString();
-
-            QString fileUrl;
-            if(messageObject.contains("fileUrl")) fileUrl = messageObject["fileUrl"].toString();
-            else fileUrl = "";
-
-            QString time = messageObject["time"].toString();
-
-            loadMessageToQml(user,message,out,time,fileUrl);
-        }
-    }
-    file.close();
-}
-
 void MessageManager::setActiveUser(const QString &userName, const int &userId)
 {
     activeUserName = userName;
@@ -155,6 +122,51 @@ void MessageManager::saveMessageFromDatabase(QJsonObject &json)
         }
     }
     emit sendAvatarsUpdate();
+}
+
+void MessageManager::savePersonalMessage(const QJsonObject &personalMessageJson)
+{
+    QString message = personalMessageJson["message"].toString();
+    QString time = personalMessageJson["time"].toString();
+    int message_id = personalMessageJson["message_id"].toInt();
+    int dialog_id = personalMessageJson["dialog_id"].toInt();
+    QString fileUrl = "";
+    if(personalMessageJson.contains("fileUrl"))  fileUrl = personalMessageJson["fileUrl"].toString();
+    QString login;
+    QString out = "";
+    QString avatar_url;
+    QString fullDate = "not:done(messagemanager::savePersonalMessage)";
+    int id;
+
+    logger->log(Logger::INFO,"messagemanager.cpp::processingPersonalMessageFromServer","Personal message received");
+
+    if(personalMessageJson.contains("receiver_login")) {
+        login = personalMessageJson["receiver_login"].toString();
+        id = personalMessageJson["receiver_id"].toInt();
+        avatar_url = personalMessageJson["receiver_avatar_url"].toString();
+        out = "out";
+        saveMessageToJson(login, message, out, time,fullDate, message_id,dialog_id,id,fileUrl);
+    } else {
+        login = personalMessageJson["sender_login"].toString();
+        id = personalMessageJson["sender_id"].toInt();
+        avatar_url = personalMessageJson["sender_avatar_url"].toString();
+
+        saveMessageToJson(login, message, out, time, fullDate, message_id,dialog_id,id,fileUrl);
+    }
+
+
+    logger->log(Logger::INFO,"messagemanager.cpp::processingPersonalMessageFromServer","Message: " + message +" from: " + login);
+    emit checkAndSendAvatarUpdate(avatar_url,id);
+
+    QString fileName = "";
+    if(fileUrl != "") {
+        int underscoreIndex = fileUrl.indexOf('_');
+        if (underscoreIndex != -1 && underscoreIndex + 1 < fileUrl.length()) {
+            fileName = fileUrl.mid(underscoreIndex + 1);
+        }
+    }
+
+    emit checkActiveDialog(login,message,out,time,fileName,fileUrl);
 }
 
 void MessageManager::loadingPersonalChat(const QString userlogin)

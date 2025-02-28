@@ -11,7 +11,7 @@
 #include <QAudioOutput>
 #include <QDir>
 
-#include "Logger/logger.h"
+#include "Core/logger.h"
 
 class AudioManager : public QObject
 {
@@ -40,9 +40,6 @@ private:
     QMediaCaptureSession *captureSession;
     QMediaRecorder *recorder;
     QAudioInput *audioInput;
-
-    QMediaPlayer *player;
-    QAudioOutput *audioOutput;
 };
 
 #endif // AUDIOMANAGER_H

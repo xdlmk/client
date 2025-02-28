@@ -210,7 +210,6 @@ Rectangle{
                 cursorShape: Qt.PointingHandCursor
 
                 onClicked: {
-                    /////////
                     if (edtText.text.trim() === "" && !isRecording) {
                         client.startRecording();
                         isRecording = !isRecording;
@@ -218,7 +217,6 @@ Rectangle{
                         client.stopRecording();
                         isRecording = !isRecording;
                         client.sendVoiceMessage(nameText.text,upLine.user_id);
-                        /////////
                     } else wordProcessing();
                 }
 
