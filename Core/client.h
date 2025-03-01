@@ -54,9 +54,9 @@ signals:
 
     void loadingPersonalChat(const QString userlogin);
 
-    void showPersonalChat(QString login,QString message, int id, QString out);
-    void checkActiveDialog(QString login,QString message, QString out,
-                           QString time,QString fileName,QString fileUrl);
+    void showPersonalChat(QString login,QString message, int id, QString out, QString type);
+    void checkActiveDialog(int user_id,QString login,QString message, QString out,
+                           QString time,QString fileName,QString fileUrl,QString type);
 
     void changeReceiverUserSignal(QString userlogin,int id);
 
@@ -64,8 +64,8 @@ signals:
 
     void addAccount();
 
-    void sendPersonalMessage(const QString &message, const QString &receiver_login, const int &receiver_id);
-    void sendPersonalMessageWithFile(const QString &message, const QString &receiver_login, const int &receiver_id, const QString& filePath);
+    void sendMessage(const QString &message, const QString &receiver_login, const int &receiver_id, const QString &flag);
+    void sendMessageWithFile(const QString &message, const QString &receiver_login, const int &receiver_id, const QString& filePath, const QString &flag);
     void sendVoiceMessage(const QString &receiver_login, const int &receiver_id);
     void sendSearchToServer(const QString &searchable);
     void sendLoginRequest(QString userlogin,QString password);

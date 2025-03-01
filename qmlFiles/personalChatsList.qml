@@ -21,6 +21,7 @@ Rectangle {
             height: 60
             property int user_id: id
             property string currentState: currentStateText
+            property string chatType: currentChatType
 
             Item {
                 anchors.fill: parent
@@ -82,7 +83,7 @@ Rectangle {
                 hoverEnabled: true
 
                 onClicked: {
-                    upLine.currentState = "personal";
+                    upLine.currentState = chatType;
 
                     for (var i = 0; i < personalChatsListModel.count; ++i) {
                         var item = personalChatsListModel.get(i);

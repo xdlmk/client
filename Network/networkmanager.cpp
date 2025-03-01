@@ -84,7 +84,7 @@ void NetworkManager::sendToFileServer(const QJsonDocument &doc)
     fileSocket->flush();
 }
 
-void NetworkManager::sendFile(const QString &filePath)
+void NetworkManager::sendFile(const QString &filePath,const QString &flag)
 {
     logger->log(Logger::INFO,"networkmanager.cpp::sendFile","Sending file");
     logger->log(Logger::INFO,"networkmanager.cpp::sendFile","filePath = " + filePath);
@@ -98,7 +98,7 @@ void NetworkManager::sendFile(const QString &filePath)
     file.close();
 
     QJsonObject fileDataJson;
-    fileDataJson["flag"] = "file";
+    fileDataJson["flag"] = flag;
     fileDataJson["fileName"] = fileInfo.baseName();
     fileDataJson["fileExtension"] = fileInfo.suffix();
     fileDataJson["fileData"] = QString(fileData.toBase64());
@@ -212,6 +212,10 @@ void NetworkManager::onDataReceived()
         {
             emit messageReceived(receivedFromServerJson);
         }
+        else if(flag == "group_message")
+        {
+            emit groupMessageReceived(receivedFromServerJson);
+        }
         else if(flag == "search")
         {
             emit searchDataReceived(receivedFromServerJson);
@@ -274,9 +278,12 @@ void NetworkManager::onFileServerReceived()
         }
 
         QJsonObject receivedFromServerJson = doc.object();
-        if(receivedFromServerJson["flag"].toString() == "fileUrl") {
+        if(receivedFromServerJson["flag"].toString() == "personal_file_url") {
             QString fileUrl = receivedFromServerJson["fileUrl"].toString();
-            emit sendPersonalMessageWithFile(fileUrl);
+            emit sendMessageWithFile(fileUrl,"personal");
+        } else if(receivedFromServerJson["flag"].toString() == "group_file_url") {
+            QString fileUrl = receivedFromServerJson["fileUrl"].toString();
+            emit sendMessageWithFile(fileUrl,"group");
         } else if (receivedFromServerJson["flag"].toString() == "fileData") {
             emit uploadFiles(receivedFromServerJson);
         } else if (receivedFromServerJson["flag"].toString() == "avatarData") {

@@ -28,7 +28,7 @@ public:
 public slots:
     void sendData(const QJsonObject &jsonToSend);
     void sendToFileServer(const QJsonDocument &doc);
-    void sendFile(const QString &filePath);
+    void sendFile(const QString &filePath,const QString &flag);
     void sendAvatar(const QString &avatarPath);
 
     void setActiveUser(const QString &userName,const int &userId);
@@ -41,6 +41,7 @@ signals:
     void sendAvatarUrl(const QString &avatar_url,const int& user_id);
 
     void messageReceived(const QJsonObject &receivedMessageJson);
+    void groupMessageReceived(const QJsonObject &receivedMessageJson);
     void loginResultsReceived(const QJsonObject &loginResultsJson);
     void registrationResultsReceived(const QJsonObject &registrationResultsJson);
     void searchDataReceived(const QJsonObject &searchDataJson);
@@ -48,7 +49,7 @@ signals:
     void editResultsReceived(const QJsonObject &editResultsJson);
     void avatarsUpdateReceived(const QJsonObject &avatarsUpdateJson);
 
-    void sendPersonalMessageWithFile(const QString& fileUrl);
+    void sendMessageWithFile(const QString& fileUrl,const QString &flag);
 
     void connectionError();
     void connectionSuccess();

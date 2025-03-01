@@ -29,6 +29,7 @@ void Client::setupNetworkConnections() {
     connect(networkManager, &NetworkManager::loginResultsReceived, accountManager, &AccountManager::processingLoginResultsFromServer);
     connect(networkManager, &NetworkManager::registrationResultsReceived, accountManager, &AccountManager::processingRegistrationResultsFromServer);
     connect(networkManager, &NetworkManager::messageReceived, messageManager, &MessageManager::savePersonalMessage);
+    connect(networkManager, &NetworkManager::groupMessageReceived, messageManager, &MessageManager::saveGroupMessage);
     connect(networkManager, &NetworkManager::searchDataReceived, accountManager, &AccountManager::processingSearchDataFromServer);
     connect(networkManager, &NetworkManager::chatsUpdateDataReceived, messageManager, &MessageManager::saveMessageFromDatabase);
     connect(networkManager, &NetworkManager::editResultsReceived, accountManager, &AccountManager::processingEditProfileFromServer);
@@ -61,8 +62,8 @@ void Client::setupAccountConnections() {
 
 void Client::setupMessageConnections() {
     connect(this, &Client::loadingPersonalChat, messageManager, &MessageManager::loadingPersonalChat);
-    connect(this, &Client::sendPersonalMessage, messageManager, &MessageManager::sendPersonalMessage);
-    connect(this, &Client::sendPersonalMessageWithFile, messageManager, &MessageManager::saveMessageAndSendFile);
+    connect(this, &Client::sendMessage, messageManager, &MessageManager::sendMessage);
+    connect(this, &Client::sendMessageWithFile, messageManager, &MessageManager::saveMessageAndSendFile);
 
     connect(messageManager, &MessageManager::sendMessageJson, networkManager, &NetworkManager::sendData);
     connect(messageManager, &MessageManager::sendFile, networkManager, &NetworkManager::sendFile);
@@ -85,7 +86,7 @@ void Client::setupMessageConnections() {
 }
 
 void Client::setupFileConnections() {
-    connect(networkManager, &NetworkManager::sendPersonalMessageWithFile, messageManager, &MessageManager::sendPersonalMessageWithFile);
+    connect(networkManager, &NetworkManager::sendMessageWithFile, messageManager, &MessageManager::sendMessageWithFile);
     connect(networkManager, &NetworkManager::uploadFiles, fileManager, &FileManager::uploadFiles);
     connect(networkManager, &NetworkManager::uploadVoiceFile, fileManager, &FileManager::uploadVoiceFile);
     connect(networkManager, &NetworkManager::uploadAvatar, fileManager, &FileManager::uploadAvatar);

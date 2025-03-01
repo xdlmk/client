@@ -108,6 +108,7 @@ Window {
             property bool isOutgoing: model.isOutgoing
             property string fileUrl: model.fileUrl
             property string fileName: model.fileName
+            isWaitingForVoice: false
         }
     }
 
@@ -259,10 +260,10 @@ Window {
 
     function connectSuccess() { connectRect.visible = false; }
 
-    function onCheckActiveDialog(login,message,out,time,fileName,fileUrl)
+    function onCheckActiveDialog(id,login,message,out,time,fileName,fileUrl,type)
     {
         logger.qmlLog("INFO","Main.qml::onCheckActiveDialog","Dialog active: " + (nameText.text === login));
-        if (nameText.text === login)
+        if (upLine.user_id === id && upLine.currentState === type)
         {
             if(out === "out") {
                 onNewMessage(userlogin,message,time,fileName,fileUrl,true);

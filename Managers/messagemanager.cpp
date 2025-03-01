@@ -80,7 +80,62 @@ void MessageManager::saveMessageToJson(QString &userlogin, QString &message, QSt
     file.write(updatedDoc.toJson());
     file.close();
 
-    emit showPersonalChat(userlogin, message, id, out);
+    emit showPersonalChat(userlogin, message, id, out, "personal");
+}
+
+void MessageManager::saveGroupMessageToJson(QString &userlogin, QString &message, QString &out, QString &time, QString &fullDate, int message_id, int id, QString &groupName, int group_id, QString &fileUrl)
+{
+    QDir dir(QCoreApplication::applicationDirPath() + "/resources/" + activeUserName + "/group");
+    if (!dir.exists()) {
+        dir.mkpath(".");
+    }
+    QFile file(QCoreApplication::applicationDirPath() + "/resources/" + activeUserName + "/group" +"/message_" + QString::number(group_id) + ".json");
+
+    if (!file.exists()) {
+        if (file.open(QIODevice::WriteOnly)) {
+            QJsonArray emptyArray;
+            QJsonDocument doc(emptyArray);
+            file.write(doc.toJson());
+            file.close();
+        } else {
+            logger->log(Logger::ERROR,"messagemanager.cpp::saveGroupMessageToJson","File dont create " + userlogin);
+        }
+    } else {
+        logger->log(Logger::INFO,"messagemanager.cpp::saveGroupMessageToJson","File exist " + userlogin);
+    }
+
+    if (!file.open(QIODevice::ReadWrite)) {
+        logger->log(Logger::ERROR,"messagemanager.cpp::saveGroupMessageToJson","File did not open with error: " + file.errorString());
+        return;
+    }
+
+    QJsonArray chatHistory;
+    QByteArray fileData = file.readAll();
+    if (!fileData.isEmpty()) {
+        QJsonDocument doc = QJsonDocument::fromJson(fileData);
+        chatHistory = doc.array();
+    }
+
+    QJsonObject messageObject;
+    messageObject["login"] = userlogin;
+    messageObject["id"] = id;
+    messageObject["message_id"] = message_id;
+    messageObject["group_name"] = groupName;
+    messageObject["group_id"] = group_id;
+    messageObject["message"] = message;
+    messageObject["Out"] = out;
+    messageObject["FullDate"] = fullDate;
+    messageObject["time"] = time;
+    messageObject["fileUrl"] = fileUrl;
+
+    chatHistory.append(messageObject);
+
+    file.resize(0);
+    QJsonDocument updatedDoc(chatHistory);
+    file.write(updatedDoc.toJson());
+    file.close();
+
+    emit showPersonalChat(groupName, message, group_id, out, "group");
 }
 
 void MessageManager::setActiveUser(const QString &userName, const int &userId)
@@ -166,7 +221,42 @@ void MessageManager::savePersonalMessage(const QJsonObject &personalMessageJson)
         }
     }
 
-    emit checkActiveDialog(login,message,out,time,fileName,fileUrl);
+    emit checkActiveDialog(id,login,message,out,time,fileName,fileUrl,"personal");
+}
+
+void MessageManager::saveGroupMessage(const QJsonObject &groupMessageJson)
+{
+    QString message = groupMessageJson["message"].toString();
+    QString time = groupMessageJson["time"].toString();
+    int message_id = groupMessageJson["message_id"].toInt();
+    QString fileUrl = "";
+    if(groupMessageJson.contains("fileUrl"))  fileUrl = groupMessageJson["fileUrl"].toString();
+    QString group_name = groupMessageJson["group_name"].toString();
+    int group_id = groupMessageJson["group_name"].toInt();
+    QString out = "";
+    QString login;
+    QString fullDate = "not:done(messagemanager::saveGroupMessage)";
+    int id;
+
+    if(groupMessageJson.contains("sender_login")) {
+        login = groupMessageJson["sender_login"].toString();
+        id = groupMessageJson["sender_id"].toInt();
+        emit checkAndSendAvatarUpdate(groupMessageJson["sender_avatar_url"].toString(),id);
+    } else {
+        out = "out";
+        login = activeUserName;
+        id = activeUserId;
+    }
+    saveGroupMessageToJson(login,message,out,time,fullDate,message_id,id,group_name,group_id,fileUrl);
+
+    QString fileName = "";
+    if(fileUrl != "") {
+        int underscoreIndex = fileUrl.indexOf('_');
+        if (underscoreIndex != -1 && underscoreIndex + 1 < fileUrl.length()) {
+            fileName = fileUrl.mid(underscoreIndex + 1);
+        }
+    }
+    emit checkActiveDialog(group_id,login,message,out,time,fileName,fileUrl,"group");
 }
 
 void MessageManager::loadingPersonalChat(const QString userlogin)
@@ -223,45 +313,66 @@ void MessageManager::loadingPersonalChat(const QString userlogin)
 
 }
 
-void MessageManager::sendPersonalMessage(const QString &message, const QString &receiver_login, const int &receiver_id)
+void MessageManager::sendMessage(const QString &message, const QString &receiver_login, const int &receiver_id, const QString &flag)
 {
     QJsonObject personalMessageJson;
 
-    personalMessageJson["flag"] = "personal_message";
+    personalMessageJson["flag"] = flag + "_message";
     personalMessageJson["message"] = message;
 
     personalMessageJson["sender_login"] = activeUserName;
     personalMessageJson["sender_id"] = activeUserId;
 
-    personalMessageJson["receiver_login"] = receiver_login;
-    personalMessageJson["receiver_id"] = receiver_id;
+    if(flag == "personal") {
+        personalMessageJson["receiver_login"] = receiver_login;
+        personalMessageJson["receiver_id"] = receiver_id;
+    } else if(flag == "group") {
+        personalMessageJson["group_name"] = receiver_login;
+        personalMessageJson["group_id"] = receiver_id;
+    }
 
     emit sendMessageJson(personalMessageJson);
 }
 
-void MessageManager::saveMessageAndSendFile(const QString &message, const QString &receiver_login, const int &receiver_id, const QString &filePath)
+void MessageManager::saveMessageAndSendFile(const QString &message, const QString &receiver_login, const int &receiver_id, const QString &filePath, const QString &flag)
 {
     QJsonObject jsonMessage;
     jsonMessage["message"] = message;
-    jsonMessage["receiver_login"] = receiver_login;
-    jsonMessage["receiver_id"] = receiver_id;
+    if(flag == "personal") {
+        jsonMessage["receiver_login"] = receiver_login;
+        jsonMessage["receiver_id"] = receiver_id;
+    } else if(flag == "group") {
+        jsonMessage["group_name"] = receiver_login;
+        jsonMessage["group_id"] = receiver_id;
+    }
 
     QJsonDocument jsonDocument(jsonMessage);
     QByteArray jsonData = jsonDocument.toJson(QJsonDocument::Compact);
 
-    QFile file("data.json");
+
+    QDir dir(QCoreApplication::applicationDirPath() + "/.tempData/" + activeUserName + "/" + flag + "_messages");
+    if (!dir.exists()) {
+        dir.mkpath(".");
+    }
+
+    QFile file(QCoreApplication::applicationDirPath() + "/.tempData/" + activeUserName + "/" + flag + "_messages/" +"data.json");
     if (file.open(QIODevice::WriteOnly | QIODevice::Text)) {
         file.write(jsonData);
         file.close();
-        emit sendFile(filePath);
+        emit sendFile(filePath,flag + "_file");
     } else {
         logger->log(Logger::ERROR,"messagemanager.cpp::saveMessageAndSendFile", "File with message do not save");
     }
 }
 
-void MessageManager::sendPersonalMessageWithFile(const QString &fileUrl)
+void MessageManager::sendMessageWithFile(const QString &fileUrl,const QString &flag)
 {
-    QFile file("data.json");
+    QDir dir(QCoreApplication::applicationDirPath() + "/.tempData/" + activeUserName + "/" + flag + "_messages");
+    if (!dir.exists()) {
+        dir.mkpath(".");
+    }
+
+    QFile file(QCoreApplication::applicationDirPath() + "/.tempData/" + activeUserName + "/" + flag + "_messages/" +"data.json");
     QByteArray jsonData;
     if (file.open(QIODevice::ReadOnly | QIODevice::Text)) {
         jsonData = file.readAll();
@@ -269,20 +380,24 @@ void MessageManager::sendPersonalMessageWithFile(const QString &fileUrl)
     }
     QJsonObject jsonObject = QJsonDocument::fromJson(jsonData).object();
 
-    QJsonObject personalMessageJson;
+    QJsonObject messageJson;
 
-    logger->log(Logger::DEBUG,"messagemanager.cpp::sendPersonalMessageWithFile","FileUrl = " + fileUrl);
-    personalMessageJson["flag"] = "personal_message";
-    personalMessageJson["message"] = jsonObject["message"].toString();
-    personalMessageJson["fileUrl"] = fileUrl;
+    logger->log(Logger::DEBUG,"messagemanager.cpp::sendMessageWithFile","FileUrl = " + fileUrl);
+    messageJson["flag"] = flag + "_message";
+    messageJson["message"] = jsonObject["message"].toString();
+    messageJson["fileUrl"] = fileUrl;
+    messageJson["sender_login"] = activeUserName;
+    messageJson["sender_id"] = activeUserId;
 
-    personalMessageJson["sender_login"] = activeUserName;
-    personalMessageJson["sender_id"] = activeUserId;
+    if(flag == "personal") {
+        messageJson["receiver_login"] = jsonObject["receiver_login"].toString();;
+        messageJson["receiver_id"] = jsonObject["receiver_id"].toInt();
+    } else if(flag == "group") {
+        messageJson["group_name"] = jsonObject["group_name"].toString();;
+        messageJson["group_id"] = jsonObject["group_id"].toInt();
+    }
 
-    personalMessageJson["receiver_login"] = jsonObject["receiver_login"].toString();;
-    personalMessageJson["receiver_id"] = jsonObject["receiver_id"].toInt();
-
-    emit sendMessageJson(personalMessageJson);
+    emit sendMessageJson(messageJson);
 }
 
 void MessageManager::sendVoiceMessage(const QString &receiver_login, const int &receiver_id)
@@ -339,7 +454,7 @@ void MessageManager::checkingChatAvailability(QString &login)
             int id = lastMessageObject["id"].toInt();
             QString out = lastMessageObject["Out"].toString();
 
-            emit showPersonalChat(login,message,id,out);
+            emit showPersonalChat(login,message,id,out, "personal");
         } else {
             logger->log(Logger::INFO,"messagemanager.cpp::checkingChatAvailability","Chat history is empty");
         }
