@@ -50,6 +50,8 @@ void Client::setupAccountConnections() {
     connect(this, &Client::sendEditProfileRequest, accountManager, &AccountManager::sendEditProfileRequest);
     connect(this,&Client::sendSearchToServer,accountManager,&AccountManager::sendSearchToServer);
 
+    connect(this,&Client::createGroup,accountManager,&AccountManager::createGroup);
+
     connect(accountManager, &AccountManager::editUserlogin, this, &Client::editUserlogin);
     connect(accountManager, &AccountManager::editPhoneNumber, this, &Client::editPhoneNumber);
     connect(accountManager, &AccountManager::editName, this, &Client::editName);

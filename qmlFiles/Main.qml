@@ -240,6 +240,10 @@ Window {
         user_id: 0
     }
 
+    CreateGroupForm {
+        id: createGroupForm
+    }
+
     Timer {
         id: updateAvatarsTimer
         interval: 1000

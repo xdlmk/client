@@ -146,6 +146,15 @@ void AccountManager::setLogger(Logger *logger)
     responseHandler.setLogger(logger);
 }
 
+void AccountManager::createGroup(const QString &groupName)
+{
+    QJsonObject createGroupJson;
+    createGroupJson["flag"] = "create_group";
+    createGroupJson["groupName"] = groupName;
+    createGroupJson["creator_id"] = user_id;
+    networkManager->sendData(createGroupJson);
+}
+
 bool AccountManager::isAvatarUpToDate(QString avatar_url, int user_id)
 {
     logger->log(Logger::INFO,"accountmanager.cpp::isAvatarUpToDate", "isAvatarUpToDate starts");

@@ -91,6 +91,8 @@ signals:
     void getFile(const QString& fileUrl,const QString& flag);
     void sendNewAvatar(const QString& avatarPath);
 
+    void createGroup(const QString& groupName);
+
     void setLoggers(Logger* logger);
 private:
     void setupConnections();

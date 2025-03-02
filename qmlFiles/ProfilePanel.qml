@@ -227,14 +227,68 @@ Rectangle {
                     }
                 }
             }
-            Button{
-                id:setti2
+            Rectangle {
+                id:openGroupCreateButton
+                width: parent.width
                 anchors.top:openMyProfileButton.bottom
-                text:"Settings2"
+                color: "#1e2a36"
+                height: 30
+
+                Item {
+                    anchors.fill: parent
+                    anchors.leftMargin: 10
+                    anchors.topMargin: 3
+
+                    Rectangle {
+                        id:groupCreateImage
+                        width: 24
+                        height: 24
+                        radius: 12
+                        color: "transparent"
+                        border.color: "lightblue"
+                        clip: true
+                        Image {
+                            anchors.fill: parent
+                            //source: groupCreateButtonImage
+                            fillMode: Image.PreserveAspectFit
+                        }
+                    }
+
+                    Text {
+                        text: "Create group"
+                        color: "white"
+                        font.pointSize: 10
+                        font.bold: true
+                        anchors.left: groupCreateImage.right
+                        anchors.top: parent.top
+                        anchors.topMargin: 3
+                        anchors.leftMargin: 10
+                    }
+                }
+                MouseArea {
+                    id: groupCreateButtonMouseArea
+                    anchors.fill: parent
+                    cursorShape: Qt.PointingHandCursor
+                    hoverEnabled: true
+
+                    onClicked: {
+                        isProfileExtended = false
+                        overlay.visible = true
+                        createGroupForm.open()
+                    }
+
+                    onEntered: {
+                        openGroupCreateButton.color = "#626a72";
+                    }
+
+                    onExited: {
+                        openGroupCreateButton.color = "#1e2a36";
+                    }
+                }
             }
             Button{
                 id:setti3
-                anchors.top:setti2.bottom
+                anchors.top:openGroupCreateButton.bottom
                 text:"Settings3"
             }
             Button{

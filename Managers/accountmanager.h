@@ -34,6 +34,7 @@ public slots:
     void setActiveUser(const QString &userName,const int &userId);
     void setLogger(Logger* logger);
 
+    void createGroup(const QString& groupName);
 signals:
     void newUser(QString username,int user_id);
     void changeAccount(QString username,QString password);
