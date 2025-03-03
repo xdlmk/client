@@ -235,7 +235,7 @@ Rectangle{
     function wordProcessing() {
         if (edtText.text.trim() !== "") {
             if(upLine.currentState == "default");
-            else if (upLine.currentState == "group") {
+            else if (upLine.currentState == "personal") {
                 if(fileLoad) {
                     client.sendMessageWithFile(edtText.text, nameText.text,upLine.user_id,filePath,"personal")
                     fileLoad = false;
@@ -243,7 +243,7 @@ Rectangle{
                 } else {
                     client.sendMessage(edtText.text, nameText.text,upLine.user_id,"personal");
                 }
-            } else if (upLine.currentState == "personal") {
+            } else if (upLine.currentState == "group") {
                 if(fileLoad) {
                     client.sendMessageWithFile(edtText.text, nameText.text,upLine.user_id,filePath,"group")
                     fileLoad = false;

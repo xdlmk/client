@@ -65,7 +65,7 @@ void Client::setupAccountConnections() {
 }
 
 void Client::setupMessageConnections() {
-    connect(this, &Client::loadingPersonalChat, messageManager, &MessageManager::loadingPersonalChat);
+    connect(this, &Client::loadingChat, messageManager, &MessageManager::loadingChat);
     connect(this, &Client::sendMessage, messageManager, &MessageManager::sendMessage);
     connect(this, &Client::sendMessageWithFile, messageManager, &MessageManager::saveMessageAndSendFile);
 

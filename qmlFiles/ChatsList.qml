@@ -90,6 +90,7 @@ Rectangle {
             }
         }
         var newPersChat;
+        console.log("onShowPersonalChat: " + userlogin + message + id + type);
         if(out === "out") {
             newPersChat = {"userlogin":userlogin, "currentChatType":type, "currentStateText": "static", "message": "You: " + message , "id":id};
         }

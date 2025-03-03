@@ -89,7 +89,7 @@ void MessageManager::saveGroupMessageToJson(QString &userlogin, QString &message
     if (!dir.exists()) {
         dir.mkpath(".");
     }
-    QFile file(QCoreApplication::applicationDirPath() + "/resources/" + activeUserName + "/group" +"/message_" + QString::number(group_id) + ".json");
+    QFile file(QCoreApplication::applicationDirPath() + "/resources/" + activeUserName + "/group" +"/message_" + groupName + ".json");
 
     if (!file.exists()) {
         if (file.open(QIODevice::WriteOnly)) {
@@ -122,7 +122,7 @@ void MessageManager::saveGroupMessageToJson(QString &userlogin, QString &message
     messageObject["message_id"] = message_id;
     messageObject["group_name"] = groupName;
     messageObject["group_id"] = group_id;
-    messageObject["message"] = message;
+    messageObject["str"] = message;
     messageObject["Out"] = out;
     messageObject["FullDate"] = fullDate;
     messageObject["time"] = time;
@@ -230,7 +230,7 @@ void MessageManager::saveGroupMessage(const QJsonObject &groupMessageJson)
     QString fileUrl = "";
     if(groupMessageJson.contains("fileUrl"))  fileUrl = groupMessageJson["fileUrl"].toString();
     QString group_name = groupMessageJson["group_name"].toString();
-    int group_id = groupMessageJson["group_name"].toInt();
+    int group_id = groupMessageJson["group_id"].toInt();
     QString out = "";
     QString login;
     QString fullDate = "not:done(messagemanager::saveGroupMessage)";
@@ -257,17 +257,17 @@ void MessageManager::saveGroupMessage(const QJsonObject &groupMessageJson)
     emit checkActiveDialog(group_id,login,message,out,time,fileName,fileUrl,"group");
 }
 
-void MessageManager::loadingPersonalChat(const QString userlogin)
+void MessageManager::loadingChat(const QString userlogin, const QString &flag)
 {
-    QDir dir(QCoreApplication::applicationDirPath() + "/resources/"+ activeUserName + "/personal");
+    QDir dir(QCoreApplication::applicationDirPath() + "/resources/"+ activeUserName + "/" + flag);
     if (!dir.exists()) {
         dir.mkpath(".");
     }
 
-    QFile file(QCoreApplication::applicationDirPath() + "/resources/" + activeUserName + "/personal" +"/message_" + userlogin + ".json");
+    QFile file(QCoreApplication::applicationDirPath() + "/resources/" + activeUserName + "/" + flag +"/message_" + userlogin + ".json");
 
     if (!file.exists()) {
-        logger->log(Logger::INFO,"messagemanager.cpp::loadingPersonalChat","File not exist, creating new file");
+        logger->log(Logger::INFO,"messagemanager.cpp::loadingChat","File not exist, creating new file");
 
         if (file.open(QIODevice::WriteOnly)) {
             QJsonArray emptyArray;
@@ -280,7 +280,7 @@ void MessageManager::loadingPersonalChat(const QString userlogin)
     }
 
     if (!file.open(QIODevice::ReadWrite)) {
-        logger->log(Logger::ERROR,"messagemanager.cpp::loadingPersonalChat","File did not open with error: " + file.errorString());
+        logger->log(Logger::ERROR,"messagemanager.cpp::loadingChat","File did not open with error: " + file.errorString());
         return;
     }
 
@@ -291,7 +291,7 @@ void MessageManager::loadingPersonalChat(const QString userlogin)
 
         emit clearMainListView();
 
-        logger->log(Logger::INFO,"messagemanager.cpp::loadingPersonalChat","Loading personal chat from json");
+        logger->log(Logger::INFO,"messagemanager.cpp::loadingChat","Loading personal chat from json");
         for (const QJsonValue &value : chatHistory) {
             QJsonObject messageObject = value.toObject();
             QString user = messageObject["login"].toString();

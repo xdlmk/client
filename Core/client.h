@@ -52,13 +52,11 @@ signals:
 
     void clientLogout();
 
-    void loadingPersonalChat(const QString userlogin);
+    void loadingChat(const QString userlogin, const QString &flag);
 
     void showPersonalChat(QString login,QString message, int id, QString out, QString type);
     void checkActiveDialog(int user_id,QString login,QString message, QString out,
                            QString time,QString fileName,QString fileUrl,QString type);
-
-    void changeReceiverUserSignal(QString userlogin,int id);
 
     void newSearchUser(QString userlogin,int id);
 

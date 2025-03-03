@@ -98,7 +98,7 @@ Rectangle {
 
                     upLine.user_id = user_id;
                     nameText.text = userlogin;
-                    changeReceiverUserSignal(userlogin,user_id);
+                    client.loadingChat(userlogin,chatType);
                 }
                 onEntered: {
                     if (currentStateText === "static"){

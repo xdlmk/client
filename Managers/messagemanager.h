@@ -33,7 +33,7 @@ public slots:
     void savePersonalMessage(const QJsonObject &personalMessageJson);
     void saveGroupMessage(const QJsonObject &groupMessageJson);
 
-    void loadingPersonalChat(const QString userlogin);
+    void loadingChat(const QString userlogin, const QString &flag);
 
     void sendMessage(const QString &message, const QString &receiver_login, const int &receiver_id, const QString &flag);
     void saveMessageAndSendFile(const QString &message, const QString &receiver_login, const int &receiver_id,const QString& filePath, const QString &flag);
