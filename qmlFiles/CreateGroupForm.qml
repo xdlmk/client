@@ -90,9 +90,9 @@ Dialog {
         color: "White"
         font.pointSize: 12
         anchors{
-            right: create.left
+            right: nextButton.left
             rightMargin: 10
-            bottom: create.bottom
+            bottom: nextButton.bottom
         }
         MouseArea {
             anchors.fill: parent
@@ -103,8 +103,8 @@ Dialog {
     }
 
     Text{
-        id:create
-        text: "Create"
+        id:nextButton
+        text: "Next"
         color: "White"
         font.pointSize: 12
         anchors{
@@ -118,15 +118,20 @@ Dialog {
             hoverEnabled: true
             cursorShape: Qt.PointingHandCursor
             onClicked: {
-                client.createGroup(groupName.text);
-                groupName.clear();
-                createGroupForm.close();
+                //client.createGroup(groupName.text);
+                //groupName.clear();
+                //createGroupForm.close();
+                selectContactsForm.open();
             }
         }
     }
 
     Behavior on opacity {
         NumberAnimation { duration: 200 }
+    }
+
+    SelectContactsForm {
+        id:selectContactsForm
     }
 
     onOpened: {

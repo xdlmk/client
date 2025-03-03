@@ -146,13 +146,107 @@ void AccountManager::setLogger(Logger *logger)
     responseHandler.setLogger(logger);
 }
 
-void AccountManager::createGroup(const QString &groupName)
+void AccountManager::createGroup(const QString &groupName, const QVariantList &selectedContacts)
 {
     QJsonObject createGroupJson;
     createGroupJson["flag"] = "create_group";
     createGroupJson["groupName"] = groupName;
     createGroupJson["creator_id"] = user_id;
+
+    QJsonArray membersArray;
+    for (const QVariant &contact : selectedContacts) {
+        QVariantMap contactMap = contact.toMap();
+        QJsonObject contactJson = QJsonObject::fromVariantMap(contactMap);
+        membersArray.append(contactJson);
+    }
+    qDebug() << membersArray;
+    createGroupJson["members"] = membersArray;
     networkManager->sendData(createGroupJson);
+}
+
+void AccountManager::getContactList()
+{
+    logger->log(Logger::DEBUG,"accountmanager.cpp::getContactList", "getContactList starts!");
+    QString appPath = QCoreApplication::applicationDirPath();
+    QString personalDirPath = appPath + "/resources/" + activeUserName + "/personal";
+
+    QDir personalDir(personalDirPath);
+    if (!personalDir.exists()) {
+        logger->log(Logger::DEBUG,"accountmanager.cpp::getContactList", "personalDir not exists!");
+        return;
+    }
+
+    QStringList messageFiles = personalDir.entryList(QStringList() << "message_*.json", QDir::Files);
+    QJsonArray contactsArray;
+
+    for (const QString &fileName : messageFiles) {
+        QString filePath = personalDirPath + "/" + fileName;
+
+        QFile file(filePath);
+        if (!file.open(QIODevice::ReadOnly)) {
+            logger->log(Logger::DEBUG,"accountmanager.cpp::getContactList", "Open file failed:" + filePath);
+            continue;
+        }
+
+        QByteArray fileData = file.readAll();
+        file.close();
+
+        QJsonDocument doc = QJsonDocument::fromJson(fileData);
+
+        QJsonArray jsonArray = doc.array();
+        if (jsonArray.isEmpty()) {
+            qDebug() << "File is empty:" << fileName;
+            continue;
+        }
+
+        QJsonObject lastObject = jsonArray.last().toObject();
+        int id = lastObject["id"].toInt();
+
+        QString username = fileName.mid(8, fileName.length() - 13);
+        if(username == activeUserName) continue;
+
+        QJsonObject contact;
+        contact["id"] = id;
+        contact["username"] = username;
+        contactsArray.append(contact);
+    }
+    QString savePath = appPath + "/.data/" + activeUserName + "/contacts/contacts.json";
+    QDir saveDir(QFileInfo(savePath).absolutePath());
+    if (!saveDir.exists()) {
+        saveDir.mkpath(".");
+    }
+
+    QFile saveFile(savePath);
+    if (!saveFile.open(QIODevice::WriteOnly)) {
+        logger->log(Logger::DEBUG,"accountmanager.cpp::getContactList", "Open file failed:" + savePath);
+        return;
+    }
+
+    QJsonDocument saveDoc(contactsArray);
+    saveFile.write(saveDoc.toJson(QJsonDocument::Indented));
+    saveFile.close();
+}
+
+void AccountManager::showContacts()
+{
+    QJsonArray contactsArray;
+    QString contactsFilePath = QCoreApplication::applicationDirPath() + "/.data/" + activeUserName + "/contacts/contacts.json";
+
+    QFile contactsFile(contactsFilePath);
+    if (!contactsFile.open(QIODevice::ReadOnly)) {
+        logger->log(Logger::DEBUG,"accountmanager.cpp::showContacts", "Open file failed:" + contactsFilePath);
+        return;
+    }
+    QByteArray fileData = contactsFile.readAll();
+    contactsFile.close();
+
+    contactsArray = QJsonDocument::fromJson(fileData).array();
+    QVariantList contactsList;
+    for (const QJsonValue &value : contactsArray) {
+        contactsList.append(value.toObject().toVariantMap());
+    }
+
+    emit loadContacts(contactsList);
 }
 
 bool AccountManager::isAvatarUpToDate(QString avatar_url, int user_id)

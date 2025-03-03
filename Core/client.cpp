@@ -49,6 +49,8 @@ void Client::setupAccountConnections() {
     connect(this, &Client::sendRegisterRequest, accountManager, &AccountManager::registerAccount);
     connect(this, &Client::sendEditProfileRequest, accountManager, &AccountManager::sendEditProfileRequest);
     connect(this,&Client::sendSearchToServer,accountManager,&AccountManager::sendSearchToServer);
+    connect(this,&Client::showContacts,accountManager,&AccountManager::showContacts);
+    connect(accountManager, &AccountManager::loadContacts, this, &Client::loadContacts);
 
     connect(this,&Client::createGroup,accountManager,&AccountManager::createGroup);
 
@@ -70,6 +72,7 @@ void Client::setupMessageConnections() {
     connect(messageManager, &MessageManager::sendMessageJson, networkManager, &NetworkManager::sendData);
     connect(messageManager, &MessageManager::sendFile, networkManager, &NetworkManager::sendFile);
     connect(messageManager,&MessageManager::checkAndSendAvatarUpdate,accountManager,&AccountManager::checkAndSendAvatarUpdate);
+    connect(messageManager,&MessageManager::getContactList,accountManager,&AccountManager::getContactList);
 
     connect(accountManager, &AccountManager::checkingChatAvailability, messageManager, &MessageManager::checkingChatAvailability);
     connect(messageManager, &MessageManager::showPersonalChat, this, &Client::showPersonalChat);

@@ -148,10 +148,6 @@ void MessageManager::saveMessageFromDatabase(QJsonObject &json)
 {
     logger->log(Logger::INFO,"messagemanager.cpp::saveMessageFromDatabase","saveMessageFromDatabase starts");
     QJsonArray messagesArray = json["messages"].toArray();
-    if(messagesArray.isEmpty()){
-        emit sendAvatarsUpdate();
-        return;
-    }
 
     for (const QJsonValue &value : messagesArray) {
         QJsonObject json = value.toObject();
@@ -177,6 +173,7 @@ void MessageManager::saveMessageFromDatabase(QJsonObject &json)
         }
     }
     emit sendAvatarsUpdate();
+    emit getContactList();
 }
 
 void MessageManager::savePersonalMessage(const QJsonObject &personalMessageJson)
@@ -222,6 +219,7 @@ void MessageManager::savePersonalMessage(const QJsonObject &personalMessageJson)
     }
 
     emit checkActiveDialog(id,login,message,out,time,fileName,fileUrl,"personal");
+    emit getContactList();
 }
 
 void MessageManager::saveGroupMessage(const QJsonObject &groupMessageJson)

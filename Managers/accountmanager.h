@@ -3,6 +3,7 @@
 
 #include <QObject>
 #include <QJsonObject>
+#include <QVariantList>
 #include <QStandardPaths>
 #include <QSettings>
 #include <QImage>
@@ -34,7 +35,10 @@ public slots:
     void setActiveUser(const QString &userName,const int &userId);
     void setLogger(Logger* logger);
 
-    void createGroup(const QString& groupName);
+    void createGroup(const QString& groupName, const QVariantList &selectedContacts);
+
+    void getContactList();
+    void showContacts();
 signals:
     void newUser(QString username,int user_id);
     void changeAccount(QString username,QString password);
@@ -60,6 +64,8 @@ signals:
     void sendAvatarUrl(const QString &avatar_url,const int& user_id);
 
     void newSearchUser(QString &userlogin,int &id);
+
+    void loadContacts(QVariantList contactsList);
 
     void processingLoginResultsFromServer(const QJsonObject &loginResultsJson);
     void processingRegistrationResultsFromServer(const QJsonObject &regResultsJson);

@@ -56,6 +56,8 @@ signals:
     void sendFile(const QString& filePath,const QString &flag);
     void sendToFileServer(const QJsonDocument &doc);
 
+    void getContactList();
+
 private:
     QString activeUserName;
     int activeUserId;

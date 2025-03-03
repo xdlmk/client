@@ -91,7 +91,10 @@ signals:
     void getFile(const QString& fileUrl,const QString& flag);
     void sendNewAvatar(const QString& avatarPath);
 
-    void createGroup(const QString& groupName);
+    void createGroup(const QString& groupName, const QVariantList &selectedContacts);
+
+    void showContacts();
+    void loadContacts(QVariantList contactsList);
 
     void setLoggers(Logger* logger);
 private:
