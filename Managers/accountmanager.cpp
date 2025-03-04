@@ -159,7 +159,6 @@ void AccountManager::createGroup(const QString &groupName, const QVariantList &s
         QJsonObject contactJson = QJsonObject::fromVariantMap(contactMap);
         membersArray.append(contactJson);
     }
-    qDebug() << membersArray;
     createGroupJson["members"] = membersArray;
     networkManager->sendData(createGroupJson);
 }
@@ -194,10 +193,7 @@ void AccountManager::getContactList()
         QJsonDocument doc = QJsonDocument::fromJson(fileData);
 
         QJsonArray jsonArray = doc.array();
-        if (jsonArray.isEmpty()) {
-            qDebug() << "File is empty:" << fileName;
-            continue;
-        }
+        if (jsonArray.isEmpty()) continue;
 
         QJsonObject lastObject = jsonArray.last().toObject();
         int id = lastObject["id"].toInt();
@@ -318,9 +314,9 @@ void AccountManager::setupResponseHandler()
 
 void AccountManager::updatingChats()
 {
-    QString folderPath = QCoreApplication::applicationDirPath() + "/resources/" + activeUserName + "/personal";
+    QString folderPathPersonal = QCoreApplication::applicationDirPath() + "/resources/" + activeUserName + "/personal";
 
-    QDir dir(folderPath);
+    QDir dir(folderPathPersonal);
 
     QStringList fileList = dir.entryList(QStringList() << "message_*.json", QDir::Files);
 
@@ -374,13 +370,69 @@ void AccountManager::updatingChats()
         }
     }
 
+    QString folderPathGroup = QCoreApplication::applicationDirPath() + "/resources/" + activeUserName + "/group";
+
+    QDir groupDir(folderPathGroup);
+
+    QStringList groupFileList = groupDir.entryList(QStringList() << "message_*.json", QDir::Files);
+
+    QJsonArray groupJsonArray;
+    QJsonArray groupsIdsArray;
+
+    for (const QString& fileName : groupFileList) {
+        QRegularExpressionMatch match = regex.match(fileName);
+        if (match.hasMatch()) {
+            QString name = match.captured(1);
+            if(name == "") continue;
+
+            //emit checkingChatAvailability(login);
+            QJsonObject groupObject;
+
+
+            QFile file(QCoreApplication::applicationDirPath() + "/resources/" + activeUserName + "/group" +"/message_" + name + ".json");
+            if (!file.open(QIODevice::ReadWrite)) {
+                logger->log(Logger::INFO,"accountmanager.cpp::updatingChats","File not open with error: " + file.errorString());
+                return;
+            }
+
+            QByteArray fileData = file.readAll();
+            if (!fileData.isEmpty()) {
+                QJsonDocument doc = QJsonDocument::fromJson(fileData);
+                QJsonArray chatHistory = doc.array();
+
+                if (!chatHistory.isEmpty()) {
+                    QJsonObject lastMessageObject = chatHistory.last().toObject();
+                    groupObject["message_id"] = lastMessageObject["message_id"];
+                    groupObject["group_id"] = lastMessageObject["group_id"];
+                    groupObject["group_name"] = lastMessageObject["group_name"];
+                    groupsIdsArray.append(groupObject["group_id"].toInt());
+
+                } else {
+                    logger->log(Logger::INFO,"accountmanager.cpp::updatingChats","ChatHistory is empty");
+                }
+            }
+            file.close();
+
+            if (!groupObject.isEmpty()) {
+                groupJsonArray.append(groupObject);
+            }
+            else {
+                logger->log(Logger::INFO,"accountmanager.cpp::updatingChats","loginObject is empty");
+            }
+        }
+    }
+
     QJsonObject mainObject;
     mainObject["flag"] = "updating_chats";
     if(!fileList.isEmpty()) {
         mainObject["chats"] = jsonArray;
     }
+    if(!groupFileList.isEmpty()) {
+        mainObject["groups"] = groupJsonArray;
+    }
     mainObject["userlogin"] = activeUserName;
     mainObject["dialogIds"] = dialogIdsArray;
+    mainObject["groupIds"] = groupsIdsArray;
 
     networkManager->sendData(mainObject);
 }

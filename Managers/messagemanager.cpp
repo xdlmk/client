@@ -155,12 +155,20 @@ void MessageManager::saveMessageFromDatabase(QJsonObject &json)
         QString message = json["str"].toString();
         QString time = json["time"].toString();
         QString fulldate = json["FullDate"].toString();
-        int dialog_id = json["dialog_id"].toInt();
         int message_id = json["message_id"].toInt();
         QString sender_login = json["sender_login"].toString();
         int sender_id = json["sender_id"].toInt();
         QString fileUrl = json["fileUrl"].toString();
         QString out = "";
+        if(json.contains("group_id")){
+            int group_id = json["group_id"].toInt();
+            QString group_name = json["group_name"].toString();
+            if(sender_id == activeUserId) out = "out";
+            saveGroupMessageToJson(sender_login, message, out, time, fulldate, message_id, sender_id, group_name, group_id, fileUrl);
+            continue;
+        }
+
+        int dialog_id = json["dialog_id"].toInt();
 
         if(sender_login == activeUserName) {
             QString receiver_login = json["receiver_login"].toString();
@@ -275,7 +283,7 @@ void MessageManager::loadingChat(const QString userlogin, const QString &flag)
             file.write(doc.toJson());
             file.close();
         } else {
-            logger->log(Logger::INFO,"messagemanager.cpp::checkingChatAvailability","File not create");
+            logger->log(Logger::INFO,"messagemanager.cpp::loadingChat","File not create");
         }
     }
 
