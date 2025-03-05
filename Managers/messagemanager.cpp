@@ -149,6 +149,9 @@ void MessageManager::saveMessageFromDatabase(QJsonObject &json)
     logger->log(Logger::INFO,"messagemanager.cpp::saveMessageFromDatabase","saveMessageFromDatabase starts");
     QJsonArray messagesArray = json["messages"].toArray();
 
+    QDir mesDir(QCoreApplication::applicationDirPath() + "/resources/" + activeUserName);
+    mesDir.removeRecursively();
+
     for (const QJsonValue &value : messagesArray) {
         QJsonObject json = value.toObject();
 
@@ -406,12 +409,12 @@ void MessageManager::sendMessageWithFile(const QString &fileUrl,const QString &f
     emit sendMessageJson(messageJson);
 }
 
-void MessageManager::sendVoiceMessage(const QString &receiver_login, const int &receiver_id)
+void MessageManager::sendVoiceMessage(const QString &receiver_login, const int &receiver_id, const QString &flag)
 {
     logger->log(Logger::DEBUG,"messagemanager.cpp::sendVoiceMessage", "sendVoiceMessage starts");
 
     QJsonObject voiceMessageJson;
-    voiceMessageJson["flag"] = "voice_message";
+    voiceMessageJson["flag"] = flag + "_voice_message";
     QString voicePath = QCoreApplication::applicationDirPath() + "/.tempData/" + activeUserName + "/voice_messages" + "/voiceMessage.wav";
     QFile file(voicePath);
     QFileInfo fileInfo(voicePath);
@@ -427,8 +430,14 @@ void MessageManager::sendVoiceMessage(const QString &receiver_login, const int &
 
     voiceMessageJson["sender_login"] = activeUserName;
     voiceMessageJson["sender_id"] = activeUserId;
-    voiceMessageJson["receiver_login"] = receiver_login;
-    voiceMessageJson["receiver_id"] = receiver_id;
+
+    if(flag == "personal") {
+        voiceMessageJson["receiver_login"] = receiver_login;
+        voiceMessageJson["receiver_id"] = receiver_id;
+    } else if(flag == "group") {
+        voiceMessageJson["group_name"] = receiver_login;
+        voiceMessageJson["group_id"] = receiver_id;
+    }
 
     QJsonDocument doc(voiceMessageJson);
 
@@ -440,10 +449,10 @@ void MessageManager::setLogger(Logger *logger)
     this->logger = logger;
 }
 
-void MessageManager::checkingChatAvailability(QString &login)
+void MessageManager::checkingChatAvailability(QString &login, const QString &flag)
 {
     logger->log(Logger::INFO,"messagemanager.cpp::checkingChatAvailability","Checking if a chat exists in a local save");
-    QFile file(QCoreApplication::applicationDirPath() + "/resources/" + activeUserName + "/personal" +"/message_" + login + ".json");
+    QFile file(QCoreApplication::applicationDirPath() + "/resources/" + activeUserName + "/" + flag + "/message_" + login + ".json");
     if (!file.open(QIODevice::ReadWrite)) {
         logger->log(Logger::ERROR,"messagemanager.cpp::checkingChatAvailability","File did not open with error: " + file.errorString());
         return;
@@ -457,10 +466,14 @@ void MessageManager::checkingChatAvailability(QString &login)
             QJsonObject lastMessageObject = chatHistory.last().toObject();
 
             QString message = lastMessageObject["str"].toString();
-            int id = lastMessageObject["id"].toInt();
+
+            int id;
+            if(flag == "group") id = lastMessageObject["group_id"].toInt();
+            else if (flag == "personal") id = lastMessageObject["id"].toInt();
+
             QString out = lastMessageObject["Out"].toString();
 
-            emit showPersonalChat(login,message,id,out, "personal");
+            emit showPersonalChat(login,message,id,out, flag);
         } else {
             logger->log(Logger::INFO,"messagemanager.cpp::checkingChatAvailability","Chat history is empty");
         }

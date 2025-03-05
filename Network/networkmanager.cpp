@@ -39,6 +39,7 @@ void NetworkManager::connectToServer()
 
 void NetworkManager::sendData(const QJsonObject &jsonToSend)
 {
+    qDebug() << jsonToSend;
     QJsonDocument doc(jsonToSend);
     logger->log(Logger::INFO,"networkmanager.cpp::sendData","Sending json for " + jsonToSend["flag"].toString());
     QByteArray jsonDataOut = doc.toJson(QJsonDocument::Compact);

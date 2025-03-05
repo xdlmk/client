@@ -19,7 +19,7 @@ public:
     explicit MessageManager(QObject *parent = nullptr);
     void setActiveUser(const QString &userName, const int &userId);
 
-    void checkingChatAvailability(QString &login);
+    void checkingChatAvailability(QString &login, const QString &flag);
 
 public slots:
     void saveMessageToJson(QString &userlogin, QString &message, QString &out, QString &time,
@@ -38,7 +38,7 @@ public slots:
     void sendMessage(const QString &message, const QString &receiver_login, const int &receiver_id, const QString &flag);
     void saveMessageAndSendFile(const QString &message, const QString &receiver_login, const int &receiver_id,const QString& filePath, const QString &flag);
     void sendMessageWithFile(const QString &fileUrl,const QString &flag);
-    void sendVoiceMessage(const QString &receiver_login, const int &receiver_id);
+    void sendVoiceMessage(const QString &receiver_login, const int &receiver_id, const QString &flag);
 
     void setLogger(Logger* logger);
 signals:
