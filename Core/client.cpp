@@ -32,6 +32,7 @@ void Client::setupNetworkConnections() {
     connect(networkManager, &NetworkManager::groupMessageReceived, messageManager, &MessageManager::saveGroupMessage);
     connect(networkManager, &NetworkManager::searchDataReceived, accountManager, &AccountManager::processingSearchDataFromServer);
     connect(networkManager, &NetworkManager::chatsUpdateDataReceived, messageManager, &MessageManager::saveMessageFromDatabase);
+    connect(networkManager, &NetworkManager::loadMeassgesReceived, messageManager, &MessageManager::loadingNextMessages);
     connect(networkManager, &NetworkManager::editResultsReceived, accountManager, &AccountManager::processingEditProfileFromServer);
     connect(networkManager, &NetworkManager::avatarsUpdateReceived, accountManager, &AccountManager::processingAvatarsUpdateFromServer);
 }
@@ -67,6 +68,7 @@ void Client::setupAccountConnections() {
 void Client::setupMessageConnections() {
     connect(this, &Client::loadingChat, messageManager, &MessageManager::loadingChat);
     connect(this, &Client::sendMessage, messageManager, &MessageManager::sendMessage);
+    connect(this, &Client::requestMessageDownload, messageManager, &MessageManager::requestMessageDownload);
     connect(this, &Client::sendMessageWithFile, messageManager, &MessageManager::saveMessageAndSendFile);
 
     connect(messageManager, &MessageManager::sendMessageJson, networkManager, &NetworkManager::sendData);
@@ -88,6 +90,8 @@ void Client::setupMessageConnections() {
     connect(messageManager, &MessageManager::clearMainListView, this, &Client::clearMainListView);
     connect(accountManager, &AccountManager::newUser, this, &Client::newUser);
     connect(messageManager, &MessageManager::checkActiveDialog, this, &Client::checkActiveDialog);
+    connect(messageManager, &MessageManager::returnChatToPosition, this, &Client::returnChatToPosition);
+    connect(messageManager, &MessageManager::insertMessage, this, &Client::insertMessage);
 }
 
 void Client::setupFileConnections() {

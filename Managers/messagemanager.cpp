@@ -13,7 +13,6 @@ void MessageManager::loadMessageToQml(const QString &username, const QString &me
             fileName = fileUrl.mid(underscoreIndex + 1);
         }
     }
-
     if(out == "out")
     {
         emit newMessage(username, message, time, fileName, fileUrl, true);
@@ -322,6 +321,59 @@ void MessageManager::loadingChat(const QString userlogin, const QString &flag)
 
 }
 
+void MessageManager::loadingNextMessages(QJsonObject &messagesJson)
+{
+    QString type = messagesJson["type"].toString();
+    QString chatName = messagesJson["chat_name"].toString();
+    QJsonArray newMessages = messagesJson["messages"].toArray();
+
+    logger->log(Logger::INFO, "messagemanager.cpp::loadingNextMessages", "Start processing messages");
+
+    QJsonArray messagesArray = messagesJson["messages"].toArray();
+
+    for (int i = messagesArray.size() - 1; i >= 0; --i) {
+        QJsonObject json = messagesArray[i].toObject();
+
+        QString message = json["str"].toString();
+        QString time = json["time"].toString();
+        QString fulldate = json["FullDate"].toString();
+        int message_id = json["message_id"].toInt();
+        QString sender_login = json["sender_login"].toString();
+        int sender_id = json["sender_id"].toInt();
+        QString fileUrl = json["fileUrl"].toString();
+        QString out = "";
+
+        QString fileName = "";
+        if(fileUrl != "") {
+            int underscoreIndex = fileUrl.indexOf('_');
+            if (underscoreIndex != -1 && underscoreIndex + 1 < fileUrl.length()) {
+                fileName = fileUrl.mid(underscoreIndex + 1);
+            }
+        }
+
+        if (json.contains("group_id")) {
+            int group_id = json["group_id"].toInt();
+            QString group_name = json["group_name"].toString();
+            if (sender_id == activeUserId) emit insertMessage(sender_login,message,time,fileName,fileUrl, true);
+            else emit insertMessage(sender_login,message,time,fileName,fileUrl, false);
+
+            continue;
+        }
+
+        int dialog_id = json["dialog_id"].toInt();
+
+        if (sender_login == activeUserName) {
+            QString receiver_login = json["receiver_login"].toString();
+            int receiver_id = json["receiver_id"].toInt();
+            out = "out";
+            emit insertMessage(sender_login,message,time,fileName,fileUrl, true);
+        } else {
+            emit insertMessage(sender_login,message,time,fileName,fileUrl, false);
+        }
+    }
+    emit returnChatToPosition();
+}
+
 void MessageManager::sendMessage(const QString &message, const QString &receiver_login, const int &receiver_id, const QString &flag)
 {
     QJsonObject personalMessageJson;
@@ -442,6 +494,19 @@ void MessageManager::sendVoiceMessage(const QString &receiver_login, const int &
     QJsonDocument doc(voiceMessageJson);
 
     emit sendToFileServer(doc);
+}
+
+void MessageManager::requestMessageDownload(const int &chat_id, const QString &chat_name, const QString &flag, const int &offset)
+{
+    QJsonObject request;
+    request["flag"] = "load_messages";
+    request["chat_id"] = chat_id;
+    request["user_id"] = activeUserId;
+    request["chat_name"] = chat_name;
+    request["offset"] = offset;
+    request["type"] = flag;
+
+    emit sendMessageJson(request);
 }
 
 void MessageManager::setLogger(Logger *logger)

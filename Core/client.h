@@ -94,6 +94,11 @@ signals:
     void showContacts();
     void loadContacts(QVariantList contactsList);
 
+    void requestMessageDownload(const int &chat_id, const QString &chat_name, const QString& flag, const int& offset);
+    void insertMessage(QString username,QString message,QString time,
+                       QString fileUrl,QString fileName, bool isOutgoing);
+    void returnChatToPosition();
+
     void setLoggers(Logger* logger);
 private:
     void setupConnections();

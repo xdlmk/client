@@ -225,6 +225,10 @@ void NetworkManager::onDataReceived()
         {
             emit chatsUpdateDataReceived(receivedFromServerJson);
         }
+        else if(flag == "load_messages")
+        {
+            emit loadMeassgesReceived(receivedFromServerJson);
+        }
         else if(flag == "edit")
         {
             emit editResultsReceived(receivedFromServerJson);

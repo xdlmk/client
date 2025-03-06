@@ -95,6 +95,9 @@ Window {
             contentItem: Rectangle { implicitWidth: 10; color: "gray"; radius: 5 }
         }
 
+        highlightFollowsCurrentItem: false
+        focus: false
+
         boundsBehavior: Flickable.StopAtBounds
         model: listModel
 
@@ -109,6 +112,17 @@ Window {
             property string fileUrl: model.fileUrl
             property string fileName: model.fileName
             isWaitingForVoice: false
+        }
+
+        //property real savedDistanceFromEnd: 0.0
+
+        onAtYBeginningChanged: {
+            if (atYBeginning && upLine.currentState !== "default" && listModel.count !== 0) {
+                //listView.savedDistanceFromEnd = listView.contentHeight - listView.contentY
+                //console.log("Saved distance:", savedDistanceFromEnd);
+                //console.log("Content height:", contentHeight);
+                client.requestMessageDownload(upLine.user_id, nameText.text, upLine.currentState, listModel.count);
+            }
         }
     }
 
@@ -277,6 +291,20 @@ Window {
         }
     }
 
+    function returnPosition() {
+        listView.forceLayout()
+        Qt.callLater(() => {
+                         //if (listView.contentHeight > 0 && listView.savedDistanceFromEnd >= 0) {
+                         //console.log(listView.contentHeight, listView.savedDistanceFromEnd, listView.contentY)
+                         //listView.contentY = listView.contentHeight - listView.savedDistanceFromEnd
+                         //}
+                     })
+    }
+
+    function addMessageToTop(name,message,time,fileName,fileUrl,isOutgoing) {
+        listModel.insert(0, {text: message, time: time, name: name, isOutgoing: isOutgoing,fileName: fileName, fileUrl: fileUrl});
+    }
+
     function onClearMainListView() { listModel.clear(); }
 
     function getFileNameFromPath(filePath) {
@@ -308,8 +336,10 @@ Window {
     Component.onCompleted: {
         clearMainListView.connect(onClearMainListView);
         newMessage.connect(onNewMessage);
+        insertMessage.connect(addMessageToTop);
         checkActiveDialog.connect(onCheckActiveDialog);
         connectionError.connect(connectError);
         connectionSuccess.connect(connectSuccess);
+        returnChatToPosition.connect(returnPosition);
     }
 }
