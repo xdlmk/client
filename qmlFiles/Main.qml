@@ -95,6 +95,9 @@ Window {
             contentItem: Rectangle { implicitWidth: 10; color: "gray"; radius: 5 }
         }
 
+        highlightFollowsCurrentItem: false
+        focus: false
+
         boundsBehavior: Flickable.StopAtBounds
         model: listModel
 
@@ -109,6 +112,15 @@ Window {
             property string fileUrl: model.fileUrl
             property string fileName: model.fileName
             isWaitingForVoice: false
+        }
+
+        property int savedIndexFromEnd: 0
+
+        onAtYBeginningChanged: {
+            if (atYBeginning && upLine.currentState !== "default" && listModel.count !== 0) {
+                listView.savedIndexFromEnd = listModel.count;
+                client.requestMessageDownload(upLine.user_id, nameText.text, upLine.currentState, listModel.count);
+            }
         }
     }
 
@@ -277,6 +289,15 @@ Window {
         }
     }
 
+    function returnPosition() {
+        listView.forceLayout()
+        listView.positionViewAtIndex(listModel.count - listView.savedIndexFromEnd, ListView.Beginning)
+    }
+
+    function addMessageToTop(name,message,time,fileName,fileUrl,isOutgoing) {
+        listModel.insert(0, {text: message, time: time, name: name, isOutgoing: isOutgoing,fileName: fileName, fileUrl: fileUrl});
+    }
+
     function onClearMainListView() { listModel.clear(); }
 
     function getFileNameFromPath(filePath) {
@@ -308,8 +329,10 @@ Window {
     Component.onCompleted: {
         clearMainListView.connect(onClearMainListView);
         newMessage.connect(onNewMessage);
+        insertMessage.connect(addMessageToTop);
         checkActiveDialog.connect(onCheckActiveDialog);
         connectionError.connect(connectError);
         connectionSuccess.connect(connectSuccess);
+        returnChatToPosition.connect(returnPosition);
     }
 }

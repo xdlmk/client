@@ -45,7 +45,7 @@ signals:
     void changeActiveAccount(QString username);
 
     void checkConfigFile();
-    void checkingChatAvailability(QString &login);
+    void checkingChatAvailability(QString &login, const QString &flag);
 
     void loginSuccess(QString &name, int &user_id);
     void loginFail();

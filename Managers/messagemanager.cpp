@@ -13,7 +13,6 @@ void MessageManager::loadMessageToQml(const QString &username, const QString &me
             fileName = fileUrl.mid(underscoreIndex + 1);
         }
     }
-
     if(out == "out")
     {
         emit newMessage(username, message, time, fileName, fileUrl, true);
@@ -148,6 +147,9 @@ void MessageManager::saveMessageFromDatabase(QJsonObject &json)
 {
     logger->log(Logger::INFO,"messagemanager.cpp::saveMessageFromDatabase","saveMessageFromDatabase starts");
     QJsonArray messagesArray = json["messages"].toArray();
+
+    QDir mesDir(QCoreApplication::applicationDirPath() + "/resources/" + activeUserName);
+    mesDir.removeRecursively();
 
     for (const QJsonValue &value : messagesArray) {
         QJsonObject json = value.toObject();
@@ -319,6 +321,59 @@ void MessageManager::loadingChat(const QString userlogin, const QString &flag)
 
 }
 
+void MessageManager::loadingNextMessages(QJsonObject &messagesJson)
+{
+    QString type = messagesJson["type"].toString();
+    QString chatName = messagesJson["chat_name"].toString();
+    QJsonArray newMessages = messagesJson["messages"].toArray();
+
+    logger->log(Logger::INFO, "messagemanager.cpp::loadingNextMessages", "Start processing messages");
+
+    QJsonArray messagesArray = messagesJson["messages"].toArray();
+
+    for (int i = messagesArray.size() - 1; i >= 0; --i) {
+        QJsonObject json = messagesArray[i].toObject();
+
+        QString message = json["str"].toString();
+        QString time = json["time"].toString();
+        QString fulldate = json["FullDate"].toString();
+        int message_id = json["message_id"].toInt();
+        QString sender_login = json["sender_login"].toString();
+        int sender_id = json["sender_id"].toInt();
+        QString fileUrl = json["fileUrl"].toString();
+        QString out = "";
+
+        QString fileName = "";
+        if(fileUrl != "") {
+            int underscoreIndex = fileUrl.indexOf('_');
+            if (underscoreIndex != -1 && underscoreIndex + 1 < fileUrl.length()) {
+                fileName = fileUrl.mid(underscoreIndex + 1);
+            }
+        }
+
+        if (json.contains("group_id")) {
+            int group_id = json["group_id"].toInt();
+            QString group_name = json["group_name"].toString();
+            if (sender_id == activeUserId) emit insertMessage(sender_login,message,time,fileName,fileUrl, true);
+            else emit insertMessage(sender_login,message,time,fileName,fileUrl, false);
+
+            continue;
+        }
+
+        int dialog_id = json["dialog_id"].toInt();
+
+        if (sender_login == activeUserName) {
+            QString receiver_login = json["receiver_login"].toString();
+            int receiver_id = json["receiver_id"].toInt();
+            out = "out";
+            emit insertMessage(sender_login,message,time,fileName,fileUrl, true);
+        } else {
+            emit insertMessage(sender_login,message,time,fileName,fileUrl, false);
+        }
+    }
+    emit returnChatToPosition();
+}
+
 void MessageManager::sendMessage(const QString &message, const QString &receiver_login, const int &receiver_id, const QString &flag)
 {
     QJsonObject personalMessageJson;
@@ -406,12 +461,12 @@ void MessageManager::sendMessageWithFile(const QString &fileUrl,const QString &f
     emit sendMessageJson(messageJson);
 }
 
-void MessageManager::sendVoiceMessage(const QString &receiver_login, const int &receiver_id)
+void MessageManager::sendVoiceMessage(const QString &receiver_login, const int &receiver_id, const QString &flag)
 {
     logger->log(Logger::DEBUG,"messagemanager.cpp::sendVoiceMessage", "sendVoiceMessage starts");
 
     QJsonObject voiceMessageJson;
-    voiceMessageJson["flag"] = "voice_message";
+    voiceMessageJson["flag"] = flag + "_voice_message";
     QString voicePath = QCoreApplication::applicationDirPath() + "/.tempData/" + activeUserName + "/voice_messages" + "/voiceMessage.wav";
     QFile file(voicePath);
     QFileInfo fileInfo(voicePath);
@@ -427,12 +482,31 @@ void MessageManager::sendVoiceMessage(const QString &receiver_login, const int &
 
     voiceMessageJson["sender_login"] = activeUserName;
     voiceMessageJson["sender_id"] = activeUserId;
-    voiceMessageJson["receiver_login"] = receiver_login;
-    voiceMessageJson["receiver_id"] = receiver_id;
+
+    if(flag == "personal") {
+        voiceMessageJson["receiver_login"] = receiver_login;
+        voiceMessageJson["receiver_id"] = receiver_id;
+    } else if(flag == "group") {
+        voiceMessageJson["group_name"] = receiver_login;
+        voiceMessageJson["group_id"] = receiver_id;
+    }
 
     QJsonDocument doc(voiceMessageJson);
 
     emit sendToFileServer(doc);
+}
+
+void MessageManager::requestMessageDownload(const int &chat_id, const QString &chat_name, const QString &flag, const int &offset)
+{
+    QJsonObject request;
+    request["flag"] = "load_messages";
+    request["chat_id"] = chat_id;
+    request["user_id"] = activeUserId;
+    request["chat_name"] = chat_name;
+    request["offset"] = offset;
+    request["type"] = flag;
+
+    emit sendMessageJson(request);
 }
 
 void MessageManager::setLogger(Logger *logger)
@@ -440,10 +514,10 @@ void MessageManager::setLogger(Logger *logger)
     this->logger = logger;
 }
 
-void MessageManager::checkingChatAvailability(QString &login)
+void MessageManager::checkingChatAvailability(QString &login, const QString &flag)
 {
     logger->log(Logger::INFO,"messagemanager.cpp::checkingChatAvailability","Checking if a chat exists in a local save");
-    QFile file(QCoreApplication::applicationDirPath() + "/resources/" + activeUserName + "/personal" +"/message_" + login + ".json");
+    QFile file(QCoreApplication::applicationDirPath() + "/resources/" + activeUserName + "/" + flag + "/message_" + login + ".json");
     if (!file.open(QIODevice::ReadWrite)) {
         logger->log(Logger::ERROR,"messagemanager.cpp::checkingChatAvailability","File did not open with error: " + file.errorString());
         return;
@@ -457,10 +531,14 @@ void MessageManager::checkingChatAvailability(QString &login)
             QJsonObject lastMessageObject = chatHistory.last().toObject();
 
             QString message = lastMessageObject["str"].toString();
-            int id = lastMessageObject["id"].toInt();
+
+            int id;
+            if(flag == "group") id = lastMessageObject["group_id"].toInt();
+            else if (flag == "personal") id = lastMessageObject["id"].toInt();
+
             QString out = lastMessageObject["Out"].toString();
 
-            emit showPersonalChat(login,message,id,out, "personal");
+            emit showPersonalChat(login,message,id,out, flag);
         } else {
             logger->log(Logger::INFO,"messagemanager.cpp::checkingChatAvailability","Chat history is empty");
         }
