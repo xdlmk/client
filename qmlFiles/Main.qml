@@ -114,13 +114,11 @@ Window {
             isWaitingForVoice: false
         }
 
-        //property real savedDistanceFromEnd: 0.0
+        property int savedIndexFromEnd: 0
 
         onAtYBeginningChanged: {
             if (atYBeginning && upLine.currentState !== "default" && listModel.count !== 0) {
-                //listView.savedDistanceFromEnd = listView.contentHeight - listView.contentY
-                //console.log("Saved distance:", savedDistanceFromEnd);
-                //console.log("Content height:", contentHeight);
+                listView.savedIndexFromEnd = listModel.count;
                 client.requestMessageDownload(upLine.user_id, nameText.text, upLine.currentState, listModel.count);
             }
         }
@@ -293,12 +291,7 @@ Window {
 
     function returnPosition() {
         listView.forceLayout()
-        Qt.callLater(() => {
-                         //if (listView.contentHeight > 0 && listView.savedDistanceFromEnd >= 0) {
-                         //console.log(listView.contentHeight, listView.savedDistanceFromEnd, listView.contentY)
-                         //listView.contentY = listView.contentHeight - listView.savedDistanceFromEnd
-                         //}
-                     })
+        listView.positionViewAtIndex(listModel.count - listView.savedIndexFromEnd, ListView.Beginning)
     }
 
     function addMessageToTop(name,message,time,fileName,fileUrl,isOutgoing) {
