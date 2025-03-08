@@ -158,10 +158,17 @@ Window {
                 hoverEnabled: true
                 cursorShape: Qt.PointingHandCursor
                 onClicked: {
-                    overlay.visible = true
-                    myProfileWindow.setUserId(upLine.user_id);
-                    myProfileWindow.open()
-                    myProfileWindow.userProfile(nameText.text)
+                    if(upLine.currentState === "personal"){
+                        overlay.visible = true
+                        myProfileWindow.setUserId(upLine.user_id);
+                        myProfileWindow.open()
+                        myProfileWindow.userProfile(nameText.text)
+                    } else if(upLine.currentState === "group") {
+                        overlay.visible = true
+                        groupInfoForm.setGroupId(upLine.user_id);
+                        groupInfoForm.setGroupName(nameText.text);
+                        groupInfoForm.open();
+                    }
                 }
             }
         }
@@ -250,6 +257,10 @@ Window {
     MyProfile{
         id: myProfileWindow
         user_id: 0
+    }
+
+    GroupInfoForm {
+        id: groupInfoForm
     }
 
     CreateGroupForm {

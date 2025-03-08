@@ -90,9 +90,11 @@ signals:
     void sendNewAvatar(const QString& avatarPath);
 
     void createGroup(const QString& groupName, const QVariantList &selectedContacts);
+    void getGroupMembers(const int& group_id,const QString& group_name);
 
     void showContacts();
     void loadContacts(QVariantList contactsList);
+    void loadGroupMembers(QVariantList membersList);
 
     void requestMessageDownload(const int &chat_id, const QString &chat_name, const QString& flag, const int& offset);
     void insertMessage(QString username,QString message,QString time,

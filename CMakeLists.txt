@@ -37,6 +37,7 @@ qt_add_qml_module(regagram
         qmlFiles/ChatBubble.qml
         qmlFiles/CreateGroupForm.qml
         qmlFiles/SelectContactsForm.qml
+        qmlFiles/GroupInfoForm.qml
     SOURCES
         Core/client.h Core/client.cpp
         Core/logger.h Core/logger.cpp

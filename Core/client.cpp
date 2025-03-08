@@ -35,6 +35,7 @@ void Client::setupNetworkConnections() {
     connect(networkManager, &NetworkManager::loadMeassgesReceived, messageManager, &MessageManager::loadingNextMessages);
     connect(networkManager, &NetworkManager::editResultsReceived, accountManager, &AccountManager::processingEditProfileFromServer);
     connect(networkManager, &NetworkManager::avatarsUpdateReceived, accountManager, &AccountManager::processingAvatarsUpdateFromServer);
+    connect(networkManager, &NetworkManager::groupInfoReceived, accountManager, &AccountManager::saveGroupInfo);
 }
 
 void Client::setupAccountConnections() {
@@ -52,8 +53,10 @@ void Client::setupAccountConnections() {
     connect(this,&Client::sendSearchToServer,accountManager,&AccountManager::sendSearchToServer);
     connect(this,&Client::showContacts,accountManager,&AccountManager::showContacts);
     connect(accountManager, &AccountManager::loadContacts, this, &Client::loadContacts);
+    connect(accountManager, &AccountManager::loadGroupMembers, this, &Client::loadGroupMembers);
 
     connect(this,&Client::createGroup,accountManager,&AccountManager::createGroup);
+    connect(this,&Client::getGroupMembers,accountManager,&AccountManager::getGroupMembers);
 
     connect(accountManager, &AccountManager::editUserlogin, this, &Client::editUserlogin);
     connect(accountManager, &AccountManager::editPhoneNumber, this, &Client::editPhoneNumber);

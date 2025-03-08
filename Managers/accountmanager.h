@@ -36,6 +36,8 @@ public slots:
     void setLogger(Logger* logger);
 
     void createGroup(const QString& groupName, const QVariantList &selectedContacts);
+    void saveGroupInfo(const QJsonObject &receivedGroupInfoJson);
+    void getGroupMembers(const int& group_id,const QString& group_name);
 
     void getContactList();
     void showContacts();
@@ -66,6 +68,7 @@ signals:
     void newSearchUser(QString &userlogin,int &id);
 
     void loadContacts(QVariantList contactsList);
+    void loadGroupMembers(QVariantList membersList);
 
     void processingLoginResultsFromServer(const QJsonObject &loginResultsJson);
     void processingRegistrationResultsFromServer(const QJsonObject &regResultsJson);

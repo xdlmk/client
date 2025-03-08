@@ -163,6 +163,60 @@ void AccountManager::createGroup(const QString &groupName, const QVariantList &s
     networkManager->sendData(createGroupJson);
 }
 
+void AccountManager::saveGroupInfo(const QJsonObject &receivedGroupInfoJson)
+{
+    int group_id = receivedGroupInfoJson["group_id"].toInt();
+    QJsonObject groupInfoJson = receivedGroupInfoJson;
+    groupInfoJson.remove("message");
+    groupInfoJson.remove("message_id");
+    groupInfoJson.remove("sender_id");
+    groupInfoJson.remove("time");
+
+    QString savePath = QCoreApplication::applicationDirPath() + "/.data/" + activeUserName + "/groupsInfo/" + QString::number(group_id) + ".json";
+    QDir saveDir(QFileInfo(savePath).absolutePath());
+    if (!saveDir.exists()) {
+        saveDir.mkpath(".");
+    }
+
+    QFile saveFile(savePath);
+    if (!saveFile.open(QIODevice::WriteOnly)) {
+        logger->log(Logger::DEBUG,"accountmanager.cpp::saveGroupInfo", "Open file failed:" + savePath);
+        return;
+    }
+
+    QJsonDocument saveDoc(groupInfoJson);
+    saveFile.write(saveDoc.toJson(QJsonDocument::Indented));
+    saveFile.close();
+}
+
+void AccountManager::getGroupMembers(const int &group_id, const QString &group_name)
+{
+    QString filePath = QCoreApplication::applicationDirPath() + "/.data/" + activeUserName + "/groupsInfo/" + QString::number(group_id) + ".json";
+    QFile groupInfoFile(filePath);
+    if(!groupInfoFile.exists()){
+        logger->log(Logger::WARN,"accountmanager.cpp::getGroupMembers", "Group info file not exists: " + filePath);
+        return;
+    }
+    if (!groupInfoFile.open(QIODevice::ReadOnly)) {
+        logger->log(Logger::DEBUG,"accountmanager.cpp::getGroupMembers", "Open file failed: " + filePath);
+        return;
+    }
+
+    QByteArray infoData = groupInfoFile.readAll();
+    groupInfoFile.close();
+    QJsonDocument doc = QJsonDocument::fromJson(infoData);
+    QJsonObject groupInfoJson = doc.object();
+
+    QJsonArray membersArray = groupInfoJson["members"].toArray();
+    QVariantList membersList;
+
+    for (const QJsonValue &value : membersArray) {
+        membersList.append(value.toObject().toVariantMap());
+    }
+
+    emit loadGroupMembers(membersList);
+}
+
 void AccountManager::getContactList()
 {
     logger->log(Logger::DEBUG,"accountmanager.cpp::getContactList", "getContactList starts!");

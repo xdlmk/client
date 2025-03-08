@@ -44,7 +44,7 @@ Rectangle {
                     Image {
                         id:profileImage
                         anchors.fill: parent
-                        source: avatarSource + user_id + ".png?" + timestamp
+                        source: chatType == "group" ? "" : avatarSource + user_id + ".png?" + timestamp
                         fillMode: Image.PreserveAspectFit
                     }
                 }

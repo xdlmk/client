@@ -118,9 +118,6 @@ Dialog {
             hoverEnabled: true
             cursorShape: Qt.PointingHandCursor
             onClicked: {
-                //client.createGroup(groupName.text);
-                //groupName.clear();
-                //createGroupForm.close();
                 selectContactsForm.open();
             }
         }

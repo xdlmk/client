@@ -42,6 +42,7 @@ signals:
 
     void messageReceived(const QJsonObject &receivedMessageJson);
     void groupMessageReceived(const QJsonObject &receivedMessageJson);
+    void groupInfoReceived(const QJsonObject &receivedGroupInfoJson);
     void loginResultsReceived(const QJsonObject &loginResultsJson);
     void registrationResultsReceived(const QJsonObject &registrationResultsJson);
     void searchDataReceived(const QJsonObject &searchDataJson);

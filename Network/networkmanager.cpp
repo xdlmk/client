@@ -217,6 +217,10 @@ void NetworkManager::onDataReceived()
         {
             emit groupMessageReceived(receivedFromServerJson);
         }
+        else if(flag == "group_info")
+        {
+            emit groupInfoReceived(receivedFromServerJson);
+        }
         else if(flag == "search")
         {
             emit searchDataReceived(receivedFromServerJson);
