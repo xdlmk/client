@@ -165,28 +165,26 @@ void AccountManager::createGroup(const QString &groupName, const QVariantList &s
 
 void AccountManager::saveGroupInfo(const QJsonObject &receivedGroupInfoJson)
 {
-    int group_id = receivedGroupInfoJson["group_id"].toInt();
-    QJsonObject groupInfoJson = receivedGroupInfoJson;
-    groupInfoJson.remove("message");
-    groupInfoJson.remove("message_id");
-    groupInfoJson.remove("sender_id");
-    groupInfoJson.remove("time");
+    QJsonArray groupsInfoArray = receivedGroupInfoJson["info"].toArray();
+    for(QJsonValue value : groupsInfoArray) {
+        QJsonObject groupInfo = value.toObject();
+        int group_id = groupInfo["group_id"].toInt();
 
-    QString savePath = QCoreApplication::applicationDirPath() + "/.data/" + activeUserName + "/groupsInfo/" + QString::number(group_id) + ".json";
-    QDir saveDir(QFileInfo(savePath).absolutePath());
-    if (!saveDir.exists()) {
-        saveDir.mkpath(".");
+        QString savePath = QCoreApplication::applicationDirPath() + "/.data/" + activeUserName + "/groupsInfo/" + QString::number(group_id) + ".json";
+        QDir saveDir(QFileInfo(savePath).absolutePath());
+        if (!saveDir.exists()) {
+            saveDir.mkpath(".");
+        }
+        QFile saveFile(savePath);
+        if (!saveFile.open(QIODevice::WriteOnly)) {
+            logger->log(Logger::DEBUG,"accountmanager.cpp::saveGroupInfo", "Open file failed:" + savePath);
+            return;
+        }
+
+        QJsonDocument saveDoc(groupInfo);
+        saveFile.write(saveDoc.toJson(QJsonDocument::Indented));
+        saveFile.close();
     }
-
-    QFile saveFile(savePath);
-    if (!saveFile.open(QIODevice::WriteOnly)) {
-        logger->log(Logger::DEBUG,"accountmanager.cpp::saveGroupInfo", "Open file failed:" + savePath);
-        return;
-    }
-
-    QJsonDocument saveDoc(groupInfoJson);
-    saveFile.write(saveDoc.toJson(QJsonDocument::Indented));
-    saveFile.close();
 }
 
 void AccountManager::getGroupMembers(const int &group_id, const QString &group_name)

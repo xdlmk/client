@@ -40,10 +40,7 @@ void MessageManager::saveMessageToJson(QString &userlogin, QString &message, QSt
         } else {
             logger->log(Logger::ERROR,"messagemanager.cpp::saveMessageToJson","File dont create " + userlogin);
         }
-    } else {
-        logger->log(Logger::INFO,"messagemanager.cpp::saveMessageToJson","File exist " + userlogin);
     }
-
     if (!file.open(QIODevice::ReadWrite)) {
         logger->log(Logger::ERROR,"messagemanager.cpp::saveMessageToJson","File did not open with error: " + file.errorString());
         return;
@@ -99,8 +96,6 @@ void MessageManager::saveGroupMessageToJson(QString &userlogin, QString &message
         } else {
             logger->log(Logger::ERROR,"messagemanager.cpp::saveGroupMessageToJson","File dont create " + userlogin);
         }
-    } else {
-        logger->log(Logger::INFO,"messagemanager.cpp::saveGroupMessageToJson","File exist " + userlogin);
     }
 
     if (!file.open(QIODevice::ReadWrite)) {

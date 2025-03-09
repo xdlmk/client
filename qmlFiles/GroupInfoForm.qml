@@ -188,13 +188,12 @@ Dialog {
             MouseArea {
                 anchors.fill: parent
                 onClicked: {
-                    console.log("user_id: ", model.user_id);
-                    console.log("username: ", model.username);
-                    console.log("status: ", model.status);
                     overlay.visible = true
                     myProfileWindow.setUserId(model.user_id);
-                    myProfileWindow.open()
-                    myProfileWindow.userProfile(model.username)
+                    myProfileWindow.open();
+                    if(activeUserId !== model.user_id){
+                        myProfileWindow.userProfile(model.username)
+                    }
                 }
             }
         }
@@ -232,10 +231,8 @@ Dialog {
         membersModel.clear();
         for (var i = 0; i < jsonArray.length; i++) {
             var member = jsonArray[i];
-            console.log("user_id: ", member.id);
-            console.log("username: ", member.username);
-            console.log("status: ", member.status);
             membersModel.append({ "user_id": member.id, "username": member.username, "status": member.status });
+            client.checkAndSendAvatarUpdate(member.avatar_url, member.id);
             if(member.status === "creator"){
                 creator_id = member.id;
             }
