@@ -232,7 +232,7 @@ Dialog {
         for (var i = 0; i < jsonArray.length; i++) {
             var member = jsonArray[i];
             membersModel.append({ "user_id": member.id, "username": member.username, "status": member.status });
-            client.checkAndSendAvatarUpdate(member.avatar_url, member.id);
+            client.checkAndSendAvatarUpdate(member.avatar_url, member.id,"personal");
             if(member.status === "creator"){
                 creator_id = member.id;
             }

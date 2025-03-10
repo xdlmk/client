@@ -38,11 +38,12 @@ signals:
     void uploadFiles(const QJsonObject &fileDataJson);
     void uploadVoiceFile(const QJsonObject &fileDataJson);
     void uploadAvatar(const QJsonObject &avatarDataJson);
-    void sendAvatarUrl(const QString &avatar_url,const int& user_id);
+    void sendAvatarUrl(const QString &avatar_url,const int& user_id, const QString& type);
 
     void messageReceived(const QJsonObject &receivedMessageJson);
     void groupMessageReceived(const QJsonObject &receivedMessageJson);
     void groupInfoReceived(const QJsonObject &receivedGroupInfoJson);
+    void dialogsInfoReceived(const QJsonObject &receivedDialogInfoJson);
     void loginResultsReceived(const QJsonObject &loginResultsJson);
     void registrationResultsReceived(const QJsonObject &registrationResultsJson);
     void searchDataReceived(const QJsonObject &searchDataJson);

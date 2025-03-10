@@ -60,16 +60,17 @@ void AccountManager::clientChangeAccount()
     networkManager->sendData(json);
 }
 
-void AccountManager::checkAndSendAvatarUpdate(const QString &avatar_url, const int &user_id)
+void AccountManager::checkAndSendAvatarUpdate(const QString &avatar_url, const int &user_id,const QString& type)
 {
     logger->log(Logger::INFO,"accountmanager.cpp::checkAndSendAvatarUpdate","checkAndSendAvatarUpdate starts");
-    if(!isAvatarUpToDate(avatar_url,user_id)) {
-        emit sendAvatarUrl(avatar_url,user_id);
+    if(!isAvatarUpToDate(avatar_url, user_id, type)) {
+        emit sendAvatarUrl(avatar_url, user_id, type);
     }
 }
 
 void AccountManager::sendAvatarsUpdate()
 {
+    logger->log(Logger::INFO,"accountmanager.cpp::sendAvatarsUpdate","sendAvatarsUpdate starts");
     QString appDir = QCoreApplication::applicationDirPath();
     QString personalDirPath = appDir + "/resources/" + activeUserName + "/personal";
     QDir personalDir(personalDirPath);
@@ -129,6 +130,24 @@ void AccountManager::sendAvatarsUpdate()
         idArray.append(id);
     }
     avatarsUpdateJson["ids"] = idArray;
+
+    QString groupInfoDirPath = appDir + "/.data/" + activeUserName + "/groupsInfo";
+    QJsonArray groupIds;
+
+    QStringList groupFilters;
+    groupFilters << "*.json";
+
+    QDir dir(groupInfoDirPath);
+    dir.setNameFilters(groupFilters);
+    if (dir.exists()) {
+        QFileInfoList fileList = dir.entryInfoList(QDir::Files);
+        for (const QFileInfo &fileInfo : fileList) {
+            QString fileName = fileInfo.baseName();
+            int groupId = fileName.toInt();
+            groupIds.append(groupId);
+        }
+        avatarsUpdateJson["groups_ids"] = groupIds;
+    }
     networkManager->sendData(avatarsUpdateJson);
 }
 
@@ -182,6 +201,31 @@ void AccountManager::saveGroupInfo(const QJsonObject &receivedGroupInfoJson)
         }
 
         QJsonDocument saveDoc(groupInfo);
+        saveFile.write(saveDoc.toJson(QJsonDocument::Indented));
+        saveFile.close();
+    }
+}
+
+void AccountManager::saveDialogsInfo(const QJsonObject &receivedDialogInfoJson)
+{
+    QJsonArray dialogsInfoArray = receivedDialogInfoJson["info"].toArray();
+    for(QJsonValue value : dialogsInfoArray) {
+        QJsonObject dialogInfo = value.toObject();
+        if(!dialogInfo.contains("user_id")) continue;
+        int user_id = dialogInfo["user_id"].toInt();
+
+        QString savePath = QCoreApplication::applicationDirPath() + "/.data/" + activeUserName + "/dialogsInfo/" + QString::number(user_id) + ".json";
+        QDir saveDir(QFileInfo(savePath).absolutePath());
+        if (!saveDir.exists()) {
+            saveDir.mkpath(".");
+        }
+        QFile saveFile(savePath);
+        if (!saveFile.open(QIODevice::WriteOnly)) {
+            logger->log(Logger::DEBUG,"accountmanager.cpp::saveDialogsInfo", "Open file failed:" + savePath);
+            return;
+        }
+
+        QJsonDocument saveDoc(dialogInfo);
         saveFile.write(saveDoc.toJson(QJsonDocument::Indented));
         saveFile.close();
     }
@@ -297,33 +341,49 @@ void AccountManager::showContacts()
     emit loadContacts(contactsList);
 }
 
-bool AccountManager::isAvatarUpToDate(QString avatar_url, int user_id)
+void AccountManager::getChatsInfo()
+{
+    QJsonObject infoObject;
+    infoObject["flag"] = "chats_info";
+    infoObject["userlogin"] = activeUserName;
+    networkManager->sendData(infoObject);
+}
+
+bool AccountManager::isAvatarUpToDate(QString avatar_url, int user_id,const QString& type)
 {
     logger->log(Logger::INFO,"accountmanager.cpp::isAvatarUpToDate", "isAvatarUpToDate starts");
-    QFile avatar(QCoreApplication::applicationDirPath() + "/avatars/" + activeUserName + "/" + QString::number(user_id) + ".png");
-    if(!avatar.open(QIODevice::ReadWrite)) {
+    QString pathToAvatar;
+    QString avatarCheckerPath;
+    if(type == "personal") {
+        pathToAvatar = QCoreApplication::applicationDirPath() + "/.data/" + activeUserName + "/avatars/" + type + "/" + QString::number(user_id) + ".png";
+        avatarCheckerPath = QCoreApplication::applicationDirPath() + "/.data/" + activeUserName + "/dialogsInfo/" + QString::number(user_id) + ".json";
+    } else if(type == "group") {
+        pathToAvatar = QCoreApplication::applicationDirPath() + "/.data/" + activeUserName + "/avatars/" + type + "/" + QString::number(user_id) + ".png";
+        avatarCheckerPath = QCoreApplication::applicationDirPath() + "/.data/" + activeUserName + "/groupsInfo/" + QString::number(user_id) + ".json";
+    }
+    QFile avatar(pathToAvatar);
+    if(!avatar.exists()) {
         logger->log(Logger::INFO,"accountmanager.cpp::isAvatarUpToDate", "Avatar not downloaded");
         return false;
     }
-    QString avatarCheckerPath = QCoreApplication::applicationDirPath() + "/.fileChecker/" + activeUserName + "/avatarChecker.json";
     QFile avatarChecker(avatarCheckerPath);
-    if(!avatarChecker.open(QIODevice::ReadWrite)) {
+    if(!avatarChecker.open(QIODevice::ReadOnly)) {
         logger->log(Logger::WARN,"accountmanager.cpp::isAvatarUpToDate", "Failed to open avatarChecker");
         return false;
     }
     QByteArray avatarCheckerData = avatarChecker.readAll();
     avatarChecker.close();
     QJsonDocument avatarCheckerDoc = QJsonDocument::fromJson(avatarCheckerData);
-    QJsonArray avatarCheckerArray = avatarCheckerDoc.array();
-    for (const auto &item : avatarCheckerArray) {
-        QJsonObject jsonObject = item.toObject();
-        if (jsonObject.contains("user_id") && jsonObject.contains("avatar_url")) {
-            if ((jsonObject["user_id"].toInt() == user_id) and (jsonObject["avatar_url"].toString() == avatar_url)) {
-                return true;
-            }
-        }
+
+    if(type == "personal") {
+        QJsonObject dialogInfo = avatarCheckerDoc.object();
+            if(dialogInfo["avatar_url"].toString() == avatar_url) return true;
+        logger->log(Logger::DEBUG,"accountmanager.cpp::isAvatarUpToDate", "isAvatarUpToDate return false (personal)");
+    } else if(type == "group") {
+        QJsonObject groupInfo = avatarCheckerDoc.object();
+        if(groupInfo["avatar_url"].toString() == avatar_url) return true;
+        logger->log(Logger::DEBUG,"accountmanager.cpp::isAvatarUpToDate", "isAvatarUpToDate return false (group)");
     }
-    logger->log(Logger::DEBUG,"accountmanager.cpp::isAvatarUpToDate", "isAvatarUpToDate return false");
     return false;
 }
 
@@ -356,6 +416,8 @@ void AccountManager::setupResponseHandler()
     connect(&responseHandler,&ResponseHandler::registrationFail,this,&AccountManager::registrationFail);
 
     connect(&responseHandler,&ResponseHandler::newSearchUser,this,&AccountManager::newSearchUser);
+
+    connect(&responseHandler,&ResponseHandler::getChatsInfo,this,&AccountManager::getChatsInfo);
 
     connect(&responseHandler,&ResponseHandler::editUniqueError,this,&AccountManager::editUniqueError);
     connect(&responseHandler,&ResponseHandler::unknownError,this,&AccountManager::unknownError);

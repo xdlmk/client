@@ -46,7 +46,7 @@ public slots:
 
     void setLogger(Logger* logger);
 signals:
-    void checkAndSendAvatarUpdate(const QString &avatar_url,const int &user_id);
+    void checkAndSendAvatarUpdate(const QString &avatar_url,const int &user_id,const QString& type);
     void checkActiveDialog(int user_id, QString login,QString message, QString out,
                            QString time,QString fileName,QString fileUrl, QString type);
 

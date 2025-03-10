@@ -213,7 +213,7 @@ void MessageManager::savePersonalMessage(const QJsonObject &personalMessageJson)
 
 
     logger->log(Logger::INFO,"messagemanager.cpp::processingPersonalMessageFromServer","Message: " + message +" from: " + login);
-    emit checkAndSendAvatarUpdate(avatar_url,id);
+    emit checkAndSendAvatarUpdate(avatar_url,id,"personal");
 
     QString fileName = "";
     if(fileUrl != "") {
@@ -244,7 +244,7 @@ void MessageManager::saveGroupMessage(const QJsonObject &groupMessageJson)
     if(groupMessageJson.contains("sender_login")) {
         login = groupMessageJson["sender_login"].toString();
         id = groupMessageJson["sender_id"].toInt();
-        emit checkAndSendAvatarUpdate(groupMessageJson["sender_avatar_url"].toString(),id);
+        emit checkAndSendAvatarUpdate(groupMessageJson["sender_avatar_url"].toString(),id, "personal");
     } else {
         out = "out";
         login = activeUserName;

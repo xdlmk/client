@@ -121,6 +121,7 @@ void NetworkManager::sendAvatar(const QString &avatarPath)
 
     QJsonObject fileDataJson;
     fileDataJson["flag"] = "newAvatarData";
+    fileDataJson["type"] = "personal";
     fileDataJson["user_id"] = activeUserId;
     fileDataJson["fileName"] = fileInfo.baseName();
     fileDataJson["fileExtension"] = fileInfo.suffix();
@@ -216,9 +217,10 @@ void NetworkManager::onDataReceived()
         {
             emit groupMessageReceived(receivedFromServerJson);
         }
-        else if(flag == "group_info")
+        else if(flag == "chats_info")
         {
-            emit groupInfoReceived(receivedFromServerJson);
+            emit dialogsInfoReceived(receivedFromServerJson["dialogs_info"].toObject());
+            emit groupInfoReceived(receivedFromServerJson["groups_info"].toObject());
         }
         else if(flag == "search")
         {
@@ -297,7 +299,7 @@ void NetworkManager::onFileServerReceived()
         } else if (receivedFromServerJson["flag"].toString() == "avatarData") {
             emit uploadAvatar(receivedFromServerJson);
         } else if (receivedFromServerJson["flag"].toString() == "avatarUrl") {
-            emit sendAvatarUrl(receivedFromServerJson["avatar_url"].toString(),receivedFromServerJson["user_id"].toInt());
+            emit sendAvatarUrl(receivedFromServerJson["avatar_url"].toString(),receivedFromServerJson["user_id"].toInt(),receivedFromServerJson["type"].toString());
         } else if (receivedFromServerJson["flag"].toString() == "voiceFileData") {
             emit uploadVoiceFile(receivedFromServerJson);
         }

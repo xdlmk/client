@@ -36,6 +36,7 @@ void Client::setupNetworkConnections() {
     connect(networkManager, &NetworkManager::editResultsReceived, accountManager, &AccountManager::processingEditProfileFromServer);
     connect(networkManager, &NetworkManager::avatarsUpdateReceived, accountManager, &AccountManager::processingAvatarsUpdateFromServer);
     connect(networkManager, &NetworkManager::groupInfoReceived, accountManager, &AccountManager::saveGroupInfo);
+    connect(networkManager, &NetworkManager::dialogsInfoReceived, accountManager, &AccountManager::saveDialogsInfo);
 }
 
 void Client::setupAccountConnections() {

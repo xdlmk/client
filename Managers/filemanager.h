@@ -34,7 +34,7 @@ signals:
     void voiceExists();
 
 public slots:
-    void sendAvatarUrl(const QString& avatar_url,const int& user_id);
+    void sendAvatarUrl(const QString& avatar_url,const int& user_id, const QString& type);
     void setLogger(Logger* logger);
     void uploadFiles(const QJsonObject &fileDataJson);
     void uploadVoiceFile(const QJsonObject &fileDataJson);

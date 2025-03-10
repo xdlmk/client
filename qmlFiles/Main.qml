@@ -12,7 +12,8 @@ Window {
 
     property bool isProfileExtended: false
     property bool isSearchListExtended: false
-    property string avatarSource: "../../avatars/" + userlogin + "/"
+    property string avatarSource: "../../.data/" + userlogin + "/avatars/personal/"
+    property string groupAvatarSource: "../../.data/" + userlogin + "/avatars/group/"
     property int timestamp: new Date().getTime()
 
     Rectangle {
