@@ -144,19 +144,19 @@ void FileManager::uploadAvatar(const QJsonObject &avatarDataJson)
 
     if (!avatarChecker.open(QIODevice::ReadOnly)) {
         logger->log(Logger::WARN,"filemanager.cpp::uploadAvatar", "Failed to read info file: " + pathToInfo);
-        return;
+    } else {
+        QJsonDocument doc = QJsonDocument::fromJson(avatarChecker.readAll());
+        avatarChecker.close();
+        QJsonObject json = doc.object();
+        json["avatar_url"] = avatarDataJson["avatar_url"];
+        QJsonDocument updatedDoc(json);
+        if (!avatarChecker.open(QIODevice::WriteOnly | QIODevice::Truncate)) {
+            logger->log(Logger::WARN,"filemanager.cpp::uploadAvatar", "Failed to write into info file: " + pathToInfo);
+        }
+        avatarChecker.write(updatedDoc.toJson());
+        avatarChecker.close();
     }
-    QJsonDocument doc = QJsonDocument::fromJson(avatarChecker.readAll());
-    avatarChecker.close();
-    QJsonObject json = doc.object();
-    json["avatar_url"] = avatarDataJson["avatar_url"];
-    QJsonDocument updatedDoc(json);
-    if (!avatarChecker.open(QIODevice::WriteOnly | QIODevice::Truncate)) {
-        logger->log(Logger::WARN,"filemanager.cpp::uploadAvatar", "Failed to write into info file: " + pathToInfo);
-        return;
-    }
-    avatarChecker.write(updatedDoc.toJson());
-    avatarChecker.close();
+
 
     QString pathToSave = QCoreApplication::applicationDirPath() + "/.data/" + activeUserName + "/avatars/" + type;
     QDir avatarDir(pathToSave);

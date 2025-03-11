@@ -95,7 +95,7 @@ Dialog {
         clip: true
         Image {
             anchors.fill: parent
-            source: ""//group_id !== 0 ? avatarSource + "groups/" + group_id + ".png?" + timestamp : ""
+            source: group_id !== 0 ? groupAvatarSource + group_id + ".png?" + timestamp : ""
             visible: source !== ""
             fillMode: Image.PreserveAspectFit
         }

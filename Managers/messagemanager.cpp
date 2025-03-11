@@ -234,12 +234,20 @@ void MessageManager::saveGroupMessage(const QJsonObject &groupMessageJson)
     int message_id = groupMessageJson["message_id"].toInt();
     QString fileUrl = "";
     if(groupMessageJson.contains("fileUrl"))  fileUrl = groupMessageJson["fileUrl"].toString();
+    if(groupMessageJson["only_create"].toString() == "true") emit getChatsInfo();
     QString group_name = groupMessageJson["group_name"].toString();
     int group_id = groupMessageJson["group_id"].toInt();
     QString out = "";
     QString login;
     QString fullDate = "not:done(messagemanager::saveGroupMessage)";
     int id;
+    if(groupMessageJson.contains("group_avatar_url")){
+        if(groupMessageJson["group_avatar_url"].toString() == ""){
+            generateAvatarImage(group_name,group_id,"group");
+        } else {
+            emit checkAndSendAvatarUpdate(groupMessageJson["group_avatar_url"].toString(),group_id,"group");
+        }
+    }
 
     if(groupMessageJson.contains("sender_login")) {
         login = groupMessageJson["sender_login"].toString();
@@ -507,6 +515,44 @@ void MessageManager::requestMessageDownload(const int &chat_id, const QString &c
 void MessageManager::setLogger(Logger *logger)
 {
     this->logger = logger;
+}
+
+void MessageManager::generateAvatarImage(const QString &text, const int &id, const QString &type)
+{
+    uint hash = qHash(text);
+    int r = (hash >> 16) & 0xFF;
+    int g = (hash >> 8) & 0xFF;
+    int b = hash & 0xFF;
+
+    QImage image(200, 200, QImage::Format_ARGB32);
+    QColor baseColor = QColor(r, g, b);
+
+    QColor lightColor = baseColor.lighter(150);
+    QLinearGradient gradient(0, 0, 0, 200);
+    gradient.setColorAt(0.0, baseColor);
+    gradient.setColorAt(1.0, lightColor);
+
+    QPainter painter(&image);
+    painter.setBrush(gradient);
+    painter.setPen(Qt::NoPen);
+    painter.drawRect(0, 0, 200, 200);
+
+    QFont font("Arial", 72, QFont::Bold);
+    painter.setFont(font);
+
+    painter.setPen(Qt::white);
+
+    QFontMetrics fm(font);
+    int textWidth = fm.horizontalAdvance(text.mid(0, 1));
+    int textHeight = fm.height();
+    int x = (200 - textWidth) / 2;
+    int y = (200 + textHeight) / 2;
+
+    painter.drawText(x, y, text.mid(0, 1));
+    painter.end();
+
+    image.save(QCoreApplication::applicationDirPath() + "/.data/" + activeUserName + "/avatars/" + type + "/" + QString::number(id) + ".png", "PNG");
+
 }
 
 void MessageManager::checkingChatAvailability(QString &login, const QString &flag)

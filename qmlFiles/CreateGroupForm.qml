@@ -14,8 +14,10 @@ Dialog {
         border.color: "#626a72"
         border.width: 1/2
     }
-    width: 300
-    height: 200
+    width: 400
+    height: 350
+
+    property string sourcePath: ""
 
     Text{
         id:createGroupText
@@ -58,6 +60,43 @@ Dialog {
             left: groupName.left
             leftMargin: 6
             top: groupName.bottom
+        }
+    }
+
+    TextField{
+        id:avatarPath
+        width:parent.width
+        selectByMouse: false
+        placeholderText: "Select image"
+        placeholderTextColor: "grey"
+        text: sourcePath
+        anchors{
+            left: groupName.left
+            top: recGroupName.bottom
+            topMargin: 30
+        }
+        font.pointSize: 10
+        color: "white"
+        background: Rectangle { color: "transparent" }
+        MouseArea {
+            anchors.fill: parent
+            hoverEnabled: true
+            cursorShape: Qt.PointingHandCursor
+            onClicked: {
+                sourcePath = fileManager.openFile("Image");
+            }
+        }
+    }
+    Rectangle
+    {
+        id:recavatarPath
+        color: "#2f6ea5"
+        width: parent.width
+        height: 2
+        anchors{
+            left: avatarPath.left
+            leftMargin: 6
+            top: avatarPath.bottom
         }
     }
 
@@ -137,6 +176,8 @@ Dialog {
     }
 
     onClosed: {
+        sourcePath = ""
+        groupName.text = ""
         overlay.opacity = 0
         createGroupForm.opacity = 0
     }

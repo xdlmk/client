@@ -129,7 +129,7 @@ Dialog {
                         selectedContacts.push({ "id": contact.id,  "username": contact.username });
                     }
                 }
-                client.createGroup(groupName.text,selectedContacts);
+                client.createGroup(groupName.text, createGroupForm.sourcePath, selectedContacts);
                 selectContactsForm.close();
                 createGroupForm.close();
             }

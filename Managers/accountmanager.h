@@ -35,7 +35,7 @@ public slots:
     void setActiveUser(const QString &userName,const int &userId);
     void setLogger(Logger* logger);
 
-    void createGroup(const QString& groupName, const QVariantList &selectedContacts);
+    void createGroup(const QString& groupName, const QString& avatarPath, const QVariantList &selectedContacts);
     void saveGroupInfo(const QJsonObject &receivedGroupInfoJson);
     void saveDialogsInfo(const QJsonObject &receivedDialogInfoJson);
     void getGroupMembers(const int& group_id,const QString& group_name);

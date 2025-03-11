@@ -80,6 +80,7 @@ void Client::setupMessageConnections() {
     connect(messageManager, &MessageManager::sendFile, networkManager, &NetworkManager::sendFile);
     connect(messageManager,&MessageManager::checkAndSendAvatarUpdate,accountManager,&AccountManager::checkAndSendAvatarUpdate);
     connect(messageManager,&MessageManager::getContactList,accountManager,&AccountManager::getContactList);
+    connect(messageManager,&MessageManager::getChatsInfo,accountManager,&AccountManager::getChatsInfo);
 
     connect(accountManager, &AccountManager::checkingChatAvailability, messageManager, &MessageManager::checkingChatAvailability);
     connect(messageManager, &MessageManager::showPersonalChat, this, &Client::showPersonalChat);

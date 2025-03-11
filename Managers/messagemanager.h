@@ -10,6 +10,11 @@
 #include <QJsonArray>
 #include <QCoreApplication>
 
+#include <QImage>
+#include <QColor>
+#include <QFont>
+#include <QPainter>
+
 #include "Core/logger.h"
 
 class MessageManager : public QObject
@@ -61,12 +66,15 @@ signals:
     void sendToFileServer(const QJsonDocument &doc);
 
     void getContactList();
+    void getChatsInfo();
 
     void insertMessage(QString username,QString message,QString time,
                        QString fileUrl,QString fileName, bool isOutgoing);
     void returnChatToPosition();
 
 private:
+    void generateAvatarImage(const QString& text, const int& id,const QString& type);
+
     QString activeUserName;
     int activeUserId;
     Logger* logger;

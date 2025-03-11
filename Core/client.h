@@ -90,7 +90,7 @@ signals:
     void sendNewAvatar(const QString& avatarPath);
     void checkAndSendAvatarUpdate(const QString &avatar_url,const int &user_id,const QString& type);
 
-    void createGroup(const QString& groupName, const QVariantList &selectedContacts);
+    void createGroup(const QString& groupName, const QString& avatarPath, const QVariantList &selectedContacts);
     void getGroupMembers(const int& group_id,const QString& group_name);
 
     void showContacts();

@@ -165,7 +165,7 @@ void AccountManager::setLogger(Logger *logger)
     responseHandler.setLogger(logger);
 }
 
-void AccountManager::createGroup(const QString &groupName, const QVariantList &selectedContacts)
+void AccountManager::createGroup(const QString &groupName, const QString& avatarPath, const QVariantList &selectedContacts)
 {
     QJsonObject createGroupJson;
     createGroupJson["flag"] = "create_group";
@@ -179,7 +179,24 @@ void AccountManager::createGroup(const QString &groupName, const QVariantList &s
         membersArray.append(contactJson);
     }
     createGroupJson["members"] = membersArray;
-    networkManager->sendData(createGroupJson);
+
+    if(avatarPath == ""){
+        createGroupJson["avatar_url"] = "";
+        networkManager->sendData(createGroupJson);
+    } else {
+        QFile file(avatarPath);
+        QFileInfo fileInfo(avatarPath);
+        if (!file.open(QIODevice::ReadOnly)) {
+            logger->log(Logger::WARN,"networkmanager.cpp::sendAvatar","Failed open avatar");
+        }
+        QByteArray fileData = file.readAll();
+        file.close();
+        createGroupJson["fileName"] = fileInfo.baseName();
+        createGroupJson["fileExtension"] = fileInfo.suffix();
+        createGroupJson["fileData"] = QString(fileData.toBase64());
+        QJsonDocument doc(createGroupJson);
+        networkManager->sendToFileServer(doc);
+    }
 }
 
 void AccountManager::saveGroupInfo(const QJsonObject &receivedGroupInfoJson)
@@ -362,7 +379,7 @@ bool AccountManager::isAvatarUpToDate(QString avatar_url, int user_id,const QStr
         avatarCheckerPath = QCoreApplication::applicationDirPath() + "/.data/" + activeUserName + "/groupsInfo/" + QString::number(user_id) + ".json";
     }
     QFile avatar(pathToAvatar);
-    if(!avatar.exists()) {
+    if(!avatar.exists() || avatar.size() == 0) {
         logger->log(Logger::INFO,"accountmanager.cpp::isAvatarUpToDate", "Avatar not downloaded");
         return false;
     }
