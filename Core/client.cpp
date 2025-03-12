@@ -37,6 +37,7 @@ void Client::setupNetworkConnections() {
     connect(networkManager, &NetworkManager::avatarsUpdateReceived, accountManager, &AccountManager::processingAvatarsUpdateFromServer);
     connect(networkManager, &NetworkManager::groupInfoReceived, accountManager, &AccountManager::saveGroupInfo);
     connect(networkManager, &NetworkManager::dialogsInfoReceived, accountManager, &AccountManager::saveDialogsInfo);
+    connect(networkManager, &NetworkManager::deleteGroupMemberReceived, accountManager, &AccountManager::deleteGroupMemberReceived);
 }
 
 void Client::setupAccountConnections() {
@@ -59,6 +60,7 @@ void Client::setupAccountConnections() {
 
     connect(this,&Client::createGroup,accountManager,&AccountManager::createGroup);
     connect(this,&Client::getGroupMembers,accountManager,&AccountManager::getGroupMembers);
+    connect(this, &Client::deleteMemberFromGroup, accountManager, &AccountManager::deleteMemberFromGroup);
 
     connect(accountManager, &AccountManager::editUserlogin, this, &Client::editUserlogin);
     connect(accountManager, &AccountManager::editPhoneNumber, this, &Client::editPhoneNumber);

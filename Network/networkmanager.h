@@ -43,6 +43,7 @@ signals:
     void messageReceived(const QJsonObject &receivedMessageJson);
     void groupMessageReceived(const QJsonObject &receivedMessageJson);
     void groupInfoReceived(const QJsonObject &receivedGroupInfoJson);
+    void deleteGroupMemberReceived(const QJsonObject &receivedDeleteMemberFromGroup);
     void dialogsInfoReceived(const QJsonObject &receivedDialogInfoJson);
     void loginResultsReceived(const QJsonObject &loginResultsJson);
     void registrationResultsReceived(const QJsonObject &registrationResultsJson);

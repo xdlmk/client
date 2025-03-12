@@ -38,7 +38,10 @@ public slots:
     void createGroup(const QString& groupName, const QString& avatarPath, const QVariantList &selectedContacts);
     void saveGroupInfo(const QJsonObject &receivedGroupInfoJson);
     void saveDialogsInfo(const QJsonObject &receivedDialogInfoJson);
+
     void getGroupMembers(const int& group_id,const QString& group_name);
+    void deleteMemberFromGroup(const int& user_id, const int &group_id);
+    void deleteGroupMemberReceived(const QJsonObject &receivedDeleteMemberFromGroup);
 
     void getContactList();
     void showContacts();

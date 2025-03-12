@@ -95,7 +95,9 @@ signals:
 
     void showContacts();
     void loadContacts(QVariantList contactsList);
+
     void loadGroupMembers(QVariantList membersList);
+    void deleteMemberFromGroup(const int& user_id, const int &group_id);
 
     void requestMessageDownload(const int &chat_id, const QString &chat_name, const QString& flag, const int& offset);
     void insertMessage(QString username,QString message,QString time,

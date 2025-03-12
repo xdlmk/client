@@ -276,6 +276,28 @@ void AccountManager::getGroupMembers(const int &group_id, const QString &group_n
     emit loadGroupMembers(membersList);
 }
 
+void AccountManager::deleteMemberFromGroup(const int &user_id, const int &group_id)
+{
+    QJsonObject deleteMemberObject;
+    deleteMemberObject["flag"] = "delete_member";
+    deleteMemberObject["user_id"] = user_id;
+    deleteMemberObject["group_id"] = group_id;
+    deleteMemberObject["creator_id"] = this->user_id;
+
+    networkManager->sendData(deleteMemberObject);
+}
+
+void AccountManager::deleteGroupMemberReceived(const QJsonObject &receivedDeleteMemberFromGroup)
+{
+    if(receivedDeleteMemberFromGroup["error_code"].toInt() == 0) {
+        logger->log(Logger::INFO,"accountmanager.cpp::deleteGroupMemberReceived", "Member with user_id: " + QString::number(receivedDeleteMemberFromGroup["deleted_user_id"].toInt()) + " successfuly removed");
+    } else if(receivedDeleteMemberFromGroup["error_code"].toInt() == 1) {
+        logger->log(Logger::WARN,"accountmanager.cpp::deleteGroupMemberReceived", "Member with user_id: " + QString::number(receivedDeleteMemberFromGroup["deleted_user_id"].toInt()) + " is not a member of the group");
+    } else if(receivedDeleteMemberFromGroup["error_code"].toInt() == 2) {
+        logger->log(Logger::WARN,"accountmanager.cpp::deleteGroupMemberReceived", "The active user does not have sufficient rights to perform this operation");
+    }
+}
+
 void AccountManager::getContactList()
 {
     logger->log(Logger::DEBUG,"accountmanager.cpp::getContactList", "getContactList starts!");

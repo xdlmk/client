@@ -163,28 +163,6 @@ Dialog {
                 anchors.leftMargin: 10
                 anchors.verticalCenter: parent.verticalCenter
             }
-            Text{
-                id:deleteUserButton
-                text: "✕"
-                color: "White"
-                font.pointSize: 15
-                font.bold: true
-                visible: activeUserId === creator_id
-
-                anchors.right: parent.right
-                anchors.rightMargin: 10
-                anchors.verticalCenter: parent.verticalCenter
-                MouseArea {
-                    id: deleteUserButtonMouseArea
-                    anchors.fill: parent
-                    hoverEnabled: true
-                    cursorShape: Qt.PointingHandCursor
-
-                    onClicked: {
-
-                    }
-                }
-            }
             MouseArea {
                 anchors.fill: parent
                 onClicked: {
@@ -193,6 +171,35 @@ Dialog {
                     myProfileWindow.open();
                     if(activeUserId !== model.user_id){
                         myProfileWindow.userProfile(model.username)
+                    }
+                }
+            }
+            Rectangle{
+                width: 25
+                height: 25
+                anchors.right: parent.right
+                anchors.rightMargin: 10
+                anchors.verticalCenter: parent.verticalCenter
+                visible: activeUserId === creator_id && activeUserId !== model.user_id
+                color: "transparent"
+                Text{
+                    id:deleteUserButton
+                    text: "✕"
+                    color: "White"
+                    font.pointSize: 15
+                    font.bold: true
+                    visible: activeUserId === creator_id && activeUserId !== model.user_id
+                    anchors.centerIn: parent.Center
+                }
+                MouseArea {
+                    id: deleteUserButtonMouseArea
+                    anchors.fill: parent
+                    hoverEnabled: true
+                    cursorShape: Qt.PointingHandCursor
+
+                    onClicked: {
+                        console.log("cliecked")
+                        client.deleteMemberFromGroup(model.user_id, group_id);
                     }
                 }
             }
