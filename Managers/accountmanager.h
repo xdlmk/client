@@ -36,12 +36,14 @@ public slots:
     void setLogger(Logger* logger);
 
     void createGroup(const QString& groupName, const QString& avatarPath, const QVariantList &selectedContacts);
+    void addGroupMembers(const int& group_id, const QVariantList &selectedContacts);
     void saveGroupInfo(const QJsonObject &receivedGroupInfoJson);
     void saveDialogsInfo(const QJsonObject &receivedDialogInfoJson);
 
-    void getGroupMembers(const int& group_id,const QString& group_name);
+    void getGroupMembers(const int& group_id);
     void deleteMemberFromGroup(const int& user_id, const int &group_id);
     void deleteGroupMemberReceived(const QJsonObject &receivedDeleteMemberFromGroup);
+    void addGroupMemberReceived(const QJsonObject &receivedAddMemberFromGroup);
 
     void getContactList();
     void showContacts();
@@ -73,7 +75,8 @@ signals:
     void newSearchUser(QString &userlogin,int &id);
 
     void loadContacts(QVariantList contactsList);
-    void loadGroupMembers(QVariantList membersList);
+    void loadGroupMembers(QVariantList membersList, const int& group_id);
+    void clearMessagesAfterDelete(const int& group_id);
 
     void processingLoginResultsFromServer(const QJsonObject &loginResultsJson);
     void processingRegistrationResultsFromServer(const QJsonObject &regResultsJson);
@@ -81,6 +84,7 @@ signals:
     void processingEditProfileFromServer(const QJsonObject &editResultsJson);
     void processingAvatarsUpdateFromServer(const QJsonObject &avatarsUpdateJson);
 private:
+    int deleteUserFromInfoFile(const int& group_id, const int& user_id);
     bool isAvatarUpToDate(QString avatar_url,int user_id,const QString& type);
 
     int user_id;

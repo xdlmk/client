@@ -157,6 +157,7 @@ Dialog {
             hoverEnabled: true
             cursorShape: Qt.PointingHandCursor
             onClicked: {
+                selectContactsForm.setParams("create");
                 selectContactsForm.open();
             }
         }
@@ -164,10 +165,6 @@ Dialog {
 
     Behavior on opacity {
         NumberAnimation { duration: 200 }
-    }
-
-    SelectContactsForm {
-        id:selectContactsForm
     }
 
     onOpened: {

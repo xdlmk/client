@@ -3,6 +3,7 @@ import QtQuick.Controls
 import QtQuick.Layouts
 
 Dialog {
+    id:selectContactsForm
     modal: true
     x: (parent.width - width) / 2
     y: (parent.height - height) / 2
@@ -16,6 +17,8 @@ Dialog {
     }
     width: 300
     height: 400
+
+    property string params: params
 
     Text{
         id:selectContactsText
@@ -108,7 +111,7 @@ Dialog {
 
     Text{
         id:createButton
-        text: "Create"
+        text: params === "create" ? "Create" : "Add"
         color: "White"
         font.pointSize: 12
         anchors{
@@ -126,12 +129,22 @@ Dialog {
                 for (var i = 0; i < contactsModel.count; i++) {
                     var contact = contactsModel.get(i);
                     if (contact.selected) {
-                        selectedContacts.push({ "id": contact.id,  "username": contact.username });
+                        selectedContacts.push({ "id": contact.id});
                     }
                 }
-                client.createGroup(groupName.text, createGroupForm.sourcePath, selectedContacts);
-                selectContactsForm.close();
-                createGroupForm.close();
+                if(params === "create") {
+                    client.createGroup(groupName.text, createGroupForm.sourcePath, selectedContacts);
+                    selectContactsForm.close();
+                    createGroupForm.close();
+                }
+                else if (params === "add") {
+                    var filteredContacts = selectedContacts.filter(function(contact) {
+                        return !groupInfoForm.isMemberExists(contact.id)
+                    })
+                    client.addGroupMembers(groupInfoForm.group_id, filteredContacts);
+                    selectContactsForm.close();
+                }
+
             }
         }
     }
@@ -151,6 +164,10 @@ Dialog {
             contactsModel.append({ "id": contact.id, "username": contact.username, "selected": false });
         }
     }
+    function setParams(params) {
+        selectContactsForm.params = params;
+    }
+
     onOpened: {
         overlay.opacity = 1
         contactsModel.clear();
@@ -159,6 +176,7 @@ Dialog {
     }
 
     onClosed: {
+        params = "create"
         overlay.opacity = 0
         selectContactsForm.opacity = 0
     }

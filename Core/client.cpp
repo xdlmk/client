@@ -38,6 +38,7 @@ void Client::setupNetworkConnections() {
     connect(networkManager, &NetworkManager::groupInfoReceived, accountManager, &AccountManager::saveGroupInfo);
     connect(networkManager, &NetworkManager::dialogsInfoReceived, accountManager, &AccountManager::saveDialogsInfo);
     connect(networkManager, &NetworkManager::deleteGroupMemberReceived, accountManager, &AccountManager::deleteGroupMemberReceived);
+    connect(networkManager, &NetworkManager::addGroupMemberReceived, accountManager, &AccountManager::addGroupMemberReceived);
 }
 
 void Client::setupAccountConnections() {
@@ -57,8 +58,11 @@ void Client::setupAccountConnections() {
     connect(this,&Client::showContacts,accountManager,&AccountManager::showContacts);
     connect(accountManager, &AccountManager::loadContacts, this, &Client::loadContacts);
     connect(accountManager, &AccountManager::loadGroupMembers, this, &Client::loadGroupMembers);
+    connect(accountManager, &AccountManager::clearMessagesAfterDelete, this, &Client::clearMessagesAfterDelete);
+
 
     connect(this,&Client::createGroup,accountManager,&AccountManager::createGroup);
+    connect(this,&Client::addGroupMembers,accountManager,&AccountManager::addGroupMembers);
     connect(this,&Client::getGroupMembers,accountManager,&AccountManager::getGroupMembers);
     connect(this, &Client::deleteMemberFromGroup, accountManager, &AccountManager::deleteMemberFromGroup);
 

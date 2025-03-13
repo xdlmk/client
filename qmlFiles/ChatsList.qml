@@ -74,12 +74,11 @@ Rectangle {
         }
     }
 
-    ListModel{
+    ListModel {
         id:personalChatsListModel
     }
 
-    function onShowPersonalChat(userlogin,message,id,out,type)
-    {
+    function onShowPersonalChat(userlogin,message,id,out,type) {
         var exists = false;
         for (var i = 0; i < personalChatsListModel.count; i++) {
             var item = personalChatsListModel.get(i);
@@ -99,7 +98,19 @@ Rectangle {
         personalChatsListModel.insert(0,newPersChat);
     }
 
+    function removeChatAfterDelete(group_id) {
+        var type = "group";
+        for (var i = 0; i < personalChatsListModel.count; i++) {
+            var item = personalChatsListModel.get(i);
+            if (item.id === group_id && item.currentChatType === type) {
+                personalChatsListModel.remove(i);
+                break;
+            }
+        }
+    }
+
     Component.onCompleted: {
         showPersonalChat.connect(onShowPersonalChat);
+        clearMessagesAfterDelete.connect(removeChatAfterDelete);
     }
 }

@@ -36,30 +36,6 @@ Dialog {
     }
 
     Text{
-        id:editButton
-        text: "\u270E"
-        color: "White"
-        font.pointSize: 15
-        font.bold: false
-
-        anchors.right: closeButton.left
-        anchors.rightMargin: 10
-        anchors.top: parent.top
-        anchors.topMargin: 10
-        visible: false
-        MouseArea {
-            id: editButtonMouseArea
-            anchors.fill: parent
-            hoverEnabled: true
-            cursorShape: Qt.PointingHandCursor
-
-            onClicked: {
-
-            }
-        }
-    }
-
-    Text{
         id:closeButton
         text: "✕"
         color: "White"
@@ -124,21 +100,45 @@ Dialog {
         anchors.topMargin: 24
     }
 
-    Text{
-        id:informationIcon
-        text: "ⓘ"
-        font.pointSize: 18
-        color: "White"
-        font.bold: true
-        anchors.left: membersListView.left
-        anchors.top: defLine.bottom
-        anchors.topMargin: 12
+    Rectangle {
+        id:addMembersButton
+        width: parent.width
+        height: 40
+        color: "transparent"
+        anchors {
+            left: membersListView.left
+            top: defLine.bottom
+            topMargin: 12
+        }
+        Text{
+            anchors {
+                verticalCenter: parent.verticalCenter
+                left:parent.left
+                leftMargin: 10
+            }
+            text: "Add members"
+            font.pointSize: 14
+            color: "White"
+            font.bold: true
+        }
+        MouseArea {
+            anchors.fill: parent
+            hoverEnabled: true
+            cursorShape: Qt.PointingHandCursor
+            onClicked: {
+                selectContactsForm.setParams("add");
+                selectContactsForm.open();
+            }
+            onEntered: {addMembersButton.color = "#626a72"}
+            onExited: {addMembersButton.color = "transparent"}
+        }
+
     }
     ListView {
         id: membersListView
         width: parent.width
         height: parent.height
-        anchors.top: informationIcon.bottom
+        anchors.top: addMembersButton.bottom
         anchors.topMargin: 12
         anchors.horizontalCenter: parent.horizontalCenter
         clip: true
@@ -148,6 +148,7 @@ Dialog {
 
     Component {
         id: memberDelegate
+
         Rectangle {
             width: membersListView.width
             height: 40
@@ -198,7 +199,6 @@ Dialog {
                     cursorShape: Qt.PointingHandCursor
 
                     onClicked: {
-                        console.log("cliecked")
                         client.deleteMemberFromGroup(model.user_id, group_id);
                     }
                 }
@@ -226,22 +226,33 @@ Dialog {
     onOpened: {
         overlay.opacity = 1
         groupInfoForm.opacity = 1
-        client.getGroupMembers(group_id,group_name);
+        client.getGroupMembers(group_id);
     }
 
     onClosed: {
         overlay.opacity = 0
         groupInfoForm.opacity = 0
     }
+    function isMemberExists(userId) {
+        for (var i = 0; i < membersModel.count; i++) {
+            var member = membersModel.get(i)
+            if (member.user_id === userId) {
+                return true
+            }
+        }
+        return false
+    }
 
-    function onLoadGroupMembers(jsonArray) {
-        membersModel.clear();
-        for (var i = 0; i < jsonArray.length; i++) {
-            var member = jsonArray[i];
-            membersModel.append({ "user_id": member.id, "username": member.username, "status": member.status });
-            client.checkAndSendAvatarUpdate(member.avatar_url, member.id,"personal");
-            if(member.status === "creator"){
-                creator_id = member.id;
+    function onLoadGroupMembers(jsonArray, group_id) {
+        if(groupInfoForm.group_id === group_id){
+            membersModel.clear();
+            for (var i = 0; i < jsonArray.length; i++) {
+                var member = jsonArray[i];
+                membersModel.append({ "user_id": member.id, "username": member.username, "status": member.status });
+                client.checkAndSendAvatarUpdate(member.avatar_url, member.id,"personal");
+                if(member.status === "creator"){
+                    creator_id = member.id;
+                }
             }
         }
     }

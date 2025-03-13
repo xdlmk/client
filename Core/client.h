@@ -91,12 +91,14 @@ signals:
     void checkAndSendAvatarUpdate(const QString &avatar_url,const int &user_id,const QString& type);
 
     void createGroup(const QString& groupName, const QString& avatarPath, const QVariantList &selectedContacts);
-    void getGroupMembers(const int& group_id,const QString& group_name);
+    void addGroupMembers(const int& group_id, const QVariantList &selectedContacts);
+    void getGroupMembers(const int& group_id);
+    void clearMessagesAfterDelete(const int& group_id);
 
     void showContacts();
     void loadContacts(QVariantList contactsList);
 
-    void loadGroupMembers(QVariantList membersList);
+    void loadGroupMembers(QVariantList membersList, const int& group_id);
     void deleteMemberFromGroup(const int& user_id, const int &group_id);
 
     void requestMessageDownload(const int &chat_id, const QString &chat_name, const QString& flag, const int& offset);

@@ -199,6 +199,22 @@ void AccountManager::createGroup(const QString &groupName, const QString& avatar
     }
 }
 
+void AccountManager::addGroupMembers(const int &group_id, const QVariantList &selectedContacts)
+{
+    QJsonObject addMembersJson;
+    addMembersJson["flag"] = "add_group_members";
+    addMembersJson["group_id"] = group_id;
+    addMembersJson["admin_id"] = this->user_id;
+    QJsonArray membersArray;
+    for (const QVariant &contact : selectedContacts) {
+        QVariantMap contactMap = contact.toMap();
+        QJsonObject contactJson = QJsonObject::fromVariantMap(contactMap);
+        membersArray.append(contactJson);
+    }
+    addMembersJson["members"] = membersArray;
+    networkManager->sendData(addMembersJson);
+}
+
 void AccountManager::saveGroupInfo(const QJsonObject &receivedGroupInfoJson)
 {
     QJsonArray groupsInfoArray = receivedGroupInfoJson["info"].toArray();
@@ -248,7 +264,7 @@ void AccountManager::saveDialogsInfo(const QJsonObject &receivedDialogInfoJson)
     }
 }
 
-void AccountManager::getGroupMembers(const int &group_id, const QString &group_name)
+void AccountManager::getGroupMembers(const int &group_id)
 {
     QString filePath = QCoreApplication::applicationDirPath() + "/.data/" + activeUserName + "/groupsInfo/" + QString::number(group_id) + ".json";
     QFile groupInfoFile(filePath);
@@ -273,7 +289,7 @@ void AccountManager::getGroupMembers(const int &group_id, const QString &group_n
         membersList.append(value.toObject().toVariantMap());
     }
 
-    emit loadGroupMembers(membersList);
+    emit loadGroupMembers(membersList,group_id);
 }
 
 void AccountManager::deleteMemberFromGroup(const int &user_id, const int &group_id)
@@ -284,18 +300,66 @@ void AccountManager::deleteMemberFromGroup(const int &user_id, const int &group_
     deleteMemberObject["group_id"] = group_id;
     deleteMemberObject["creator_id"] = this->user_id;
 
-    networkManager->sendData(deleteMemberObject);
+    if(user_id != this->user_id){
+        networkManager->sendData(deleteMemberObject);
+    }
 }
 
 void AccountManager::deleteGroupMemberReceived(const QJsonObject &receivedDeleteMemberFromGroup)
 {
     if(receivedDeleteMemberFromGroup["error_code"].toInt() == 0) {
-        logger->log(Logger::INFO,"accountmanager.cpp::deleteGroupMemberReceived", "Member with user_id: " + QString::number(receivedDeleteMemberFromGroup["deleted_user_id"].toInt()) + " successfuly removed");
+        int group_id = receivedDeleteMemberFromGroup["group_id"].toInt();
+        int error_code = deleteUserFromInfoFile(group_id, receivedDeleteMemberFromGroup["deleted_user_id"].toInt());
+        if(error_code == 0){
+            logger->log(Logger::INFO,"accountmanager.cpp::deleteGroupMemberReceived", "Member with user_id: " + QString::number(receivedDeleteMemberFromGroup["deleted_user_id"].toInt()) + " successfuly removed from info list");
+            getGroupMembers(group_id);
+        } else {
+            logger->log(Logger::WARN,"accountmanager.cpp::deleteGroupMemberReceived", "Member with user_id: " + QString::number(receivedDeleteMemberFromGroup["deleted_user_id"].toInt()) + " not removed from info list");
+        }
+
     } else if(receivedDeleteMemberFromGroup["error_code"].toInt() == 1) {
         logger->log(Logger::WARN,"accountmanager.cpp::deleteGroupMemberReceived", "Member with user_id: " + QString::number(receivedDeleteMemberFromGroup["deleted_user_id"].toInt()) + " is not a member of the group");
     } else if(receivedDeleteMemberFromGroup["error_code"].toInt() == 2) {
         logger->log(Logger::WARN,"accountmanager.cpp::deleteGroupMemberReceived", "The active user does not have sufficient rights to perform this operation");
     }
+}
+
+void AccountManager::addGroupMemberReceived(const QJsonObject &receivedAddMemberFromGroup)
+{
+    int group_id = receivedAddMemberFromGroup["group_id"].toInt();
+    QJsonArray newMembers = receivedAddMemberFromGroup["addedMembers"].toArray();
+
+    for(const QJsonValue &value : newMembers) {
+        QJsonObject member = value.toObject();
+        if(member["id"].toInt() == this->user_id) {
+            updatingChats();
+            return;
+        }
+    }
+
+    QString pathToGroupInfo = QCoreApplication::applicationDirPath() + "/.data/" + activeUserName + "/groupsInfo/" + QString::number(group_id) + ".json";
+    QFile file(pathToGroupInfo);
+    if (!file.open(QIODevice::ReadOnly)) {
+        logger->log(Logger::WARN,"accountmanager.cpp::addGroupMemberReceived", "Group info file not open for read");
+    }
+    QJsonDocument doc = QJsonDocument::fromJson(file.readAll());
+    QJsonObject json = doc.object();
+    file.close();
+    QJsonArray members = json["members"].toArray();
+
+
+    for(const QJsonValue &value : newMembers) {
+        QJsonObject member = value.toObject();
+        members.append(member);
+    }
+    json["members"] = members;
+
+    if (!file.open(QIODevice::WriteOnly)) {
+        logger->log(Logger::WARN,"accountmanager.cpp::addGroupMemberReceived", "Group info file not open for write");
+    }
+    file.write(QJsonDocument(json).toJson());
+    file.close();
+    getGroupMembers(group_id);
 }
 
 void AccountManager::getContactList()
@@ -388,6 +452,46 @@ void AccountManager::getChatsInfo()
     networkManager->sendData(infoObject);
 }
 
+int AccountManager::deleteUserFromInfoFile(const int &group_id, const int &user_id)
+{
+    QString pathToGroupInfo = QCoreApplication::applicationDirPath() + "/.data/" + activeUserName + "/groupsInfo/" + QString::number(group_id) + ".json";
+    QFile file(pathToGroupInfo);
+    if(user_id == this->user_id) {
+        QFile::remove(pathToGroupInfo);
+        QFile::remove(QCoreApplication::applicationDirPath() + "/resources/" + activeUserName + "/group/message_" + QString::number(group_id) + ".json");
+        emit clearMessagesAfterDelete(group_id);
+    }
+    if (!file.open(QIODevice::ReadOnly)) {
+        logger->log(Logger::WARN,"accountmanager.cpp::deleteUserFromInfoFile", "Group info file not open for read");
+        return 1;
+    }
+    QJsonDocument doc = QJsonDocument::fromJson(file.readAll());
+    QJsonObject json = doc.object();
+    file.close();
+    QJsonArray members = json["members"].toArray();
+    QJsonArray newMembers;
+
+    for (const QJsonValue &value : members) {
+        QJsonObject member = value.toObject();
+        int memberId = member["id"].toInt();
+        if (memberId == user_id) {
+            logger->log(Logger::DEBUG,"accountmanager.cpp::deleteUserFromInfoFile", "User with id: " + QString::number(user_id) + " successfuly removed from group with id: " + QString::number(group_id));
+            continue;
+        }
+
+        newMembers.append(member);
+    }
+    json["members"] = newMembers;
+
+    if (!file.open(QIODevice::WriteOnly)) {
+        logger->log(Logger::WARN,"accountmanager.cpp::deleteUserFromInfoFile", "Group info file not open for write");
+        return 1;
+    }
+    file.write(QJsonDocument(json).toJson());
+    file.close();
+    return 0;
+}
+
 bool AccountManager::isAvatarUpToDate(QString avatar_url, int user_id,const QString& type)
 {
     logger->log(Logger::INFO,"accountmanager.cpp::isAvatarUpToDate", "isAvatarUpToDate starts");
@@ -416,7 +520,7 @@ bool AccountManager::isAvatarUpToDate(QString avatar_url, int user_id,const QStr
 
     if(type == "personal") {
         QJsonObject dialogInfo = avatarCheckerDoc.object();
-            if(dialogInfo["avatar_url"].toString() == avatar_url) return true;
+        if(dialogInfo["avatar_url"].toString() == avatar_url) return true;
         logger->log(Logger::DEBUG,"accountmanager.cpp::isAvatarUpToDate", "isAvatarUpToDate return false (personal)");
     } else if(type == "group") {
         QJsonObject groupInfo = avatarCheckerDoc.object();

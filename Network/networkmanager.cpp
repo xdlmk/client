@@ -221,6 +221,10 @@ void NetworkManager::onDataReceived()
         {
             emit deleteGroupMemberReceived(receivedFromServerJson);
         }
+        else if(flag == "add_group_members")
+        {
+            emit addGroupMemberReceived(receivedFromServerJson);
+        }
         else if(flag == "chats_info")
         {
             emit dialogsInfoReceived(receivedFromServerJson["dialogs_info"].toObject());

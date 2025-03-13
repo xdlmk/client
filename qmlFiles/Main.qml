@@ -268,6 +268,10 @@ Window {
         id: createGroupForm
     }
 
+    SelectContactsForm {
+        id:selectContactsForm
+    }
+
     Timer {
         id: updateAvatarsTimer
         interval: 1000
@@ -311,6 +315,12 @@ Window {
     }
 
     function onClearMainListView() { listModel.clear(); }
+    function onClearMessagesAfterDelete(group_id) {
+        if(upLine.currentState === "group" && upLine.user_id === group_id) {
+            listModel.clear();
+            upLine.currentState = "default";
+        }
+    }
 
     function getFileNameFromPath(filePath) {
         if (!filePath || filePath.trim === "") {
@@ -340,6 +350,7 @@ Window {
 
     Component.onCompleted: {
         clearMainListView.connect(onClearMainListView);
+        clearMessagesAfterDelete.connect(onClearMessagesAfterDelete);
         newMessage.connect(onNewMessage);
         insertMessage.connect(addMessageToTop);
         checkActiveDialog.connect(onCheckActiveDialog);
