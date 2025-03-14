@@ -52,11 +52,25 @@ Dialog {
             width: contactsListView.width
             height: 40
             color: model.selected ? "#626a72" : "transparent"
+            Image {
+                id:profileImage
+                width: 30
+                height: 30
+                source: avatarSource + model.id + ".png?" + timestamp
+                anchors {
+                    left: parent.left
+                    leftMargin: 5
+                    verticalCenter: parent.verticalCenter
+                }
+
+            }
             Text {
                 text: model.username
                 color: "White"
                 font.pointSize: 14
-                anchors.centerIn: parent
+                anchors.left: profileImage.right
+                anchors.leftMargin: 10
+                anchors.verticalCenter: parent.verticalCenter
             }
             MouseArea {
                 anchors.fill: parent
@@ -133,7 +147,7 @@ Dialog {
                     }
                 }
                 if(params === "create") {
-                    client.createGroup(groupName.text, createGroupForm.sourcePath, selectedContacts);
+                    client.createGroup(createGroupForm.group_name, createGroupForm.sourcePath, selectedContacts);
                     selectContactsForm.close();
                     createGroupForm.close();
                 }

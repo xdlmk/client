@@ -18,6 +18,7 @@ Dialog {
     height: 350
 
     property string sourcePath: ""
+    property string group_name: groupName.text
 
     Text{
         id:createGroupText

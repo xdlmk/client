@@ -16,6 +16,10 @@ Window {
     property string groupAvatarSource: "../../.data/" + userlogin + "/avatars/group/"
     property int timestamp: new Date().getTime()
 
+    property string activeChatTypeBeforeRequest: "default"
+    property int activeChatIdBeforeRequest: 0
+
+
     Rectangle {
         id: leftLine
         color: "#0e1621"
@@ -121,6 +125,8 @@ Window {
             if (atYBeginning && upLine.currentState !== "default" && listModel.count !== 0) {
                 listView.savedIndexFromEnd = listModel.count;
                 client.requestMessageDownload(upLine.user_id, nameText.text, upLine.currentState, listModel.count);
+                activeChatIdBeforeRequest = upLine.user_id;
+                activeChatTypeBeforeRequest = upLine.currentState;
             }
         }
     }
@@ -176,9 +182,10 @@ Window {
 
         Text {
             id: valueText
-            text: "5 participants"
+            text: "Offline"
             font.pointSize: 8
             color: "grey"
+            visible: false
             anchors{
                 left: parent.left
                 leftMargin: 10
@@ -305,13 +312,20 @@ Window {
         }
     }
 
+    function loadCountOfGroupMembers(jsonArray, group_id){
+        valueText.text = jsonArray.length + " participants";
+        valueText.visible = true;
+    }
+
     function returnPosition() {
         listView.forceLayout()
         listView.positionViewAtIndex(listModel.count - listView.savedIndexFromEnd, ListView.Beginning)
     }
 
     function addMessageToTop(name,message,time,fileName,fileUrl,isOutgoing) {
-        listModel.insert(0, {text: message, time: time, name: name, isOutgoing: isOutgoing,fileName: fileName, fileUrl: fileUrl});
+        if(activeChatIdBeforeRequest === upLine.user_id && activeChatTypeBeforeRequest === upLine.currentState) {
+            listModel.insert(0, {text: message, time: time, name: name, isOutgoing: isOutgoing,fileName: fileName, fileUrl: fileUrl});
+        }
     }
 
     function onClearMainListView() { listModel.clear(); }
@@ -351,6 +365,7 @@ Window {
     Component.onCompleted: {
         clearMainListView.connect(onClearMainListView);
         clearMessagesAfterDelete.connect(onClearMessagesAfterDelete);
+        loadGroupMembers.connect(loadCountOfGroupMembers);
         newMessage.connect(onNewMessage);
         insertMessage.connect(addMessageToTop);
         checkActiveDialog.connect(onCheckActiveDialog);

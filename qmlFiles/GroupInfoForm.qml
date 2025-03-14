@@ -153,14 +153,23 @@ Dialog {
             width: membersListView.width
             height: 40
             color: "#626a72"
-            Image{
+            Image {
+                id:profileImage
+                width: 30
+                height: 30
+                source: avatarSource + model.user_id + ".png?" + timestamp
+                anchors {
+                    left: parent.left
+                    leftMargin: 5
+                    verticalCenter: parent.verticalCenter
+                }
 
             }
             Text {
                 text: model.username
                 color: "White"
                 font.pointSize: 14
-                anchors.left: parent.left //image
+                anchors.left: profileImage.right
                 anchors.leftMargin: 10
                 anchors.verticalCenter: parent.verticalCenter
             }

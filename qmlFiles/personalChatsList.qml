@@ -12,12 +12,13 @@ Rectangle {
         anchors.fill: parent
         spacing: 5
         boundsBehavior: Flickable.StopAtBounds
+        clip: true
 
         model: personalChatsListModel
         delegate: Rectangle {
             id:personalChat
             width: personalChatsListView.width
-            color: personalChatMouseArea.containsMouse ? "#626a72" : "#1e2a36"
+            color: model.currentStateText === "active" ? "#2b5278" : (personalChatMouseArea.containsMouse ? "#626a72" : "#1e2a36")
             height: 60
             property int user_id: id
             property string currentState: currentStateText
@@ -83,31 +84,20 @@ Rectangle {
                 hoverEnabled: true
 
                 onClicked: {
+                    valueText.visible = false;
                     upLine.currentState = chatType;
 
                     for (var i = 0; i < personalChatsListModel.count; ++i) {
-                        var item = personalChatsListModel.get(i);
-                        if (item.currentStateText === "active") {
-                            item.currentStateText = "static";
-                            item.color = "#1e2a36";
-                            personalChatsListView.forceLayout();
-                        }
+                        personalChatsListModel.setProperty(i, "currentStateText", "static");
                     }
-                    personalChatsListModel.setProperty(index,"currentStateText","active");
-                    if(currentStateText === "active") personalChat.color = "#2b5278";
+                    personalChatsListModel.setProperty(index, "currentStateText", "active");
 
                     upLine.user_id = user_id;
                     nameText.text = userlogin;
                     client.loadingChat(userlogin,chatType);
-                }
-                onEntered: {
-                    if (currentStateText === "static"){
-                        personalChat.color = "#626a72";
-                    }
-                }
-                onExited: {
-                    if (currentStateText === "static"){
-                        personalChat.color = "#1e2a36";
+
+                    if(chatType === "group") {
+                        client.getGroupMembers(user_id);
                     }
                 }
             }

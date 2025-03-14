@@ -218,15 +218,20 @@ void AccountManager::addGroupMembers(const int &group_id, const QVariantList &se
 void AccountManager::saveGroupInfo(const QJsonObject &receivedGroupInfoJson)
 {
     QJsonArray groupsInfoArray = receivedGroupInfoJson["info"].toArray();
+    QDir saveDir(QCoreApplication::applicationDirPath() + "/.data/" + activeUserName + "/groupsInfo");
+    if (!saveDir.exists()) {
+        saveDir.mkpath(".");
+    } else {
+        saveDir.removeRecursively();
+        saveDir.mkpath(".");
+    }
+
     for(QJsonValue value : groupsInfoArray) {
         QJsonObject groupInfo = value.toObject();
         int group_id = groupInfo["group_id"].toInt();
 
         QString savePath = QCoreApplication::applicationDirPath() + "/.data/" + activeUserName + "/groupsInfo/" + QString::number(group_id) + ".json";
-        QDir saveDir(QFileInfo(savePath).absolutePath());
-        if (!saveDir.exists()) {
-            saveDir.mkpath(".");
-        }
+
         QFile saveFile(savePath);
         if (!saveFile.open(QIODevice::WriteOnly)) {
             logger->log(Logger::DEBUG,"accountmanager.cpp::saveGroupInfo", "Open file failed:" + savePath);
@@ -242,16 +247,20 @@ void AccountManager::saveGroupInfo(const QJsonObject &receivedGroupInfoJson)
 void AccountManager::saveDialogsInfo(const QJsonObject &receivedDialogInfoJson)
 {
     QJsonArray dialogsInfoArray = receivedDialogInfoJson["info"].toArray();
+
+    QDir saveDir(QCoreApplication::applicationDirPath() + "/.data/" + activeUserName + "/dialogsInfo");
+    if (!saveDir.exists()) {
+        saveDir.mkpath(".");
+    } else {
+        saveDir.removeRecursively();
+        saveDir.mkpath(".");
+    }
     for(QJsonValue value : dialogsInfoArray) {
         QJsonObject dialogInfo = value.toObject();
         if(!dialogInfo.contains("user_id")) continue;
         int user_id = dialogInfo["user_id"].toInt();
 
         QString savePath = QCoreApplication::applicationDirPath() + "/.data/" + activeUserName + "/dialogsInfo/" + QString::number(user_id) + ".json";
-        QDir saveDir(QFileInfo(savePath).absolutePath());
-        if (!saveDir.exists()) {
-            saveDir.mkpath(".");
-        }
         QFile saveFile(savePath);
         if (!saveFile.open(QIODevice::WriteOnly)) {
             logger->log(Logger::DEBUG,"accountmanager.cpp::saveDialogsInfo", "Open file failed:" + savePath);
