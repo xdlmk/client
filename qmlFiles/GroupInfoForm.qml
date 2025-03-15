@@ -21,6 +21,8 @@ Dialog {
     property string group_name: group_name
     property int creator_id: creator_id
 
+    property string newGroupAvatarPath: ""
+
 
     Text{
         id:groupInfoText
@@ -74,6 +76,36 @@ Dialog {
             source: group_id !== 0 ? groupAvatarSource + group_id + ".png?" + timestamp : ""
             visible: source !== ""
             fillMode: Image.PreserveAspectFit
+        }
+    }
+    Rectangle {
+        id:changeGroupAvatarButton
+        width: 20
+        height: 20
+        radius: 10
+        visible: activeUserId === creator_id
+        anchors{
+            right: groupAvatar.right
+            bottom: groupAvatar.bottom
+        }
+        color: "#2b5278"
+        border.color: "#182533"
+        Text {
+            text: "\u270E"
+            color:"#182533"
+            font.pointSize: 12
+            font.bold: true
+            anchors.centerIn: parent
+        }
+        MouseArea {
+            anchors.fill: parent
+            onClicked: {
+                newGroupAvatarPath = fileManager.openFile("Image");
+                if (newGroupAvatarPath != "") {
+                    client.sendNewAvatar(newGroupAvatarPath, "group", group_id);
+                    newGroupAvatarPath = "";
+                }
+            }
         }
     }
 

@@ -107,7 +107,7 @@ void NetworkManager::sendFile(const QString &filePath,const QString &flag)
     sendToFileServer(doc);
 }
 
-void NetworkManager::sendAvatar(const QString &avatarPath)
+void NetworkManager::sendAvatar(const QString &avatarPath, const QString &type, const int& id)
 {
     logger->log(Logger::INFO,"networkmanager.cpp::sendAvatar","Sending avatar");
     QFile file(avatarPath);
@@ -121,8 +121,8 @@ void NetworkManager::sendAvatar(const QString &avatarPath)
 
     QJsonObject fileDataJson;
     fileDataJson["flag"] = "newAvatarData";
-    fileDataJson["type"] = "personal";
-    fileDataJson["user_id"] = activeUserId;
+    fileDataJson["type"] = type;
+    fileDataJson["id"] = id;
     fileDataJson["fileName"] = fileInfo.baseName();
     fileDataJson["fileExtension"] = fileInfo.suffix();
     fileDataJson["fileData"] = QString(fileData.toBase64());
@@ -250,6 +250,10 @@ void NetworkManager::onDataReceived()
         {
             emit avatarsUpdateReceived(receivedFromServerJson);
         }
+        else if(flag == "avatarUrl")
+        {
+            emit sendAvatarUrl(receivedFromServerJson["avatar_url"].toString(),receivedFromServerJson["id"].toInt(),receivedFromServerJson["type"].toString());
+        }
 
         blockSize = 0;
         logger->log(Logger::INFO,"networkmanager.cpp::onDataReceived","Leave onDataReceived");
@@ -307,7 +311,7 @@ void NetworkManager::onFileServerReceived()
         } else if (receivedFromServerJson["flag"].toString() == "avatarData") {
             emit uploadAvatar(receivedFromServerJson);
         } else if (receivedFromServerJson["flag"].toString() == "avatarUrl") {
-            emit sendAvatarUrl(receivedFromServerJson["avatar_url"].toString(),receivedFromServerJson["user_id"].toInt(),receivedFromServerJson["type"].toString());
+            emit sendAvatarUrl(receivedFromServerJson["avatar_url"].toString(),receivedFromServerJson["id"].toInt(),receivedFromServerJson["type"].toString());
         } else if (receivedFromServerJson["flag"].toString() == "voiceFileData") {
             emit uploadVoiceFile(receivedFromServerJson);
         }

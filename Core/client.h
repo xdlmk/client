@@ -87,7 +87,7 @@ signals:
     void changeActiveAccount(QString username);
     void voiceExists();
     void getFile(const QString& fileUrl,const QString& flag);
-    void sendNewAvatar(const QString& avatarPath);
+    void sendNewAvatar(const QString& avatarPath, const QString &type, const int& id);
     void checkAndSendAvatarUpdate(const QString &avatar_url,const int &user_id,const QString& type);
 
     void createGroup(const QString& groupName, const QString& avatarPath, const QVariantList &selectedContacts);

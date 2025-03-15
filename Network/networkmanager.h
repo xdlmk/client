@@ -29,7 +29,7 @@ public slots:
     void sendData(const QJsonObject &jsonToSend);
     void sendToFileServer(const QJsonDocument &doc);
     void sendFile(const QString &filePath,const QString &flag);
-    void sendAvatar(const QString &avatarPath);
+    void sendAvatar(const QString &avatarPath, const QString &type, const int& id);
 
     void setActiveUser(const QString &userName,const int &userId);
     void setLogger(Logger *logger);
