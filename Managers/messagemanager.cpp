@@ -234,7 +234,10 @@ void MessageManager::saveGroupMessage(const QJsonObject &groupMessageJson)
     int message_id = groupMessageJson["message_id"].toInt();
     QString fileUrl = "";
     if(groupMessageJson.contains("fileUrl"))  fileUrl = groupMessageJson["fileUrl"].toString();
-    if(groupMessageJson["only_create"].toString() == "true") emit getChatsInfo();
+    if(groupMessageJson["special_type"].toString() == "create") {
+        emit getChatsInfo();
+
+    }
     QString group_name = groupMessageJson["group_name"].toString();
     int group_id = groupMessageJson["group_id"].toInt();
     QString out = "";
@@ -249,7 +252,7 @@ void MessageManager::saveGroupMessage(const QJsonObject &groupMessageJson)
         }
     }
 
-    if(groupMessageJson.contains("sender_login")) {
+   if(groupMessageJson["sender_login"].toString() != activeUserName) {
         login = groupMessageJson["sender_login"].toString();
         id = groupMessageJson["sender_id"].toInt();
         emit checkAndSendAvatarUpdate(groupMessageJson["sender_avatar_url"].toString(),id, "personal");
