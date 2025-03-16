@@ -28,7 +28,7 @@ void ResponseHandler::processingLoginResults(const QJsonObject &loginResultsJson
     if(success == "ok")
     {
         emit transferUserNameAndIdAfterLogin(name,userId);
-        emit checkAndSendAvatarUpdate(avatar_url,userId);
+        emit checkAndSendAvatarUpdate(avatar_url, userId, "personal");
         emit loginSuccess(name, userId);
         emit addAccount(name,password,userId);
         emit updatingChats();
@@ -63,7 +63,7 @@ void ResponseHandler::processingSearchData(const QJsonObject &searchDataJson)
         int id = userObj.value("id").toInt();
         QString userlogin = userObj.value("userlogin").toString();
         QString avatar_url = userObj.value("avatar_url").toString();
-        emit checkAndSendAvatarUpdate(avatar_url,id);
+        emit checkAndSendAvatarUpdate(avatar_url,id,"personal");
 
         emit newSearchUser(userlogin,id);
     }
@@ -102,8 +102,13 @@ void ResponseHandler::processingAvatarsUpdate(const QJsonObject &avatarsUpdateJs
 {
     logger->log(Logger::INFO,"responsehandler.cpp::processingAvatarsUpdate","processingAvatarsUpdate has begun");
     QJsonArray avatarsArray = avatarsUpdateJson["avatars"].toArray();
+    QJsonArray groupsAvatarsArray = avatarsUpdateJson["groups_avatars"].toArray();
     if (avatarsArray.isEmpty()) {
         logger->log(Logger::ERROR,"responsehandler.cpp::processingAvatarsUpdate","Urls json array is empty");
+        return;
+    }
+    if (groupsAvatarsArray.isEmpty()) {
+        logger->log(Logger::ERROR,"responsehandler.cpp::processingAvatarsUpdate","Groups urls json array is empty");
         return;
     }
 
@@ -113,6 +118,17 @@ void ResponseHandler::processingAvatarsUpdate(const QJsonObject &avatarsUpdateJs
         int id = avatarObject["id"].toInt();
         QString avatarUrl = avatarObject["avatar_url"].toString();
 
-        emit checkAndSendAvatarUpdate(avatarUrl,id);
+        emit checkAndSendAvatarUpdate(avatarUrl, id, "personal");
     }
+
+    for (const QJsonValue &value : groupsAvatarsArray) {
+        QJsonObject avatarObject = value.toObject();
+
+        int id = avatarObject["group_id"].toInt();
+        QString avatarUrl = avatarObject["avatar_url"].toString();
+
+        emit checkAndSendAvatarUpdate(avatarUrl, id, "group");
+    }
+
+    emit getChatsInfo();
 }

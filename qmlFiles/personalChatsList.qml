@@ -12,15 +12,17 @@ Rectangle {
         anchors.fill: parent
         spacing: 5
         boundsBehavior: Flickable.StopAtBounds
+        clip: true
 
         model: personalChatsListModel
         delegate: Rectangle {
             id:personalChat
             width: personalChatsListView.width
-            color: personalChatMouseArea.containsMouse ? "#626a72" : "#1e2a36"
+            color: model.currentStateText === "active" ? "#2b5278" : (personalChatMouseArea.containsMouse ? "#626a72" : "#1e2a36")
             height: 60
             property int user_id: id
             property string currentState: currentStateText
+            property string chatType: currentChatType
 
             Item {
                 anchors.fill: parent
@@ -43,7 +45,7 @@ Rectangle {
                     Image {
                         id:profileImage
                         anchors.fill: parent
-                        source: avatarSource + user_id + ".png?" + timestamp
+                        source: (chatType == "group" ? groupAvatarSource : avatarSource) + user_id + ".png?" + timestamp
                         fillMode: Image.PreserveAspectFit
                     }
                 }
@@ -82,31 +84,20 @@ Rectangle {
                 hoverEnabled: true
 
                 onClicked: {
-                    upLine.currentState = "personal";
+                    valueText.visible = false;
+                    upLine.currentState = chatType;
 
                     for (var i = 0; i < personalChatsListModel.count; ++i) {
-                        var item = personalChatsListModel.get(i);
-                        if (item.currentStateText === "active") {
-                            item.currentStateText = "static";
-                            item.color = "#1e2a36";
-                            personalChatsListView.forceLayout();
-                        }
+                        personalChatsListModel.setProperty(i, "currentStateText", "static");
                     }
-                    personalChatsListModel.setProperty(index,"currentStateText","active");
-                    if(currentStateText === "active") personalChat.color = "#2b5278";
+                    personalChatsListModel.setProperty(index, "currentStateText", "active");
 
                     upLine.user_id = user_id;
                     nameText.text = userlogin;
-                    changeReceiverUserSignal(userlogin,user_id);
-                }
-                onEntered: {
-                    if (currentStateText === "static"){
-                        personalChat.color = "#626a72";
-                    }
-                }
-                onExited: {
-                    if (currentStateText === "static"){
-                        personalChat.color = "#1e2a36";
+                    client.loadingChat(userlogin,chatType);
+
+                    if(chatType === "group") {
+                        client.getGroupMembers(user_id);
                     }
                 }
             }

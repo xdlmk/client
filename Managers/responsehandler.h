@@ -29,7 +29,7 @@ public slots:
 
 signals:
     void transferUserNameAndIdAfterLogin(const QString &activeUserName,const int &activeUserId);
-    void checkAndSendAvatarUpdate(const QString &avatar_url,const int &user_id);
+    void checkAndSendAvatarUpdate(const QString &avatar_url,const int &user_id,const QString& type);
     void loginSuccess(QString &name, int &user_id);
     void loginFail();
     void addAccount(const QString &login, const QString &password, int userId);
@@ -45,6 +45,8 @@ signals:
     void editUserlogin(QString editInformation);
     void editPhoneNumber(QString editInformation);
     void editName(QString editInformation);
+
+    void getChatsInfo();
 
 private:
     Logger *logger;

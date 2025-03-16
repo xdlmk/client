@@ -52,21 +52,19 @@ signals:
 
     void clientLogout();
 
-    void loadingPersonalChat(const QString userlogin);
+    void loadingChat(const QString userlogin, const QString &flag);
 
-    void showPersonalChat(QString login,QString message, int id, QString out);
-    void checkActiveDialog(QString login,QString message, QString out,
-                           QString time,QString fileName,QString fileUrl);
-
-    void changeReceiverUserSignal(QString userlogin,int id);
+    void showPersonalChat(QString login,QString message, int id, QString out, QString type);
+    void checkActiveDialog(int user_id,QString login,QString message, QString out,
+                           QString time,QString fileName,QString fileUrl,QString type);
 
     void newSearchUser(QString userlogin,int id);
 
     void addAccount();
 
-    void sendPersonalMessage(const QString &message, const QString &receiver_login, const int &receiver_id);
-    void sendPersonalMessageWithFile(const QString &message, const QString &receiver_login, const int &receiver_id, const QString& filePath);
-    void sendVoiceMessage(const QString &receiver_login, const int &receiver_id);
+    void sendMessage(const QString &message, const QString &receiver_login, const int &receiver_id, const QString &flag);
+    void sendMessageWithFile(const QString &message, const QString &receiver_login, const int &receiver_id, const QString& filePath, const QString &flag);
+    void sendVoiceMessage(const QString &receiver_login, const int &receiver_id, const QString &flag);
     void sendSearchToServer(const QString &searchable);
     void sendLoginRequest(QString userlogin,QString password);
     void sendRegisterRequest(const QString login, const QString password);
@@ -89,7 +87,24 @@ signals:
     void changeActiveAccount(QString username);
     void voiceExists();
     void getFile(const QString& fileUrl,const QString& flag);
-    void sendNewAvatar(const QString& avatarPath);
+    void sendNewAvatar(const QString& avatarPath, const QString &type, const int& id);
+    void checkAndSendAvatarUpdate(const QString &avatar_url,const int &user_id,const QString& type);
+
+    void createGroup(const QString& groupName, const QString& avatarPath, const QVariantList &selectedContacts);
+    void addGroupMembers(const int& group_id, const QVariantList &selectedContacts);
+    void getGroupMembers(const int& group_id);
+    void clearMessagesAfterDelete(const int& group_id);
+
+    void showContacts();
+    void loadContacts(QVariantList contactsList);
+
+    void loadGroupMembers(QVariantList membersList, const int& group_id);
+    void deleteMemberFromGroup(const int& user_id, const int &group_id);
+
+    void requestMessageDownload(const int &chat_id, const QString &chat_name, const QString& flag, const int& offset);
+    void insertMessage(QString username,QString message,QString time,
+                       QString fileUrl,QString fileName, bool isOutgoing);
+    void returnChatToPosition();
 
     void setLoggers(Logger* logger);
 private:

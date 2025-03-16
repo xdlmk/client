@@ -60,16 +60,17 @@ void AccountManager::clientChangeAccount()
     networkManager->sendData(json);
 }
 
-void AccountManager::checkAndSendAvatarUpdate(const QString &avatar_url, const int &user_id)
+void AccountManager::checkAndSendAvatarUpdate(const QString &avatar_url, const int &user_id,const QString& type)
 {
     logger->log(Logger::INFO,"accountmanager.cpp::checkAndSendAvatarUpdate","checkAndSendAvatarUpdate starts");
-    if(!isAvatarUpToDate(avatar_url,user_id)) {
-        emit sendAvatarUrl(avatar_url,user_id);
+    if(!isAvatarUpToDate(avatar_url, user_id, type)) {
+        emit sendAvatarUrl(avatar_url, user_id, type);
     }
 }
 
 void AccountManager::sendAvatarsUpdate()
 {
+    logger->log(Logger::INFO,"accountmanager.cpp::sendAvatarsUpdate","sendAvatarsUpdate starts");
     QString appDir = QCoreApplication::applicationDirPath();
     QString personalDirPath = appDir + "/resources/" + activeUserName + "/personal";
     QDir personalDir(personalDirPath);
@@ -129,6 +130,24 @@ void AccountManager::sendAvatarsUpdate()
         idArray.append(id);
     }
     avatarsUpdateJson["ids"] = idArray;
+
+    QString groupInfoDirPath = appDir + "/.data/" + activeUserName + "/groupsInfo";
+    QJsonArray groupIds;
+
+    QStringList groupFilters;
+    groupFilters << "*.json";
+
+    QDir dir(groupInfoDirPath);
+    dir.setNameFilters(groupFilters);
+    if (dir.exists()) {
+        QFileInfoList fileList = dir.entryInfoList(QDir::Files);
+        for (const QFileInfo &fileInfo : fileList) {
+            QString fileName = fileInfo.baseName();
+            int groupId = fileName.toInt();
+            groupIds.append(groupId);
+        }
+        avatarsUpdateJson["groups_ids"] = groupIds;
+    }
     networkManager->sendData(avatarsUpdateJson);
 }
 
@@ -146,33 +165,377 @@ void AccountManager::setLogger(Logger *logger)
     responseHandler.setLogger(logger);
 }
 
-bool AccountManager::isAvatarUpToDate(QString avatar_url, int user_id)
+void AccountManager::createGroup(const QString &groupName, const QString& avatarPath, const QVariantList &selectedContacts)
+{
+    QJsonObject createGroupJson;
+    createGroupJson["flag"] = "create_group";
+    createGroupJson["groupName"] = groupName;
+    createGroupJson["creator_id"] = user_id;
+
+    QJsonArray membersArray;
+    for (const QVariant &contact : selectedContacts) {
+        QVariantMap contactMap = contact.toMap();
+        QJsonObject contactJson = QJsonObject::fromVariantMap(contactMap);
+        membersArray.append(contactJson);
+    }
+    createGroupJson["members"] = membersArray;
+
+    if(avatarPath == ""){
+        createGroupJson["avatar_url"] = "";
+        networkManager->sendData(createGroupJson);
+    } else {
+        QFile file(avatarPath);
+        QFileInfo fileInfo(avatarPath);
+        if (!file.open(QIODevice::ReadOnly)) {
+            logger->log(Logger::WARN,"networkmanager.cpp::sendAvatar","Failed open avatar");
+        }
+        QByteArray fileData = file.readAll();
+        file.close();
+        createGroupJson["fileName"] = fileInfo.baseName();
+        createGroupJson["fileExtension"] = fileInfo.suffix();
+        createGroupJson["fileData"] = QString(fileData.toBase64());
+        QJsonDocument doc(createGroupJson);
+        networkManager->sendToFileServer(doc);
+    }
+}
+
+void AccountManager::addGroupMembers(const int &group_id, const QVariantList &selectedContacts)
+{
+    QJsonObject addMembersJson;
+    addMembersJson["flag"] = "add_group_members";
+    addMembersJson["group_id"] = group_id;
+    addMembersJson["admin_id"] = this->user_id;
+    QJsonArray membersArray;
+    for (const QVariant &contact : selectedContacts) {
+        QVariantMap contactMap = contact.toMap();
+        QJsonObject contactJson = QJsonObject::fromVariantMap(contactMap);
+        membersArray.append(contactJson);
+    }
+    addMembersJson["members"] = membersArray;
+    networkManager->sendData(addMembersJson);
+}
+
+void AccountManager::saveGroupInfo(const QJsonObject &receivedGroupInfoJson)
+{
+    QJsonArray groupsInfoArray = receivedGroupInfoJson["info"].toArray();
+    QDir saveDir(QCoreApplication::applicationDirPath() + "/.data/" + activeUserName + "/groupsInfo");
+    if (!saveDir.exists()) {
+        saveDir.mkpath(".");
+    } else {
+        saveDir.removeRecursively();
+        saveDir.mkpath(".");
+    }
+
+    for(QJsonValue value : groupsInfoArray) {
+        QJsonObject groupInfo = value.toObject();
+        int group_id = groupInfo["group_id"].toInt();
+
+        QString savePath = QCoreApplication::applicationDirPath() + "/.data/" + activeUserName + "/groupsInfo/" + QString::number(group_id) + ".json";
+
+        QFile saveFile(savePath);
+        if (!saveFile.open(QIODevice::WriteOnly)) {
+            logger->log(Logger::DEBUG,"accountmanager.cpp::saveGroupInfo", "Open file failed:" + savePath);
+            return;
+        }
+
+        QJsonDocument saveDoc(groupInfo);
+        saveFile.write(saveDoc.toJson(QJsonDocument::Indented));
+        saveFile.close();
+    }
+}
+
+void AccountManager::saveDialogsInfo(const QJsonObject &receivedDialogInfoJson)
+{
+    QJsonArray dialogsInfoArray = receivedDialogInfoJson["info"].toArray();
+
+    QDir saveDir(QCoreApplication::applicationDirPath() + "/.data/" + activeUserName + "/dialogsInfo");
+    if (!saveDir.exists()) {
+        saveDir.mkpath(".");
+    } else {
+        saveDir.removeRecursively();
+        saveDir.mkpath(".");
+    }
+    for(QJsonValue value : dialogsInfoArray) {
+        QJsonObject dialogInfo = value.toObject();
+        if(!dialogInfo.contains("user_id")) continue;
+        int user_id = dialogInfo["user_id"].toInt();
+
+        QString savePath = QCoreApplication::applicationDirPath() + "/.data/" + activeUserName + "/dialogsInfo/" + QString::number(user_id) + ".json";
+        QFile saveFile(savePath);
+        if (!saveFile.open(QIODevice::WriteOnly)) {
+            logger->log(Logger::DEBUG,"accountmanager.cpp::saveDialogsInfo", "Open file failed:" + savePath);
+            return;
+        }
+
+        QJsonDocument saveDoc(dialogInfo);
+        saveFile.write(saveDoc.toJson(QJsonDocument::Indented));
+        saveFile.close();
+    }
+}
+
+void AccountManager::getGroupMembers(const int &group_id)
+{
+    QString filePath = QCoreApplication::applicationDirPath() + "/.data/" + activeUserName + "/groupsInfo/" + QString::number(group_id) + ".json";
+    QFile groupInfoFile(filePath);
+    if(!groupInfoFile.exists()){
+        logger->log(Logger::WARN,"accountmanager.cpp::getGroupMembers", "Group info file not exists: " + filePath);
+        return;
+    }
+    if (!groupInfoFile.open(QIODevice::ReadOnly)) {
+        logger->log(Logger::DEBUG,"accountmanager.cpp::getGroupMembers", "Open file failed: " + filePath);
+        return;
+    }
+
+    QByteArray infoData = groupInfoFile.readAll();
+    groupInfoFile.close();
+    QJsonDocument doc = QJsonDocument::fromJson(infoData);
+    QJsonObject groupInfoJson = doc.object();
+
+    QJsonArray membersArray = groupInfoJson["members"].toArray();
+    QVariantList membersList;
+
+    for (const QJsonValue &value : membersArray) {
+        membersList.append(value.toObject().toVariantMap());
+    }
+
+    emit loadGroupMembers(membersList,group_id);
+}
+
+void AccountManager::deleteMemberFromGroup(const int &user_id, const int &group_id)
+{
+    QJsonObject deleteMemberObject;
+    deleteMemberObject["flag"] = "delete_member";
+    deleteMemberObject["user_id"] = user_id;
+    deleteMemberObject["group_id"] = group_id;
+    deleteMemberObject["creator_id"] = this->user_id;
+
+    if(user_id != this->user_id){
+        networkManager->sendData(deleteMemberObject);
+    }
+}
+
+void AccountManager::deleteGroupMemberReceived(const QJsonObject &receivedDeleteMemberFromGroup)
+{
+    if(receivedDeleteMemberFromGroup["error_code"].toInt() == 0) {
+        int group_id = receivedDeleteMemberFromGroup["group_id"].toInt();
+        int error_code = deleteUserFromInfoFile(group_id, receivedDeleteMemberFromGroup["deleted_user_id"].toInt());
+        if(error_code == 0){
+            logger->log(Logger::INFO,"accountmanager.cpp::deleteGroupMemberReceived", "Member with user_id: " + QString::number(receivedDeleteMemberFromGroup["deleted_user_id"].toInt()) + " successfuly removed from info list");
+            getGroupMembers(group_id);
+        } else {
+            logger->log(Logger::WARN,"accountmanager.cpp::deleteGroupMemberReceived", "Member with user_id: " + QString::number(receivedDeleteMemberFromGroup["deleted_user_id"].toInt()) + " not removed from info list");
+        }
+
+    } else if(receivedDeleteMemberFromGroup["error_code"].toInt() == 1) {
+        logger->log(Logger::WARN,"accountmanager.cpp::deleteGroupMemberReceived", "Member with user_id: " + QString::number(receivedDeleteMemberFromGroup["deleted_user_id"].toInt()) + " is not a member of the group");
+    } else if(receivedDeleteMemberFromGroup["error_code"].toInt() == 2) {
+        logger->log(Logger::WARN,"accountmanager.cpp::deleteGroupMemberReceived", "The active user does not have sufficient rights to perform this operation");
+    }
+}
+
+void AccountManager::addGroupMemberReceived(const QJsonObject &receivedAddMemberFromGroup)
+{
+    int group_id = receivedAddMemberFromGroup["group_id"].toInt();
+    QJsonArray newMembers = receivedAddMemberFromGroup["addedMembers"].toArray();
+
+    for(const QJsonValue &value : newMembers) {
+        QJsonObject member = value.toObject();
+        if(member["id"].toInt() == this->user_id) {
+            updatingChats();
+            return;
+        }
+    }
+
+    QString pathToGroupInfo = QCoreApplication::applicationDirPath() + "/.data/" + activeUserName + "/groupsInfo/" + QString::number(group_id) + ".json";
+    QFile file(pathToGroupInfo);
+    if (!file.open(QIODevice::ReadOnly)) {
+        logger->log(Logger::WARN,"accountmanager.cpp::addGroupMemberReceived", "Group info file not open for read");
+    }
+    QJsonDocument doc = QJsonDocument::fromJson(file.readAll());
+    QJsonObject json = doc.object();
+    file.close();
+    QJsonArray members = json["members"].toArray();
+
+
+    for(const QJsonValue &value : newMembers) {
+        QJsonObject member = value.toObject();
+        members.append(member);
+    }
+    json["members"] = members;
+
+    if (!file.open(QIODevice::WriteOnly)) {
+        logger->log(Logger::WARN,"accountmanager.cpp::addGroupMemberReceived", "Group info file not open for write");
+    }
+    file.write(QJsonDocument(json).toJson());
+    file.close();
+    getGroupMembers(group_id);
+}
+
+void AccountManager::getContactList()
+{
+    logger->log(Logger::DEBUG,"accountmanager.cpp::getContactList", "getContactList starts!");
+    QString appPath = QCoreApplication::applicationDirPath();
+    QString personalDirPath = appPath + "/resources/" + activeUserName + "/personal";
+
+    QDir personalDir(personalDirPath);
+    if (!personalDir.exists()) {
+        logger->log(Logger::DEBUG,"accountmanager.cpp::getContactList", "personalDir not exists!");
+        return;
+    }
+
+    QStringList messageFiles = personalDir.entryList(QStringList() << "message_*.json", QDir::Files);
+    QJsonArray contactsArray;
+
+    for (const QString &fileName : messageFiles) {
+        QString filePath = personalDirPath + "/" + fileName;
+
+        QFile file(filePath);
+        if (!file.open(QIODevice::ReadOnly)) {
+            logger->log(Logger::DEBUG,"accountmanager.cpp::getContactList", "Open file failed:" + filePath);
+            continue;
+        }
+
+        QByteArray fileData = file.readAll();
+        file.close();
+
+        QJsonDocument doc = QJsonDocument::fromJson(fileData);
+
+        QJsonArray jsonArray = doc.array();
+        if (jsonArray.isEmpty()) continue;
+
+        QJsonObject lastObject = jsonArray.last().toObject();
+        int id = lastObject["id"].toInt();
+
+        QString username = fileName.mid(8, fileName.length() - 13);
+        if(username == activeUserName) continue;
+
+        QJsonObject contact;
+        contact["id"] = id;
+        contact["username"] = username;
+        contactsArray.append(contact);
+    }
+    QString savePath = appPath + "/.data/" + activeUserName + "/contacts/contacts.json";
+    QDir saveDir(QFileInfo(savePath).absolutePath());
+    if (!saveDir.exists()) {
+        saveDir.mkpath(".");
+    }
+
+    QFile saveFile(savePath);
+    if (!saveFile.open(QIODevice::WriteOnly)) {
+        logger->log(Logger::DEBUG,"accountmanager.cpp::getContactList", "Open file failed:" + savePath);
+        return;
+    }
+
+    QJsonDocument saveDoc(contactsArray);
+    saveFile.write(saveDoc.toJson(QJsonDocument::Indented));
+    saveFile.close();
+}
+
+void AccountManager::showContacts()
+{
+    QJsonArray contactsArray;
+    QString contactsFilePath = QCoreApplication::applicationDirPath() + "/.data/" + activeUserName + "/contacts/contacts.json";
+
+    QFile contactsFile(contactsFilePath);
+    if (!contactsFile.open(QIODevice::ReadOnly)) {
+        logger->log(Logger::DEBUG,"accountmanager.cpp::showContacts", "Open file failed:" + contactsFilePath);
+        return;
+    }
+    QByteArray fileData = contactsFile.readAll();
+    contactsFile.close();
+
+    contactsArray = QJsonDocument::fromJson(fileData).array();
+    QVariantList contactsList;
+    for (const QJsonValue &value : contactsArray) {
+        contactsList.append(value.toObject().toVariantMap());
+    }
+
+    emit loadContacts(contactsList);
+}
+
+void AccountManager::getChatsInfo()
+{
+    QJsonObject infoObject;
+    infoObject["flag"] = "chats_info";
+    infoObject["userlogin"] = activeUserName;
+    networkManager->sendData(infoObject);
+}
+
+int AccountManager::deleteUserFromInfoFile(const int &group_id, const int &user_id)
+{
+    QString pathToGroupInfo = QCoreApplication::applicationDirPath() + "/.data/" + activeUserName + "/groupsInfo/" + QString::number(group_id) + ".json";
+    QFile file(pathToGroupInfo);
+    if(user_id == this->user_id) {
+        QFile::remove(pathToGroupInfo);
+        QFile::remove(QCoreApplication::applicationDirPath() + "/resources/" + activeUserName + "/group/message_" + QString::number(group_id) + ".json");
+        emit clearMessagesAfterDelete(group_id);
+    }
+    if (!file.open(QIODevice::ReadOnly)) {
+        logger->log(Logger::WARN,"accountmanager.cpp::deleteUserFromInfoFile", "Group info file not open for read");
+        return 1;
+    }
+    QJsonDocument doc = QJsonDocument::fromJson(file.readAll());
+    QJsonObject json = doc.object();
+    file.close();
+    QJsonArray members = json["members"].toArray();
+    QJsonArray newMembers;
+
+    for (const QJsonValue &value : members) {
+        QJsonObject member = value.toObject();
+        int memberId = member["id"].toInt();
+        if (memberId == user_id) {
+            logger->log(Logger::DEBUG,"accountmanager.cpp::deleteUserFromInfoFile", "User with id: " + QString::number(user_id) + " successfuly removed from group with id: " + QString::number(group_id));
+            continue;
+        }
+
+        newMembers.append(member);
+    }
+    json["members"] = newMembers;
+
+    if (!file.open(QIODevice::WriteOnly)) {
+        logger->log(Logger::WARN,"accountmanager.cpp::deleteUserFromInfoFile", "Group info file not open for write");
+        return 1;
+    }
+    file.write(QJsonDocument(json).toJson());
+    file.close();
+    return 0;
+}
+
+bool AccountManager::isAvatarUpToDate(QString avatar_url, int user_id,const QString& type)
 {
     logger->log(Logger::INFO,"accountmanager.cpp::isAvatarUpToDate", "isAvatarUpToDate starts");
-    QFile avatar(QCoreApplication::applicationDirPath() + "/avatars/" + activeUserName + "/" + QString::number(user_id) + ".png");
-    if(!avatar.open(QIODevice::ReadWrite)) {
+    QString pathToAvatar;
+    QString avatarCheckerPath;
+    if(type == "personal") {
+        pathToAvatar = QCoreApplication::applicationDirPath() + "/.data/" + activeUserName + "/avatars/" + type + "/" + QString::number(user_id) + ".png";
+        avatarCheckerPath = QCoreApplication::applicationDirPath() + "/.data/" + activeUserName + "/dialogsInfo/" + QString::number(user_id) + ".json";
+    } else if(type == "group") {
+        pathToAvatar = QCoreApplication::applicationDirPath() + "/.data/" + activeUserName + "/avatars/" + type + "/" + QString::number(user_id) + ".png";
+        avatarCheckerPath = QCoreApplication::applicationDirPath() + "/.data/" + activeUserName + "/groupsInfo/" + QString::number(user_id) + ".json";
+    }
+    QFile avatar(pathToAvatar);
+    if(!avatar.exists() || avatar.size() == 0) {
         logger->log(Logger::INFO,"accountmanager.cpp::isAvatarUpToDate", "Avatar not downloaded");
         return false;
     }
-    QString avatarCheckerPath = QCoreApplication::applicationDirPath() + "/.fileChecker/" + activeUserName + "/avatarChecker.json";
     QFile avatarChecker(avatarCheckerPath);
-    if(!avatarChecker.open(QIODevice::ReadWrite)) {
+    if(!avatarChecker.open(QIODevice::ReadOnly)) {
         logger->log(Logger::WARN,"accountmanager.cpp::isAvatarUpToDate", "Failed to open avatarChecker");
         return false;
     }
     QByteArray avatarCheckerData = avatarChecker.readAll();
     avatarChecker.close();
     QJsonDocument avatarCheckerDoc = QJsonDocument::fromJson(avatarCheckerData);
-    QJsonArray avatarCheckerArray = avatarCheckerDoc.array();
-    for (const auto &item : avatarCheckerArray) {
-        QJsonObject jsonObject = item.toObject();
-        if (jsonObject.contains("user_id") && jsonObject.contains("avatar_url")) {
-            if ((jsonObject["user_id"].toInt() == user_id) and (jsonObject["avatar_url"].toString() == avatar_url)) {
-                return true;
-            }
-        }
+
+    if(type == "personal") {
+        QJsonObject dialogInfo = avatarCheckerDoc.object();
+        if(dialogInfo["avatar_url"].toString() == avatar_url) return true;
+        logger->log(Logger::DEBUG,"accountmanager.cpp::isAvatarUpToDate", "isAvatarUpToDate return false (personal)");
+    } else if(type == "group") {
+        QJsonObject groupInfo = avatarCheckerDoc.object();
+        if(groupInfo["avatar_url"].toString() == avatar_url) return true;
+        logger->log(Logger::DEBUG,"accountmanager.cpp::isAvatarUpToDate", "isAvatarUpToDate return false (group)");
     }
-    logger->log(Logger::DEBUG,"accountmanager.cpp::isAvatarUpToDate", "isAvatarUpToDate return false");
     return false;
 }
 
@@ -206,6 +569,8 @@ void AccountManager::setupResponseHandler()
 
     connect(&responseHandler,&ResponseHandler::newSearchUser,this,&AccountManager::newSearchUser);
 
+    connect(&responseHandler,&ResponseHandler::getChatsInfo,this,&AccountManager::getChatsInfo);
+
     connect(&responseHandler,&ResponseHandler::editUniqueError,this,&AccountManager::editUniqueError);
     connect(&responseHandler,&ResponseHandler::unknownError,this,&AccountManager::unknownError);
     connect(&responseHandler,&ResponseHandler::editUserlogin,this,&AccountManager::editUserlogin);
@@ -215,70 +580,9 @@ void AccountManager::setupResponseHandler()
 
 void AccountManager::updatingChats()
 {
-    QString folderPath = QCoreApplication::applicationDirPath() + "/resources/" + activeUserName + "/personal";
-
-    QDir dir(folderPath);
-
-    QStringList fileList = dir.entryList(QStringList() << "message_*.json", QDir::Files);
-
-    QJsonArray jsonArray;
-    QJsonArray dialogIdsArray;
-
-    QRegularExpression regex("^message_(.*)\\.json$");
-
-
-    for (const QString& fileName : fileList) {
-        QRegularExpressionMatch match = regex.match(fileName);
-        if (match.hasMatch()) {
-            QString login = match.captured(1);
-            if(login == "") continue;
-
-            emit checkingChatAvailability(login);
-            QJsonObject loginObject;
-
-
-            QFile file(QCoreApplication::applicationDirPath() + "/resources/" + activeUserName + "/personal" +"/message_" + login + ".json");
-            if (!file.open(QIODevice::ReadWrite)) {
-                logger->log(Logger::INFO,"accountmanager.cpp::updatingChats","File not open with error: " + file.errorString());
-                return;
-            }
-
-            QByteArray fileData = file.readAll();
-            if (!fileData.isEmpty()) {
-                QJsonDocument doc = QJsonDocument::fromJson(fileData);
-                QJsonArray chatHistory = doc.array();
-
-                if (!chatHistory.isEmpty()) {
-
-                    QJsonObject lastMessageObject = chatHistory.last().toObject();
-                    loginObject["message_id"] = lastMessageObject["message_id"];
-                    loginObject["login"] = login;
-                    loginObject["dialog_id"] = lastMessageObject["dialog_id"];
-                    dialogIdsArray.append(loginObject["dialog_id"].toInt());
-
-                } else {
-                    logger->log(Logger::INFO,"accountmanager.cpp::updatingChats","ChatHistory is empty");
-                }
-            }
-            file.close();
-
-            if (!loginObject.isEmpty()) {
-                jsonArray.append(loginObject);
-            }
-            else {
-                logger->log(Logger::INFO,"accountmanager.cpp::updatingChats","loginObject is empty");
-            }
-        }
-    }
-
     QJsonObject mainObject;
     mainObject["flag"] = "updating_chats";
-    if(!fileList.isEmpty()) {
-        mainObject["chats"] = jsonArray;
-    }
     mainObject["userlogin"] = activeUserName;
-    mainObject["dialogIds"] = dialogIdsArray;
-
     networkManager->sendData(mainObject);
 }
 

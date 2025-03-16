@@ -74,16 +74,15 @@ Rectangle {
         }
     }
 
-    ListModel{
+    ListModel {
         id:personalChatsListModel
     }
 
-    function onShowPersonalChat(userlogin,message,id,out)
-    {
+    function onShowPersonalChat(userlogin,message,id,out,type) {
         var exists = false;
         for (var i = 0; i < personalChatsListModel.count; i++) {
             var item = personalChatsListModel.get(i);
-            if (item.id === id) {
+            if (item.id === id && item.currentChatType === type) {
                 exists = true;
                 personalChatsListModel.remove(i);
                 break;
@@ -91,15 +90,27 @@ Rectangle {
         }
         var newPersChat;
         if(out === "out") {
-            newPersChat = {"userlogin":userlogin,"currentStateText": "static", "message": "You: " + message , "id":id};
+            newPersChat = {"userlogin":userlogin, "currentChatType":type, "currentStateText": "static", "message": "You: " + message , "id":id};
         }
         else {
-            newPersChat = {"userlogin":userlogin,"currentStateText": "static", "message": message , "id":id};
+            newPersChat = {"userlogin":userlogin, "currentChatType":type, "currentStateText": "static", "message": message , "id":id};
         }
         personalChatsListModel.insert(0,newPersChat);
     }
 
+    function removeChatAfterDelete(group_id) {
+        var type = "group";
+        for (var i = 0; i < personalChatsListModel.count; i++) {
+            var item = personalChatsListModel.get(i);
+            if (item.id === group_id && item.currentChatType === type) {
+                personalChatsListModel.remove(i);
+                break;
+            }
+        }
+    }
+
     Component.onCompleted: {
         showPersonalChat.connect(onShowPersonalChat);
+        clearMessagesAfterDelete.connect(removeChatAfterDelete);
     }
 }

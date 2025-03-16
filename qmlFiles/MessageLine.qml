@@ -35,25 +35,25 @@ Rectangle{
             leftMargin: 10
         }
         Rectangle {
-                id: fileIcon
-                width: 40
-                height: parent.height - 20
-                color: "#1e3a5f"
-                radius: 5
-                anchors {
-                    left: parent.left
-                    leftMargin: 5
-                    verticalCenter: parent.verticalCenter
-                }
-
-                Text {
-                    id: extensionText
-                    anchors.centerIn: parent
-                    text: getExtension(filePath)
-                    font.pointSize: 10
-                    color: "white"
-                }
+            id: fileIcon
+            width: 40
+            height: parent.height - 20
+            color: "#1e3a5f"
+            radius: 5
+            anchors {
+                left: parent.left
+                leftMargin: 5
+                verticalCenter: parent.verticalCenter
             }
+
+            Text {
+                id: extensionText
+                anchors.centerIn: parent
+                text: getExtension(filePath)
+                font.pointSize: 10
+                color: "white"
+            }
+        }
 
         Text {
             id:fileName
@@ -216,7 +216,7 @@ Rectangle{
                     } else if (isRecording) {
                         client.stopRecording();
                         isRecording = !isRecording;
-                        client.sendVoiceMessage(nameText.text,upLine.user_id);
+                        client.sendVoiceMessage(nameText.text,upLine.user_id,upLine.currentState);
                     } else wordProcessing();
                 }
 
@@ -234,18 +234,24 @@ Rectangle{
 
     function wordProcessing() {
         if (edtText.text.trim() !== "") {
-            if(upLine.currentState == "default"){
-            }
+            if(upLine.currentState == "default");
             else if (upLine.currentState == "personal") {
                 if(fileLoad) {
-                    client.sendPersonalMessageWithFile(edtText.text, nameText.text,upLine.user_id,filePath)
+                    client.sendMessageWithFile(edtText.text, nameText.text,upLine.user_id,filePath,"personal")
                     fileLoad = false;
                     filePath = "";
                 } else {
-                    client.sendPersonalMessage(edtText.text, nameText.text,upLine.user_id);
+                    client.sendMessage(edtText.text, nameText.text,upLine.user_id,"personal");
+                }
+            } else if (upLine.currentState == "group") {
+                if(fileLoad) {
+                    client.sendMessageWithFile(edtText.text, nameText.text,upLine.user_id,filePath,"group")
+                    fileLoad = false;
+                    filePath = "";
+                } else {
+                    client.sendMessage(edtText.text, nameText.text,upLine.user_id,"group");
                 }
             }
-
             edtText.clear();
         }
     }

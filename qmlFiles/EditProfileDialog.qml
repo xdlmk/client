@@ -128,7 +128,7 @@ Dialog {
                 onClicked: {
                     newAvatarPath = fileManager.openFile("Image");
                     if (newAvatarPath != "") {
-                        client.sendNewAvatar(newAvatarPath);
+                        client.sendNewAvatar(newAvatarPath, "personal", activeUserId);
                         newAvatarPath = "";
                     }
                 }

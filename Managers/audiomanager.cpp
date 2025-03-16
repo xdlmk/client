@@ -13,9 +13,7 @@ void AudioManager::startRecording() {
     if (!dir.exists()) {
         dir.mkpath(".");
     }
-    qDebug() << dir;
     QString filePath = QDir::cleanPath(QCoreApplication::applicationDirPath()) + "/.tempData/" + activeUserLogin + "/voice_messages" + "/voiceMessage.wav";
-    qDebug() << filePath;
     recorder->setOutputLocation(QUrl::fromLocalFile(filePath));
     recorder->record();
 }

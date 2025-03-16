@@ -3,6 +3,7 @@
 
 #include <QObject>
 #include <QJsonObject>
+#include <QVariantList>
 #include <QStandardPaths>
 #include <QSettings>
 #include <QImage>
@@ -24,7 +25,7 @@ public:
     void logout();
     void clientChangeAccount();
 public slots:
-    void checkAndSendAvatarUpdate(const QString &avatar_url,const int &user_id);
+    void checkAndSendAvatarUpdate(const QString &avatar_url, const int &user_id, const QString& type);
     void updatingChats();
 
     void sendAvatarsUpdate();
@@ -34,13 +35,26 @@ public slots:
     void setActiveUser(const QString &userName,const int &userId);
     void setLogger(Logger* logger);
 
+    void createGroup(const QString& groupName, const QString& avatarPath, const QVariantList &selectedContacts);
+    void addGroupMembers(const int& group_id, const QVariantList &selectedContacts);
+    void saveGroupInfo(const QJsonObject &receivedGroupInfoJson);
+    void saveDialogsInfo(const QJsonObject &receivedDialogInfoJson);
+
+    void getGroupMembers(const int& group_id);
+    void deleteMemberFromGroup(const int& user_id, const int &group_id);
+    void deleteGroupMemberReceived(const QJsonObject &receivedDeleteMemberFromGroup);
+    void addGroupMemberReceived(const QJsonObject &receivedAddMemberFromGroup);
+
+    void getContactList();
+    void showContacts();
+    void getChatsInfo();
 signals:
     void newUser(QString username,int user_id);
     void changeAccount(QString username,QString password);
     void changeActiveAccount(QString username);
 
     void checkConfigFile();
-    void checkingChatAvailability(QString &login);
+    void checkingChatAvailability(QString &login, const QString &flag);
 
     void loginSuccess(QString &name, int &user_id);
     void loginFail();
@@ -56,9 +70,13 @@ signals:
     void unknownError();
 
     void clientLogout();
-    void sendAvatarUrl(const QString &avatar_url,const int& user_id);
+    void sendAvatarUrl(const QString &avatar_url,const int& user_id, const QString& type);
 
     void newSearchUser(QString &userlogin,int &id);
+
+    void loadContacts(QVariantList contactsList);
+    void loadGroupMembers(QVariantList membersList, const int& group_id);
+    void clearMessagesAfterDelete(const int& group_id);
 
     void processingLoginResultsFromServer(const QJsonObject &loginResultsJson);
     void processingRegistrationResultsFromServer(const QJsonObject &regResultsJson);
@@ -66,7 +84,8 @@ signals:
     void processingEditProfileFromServer(const QJsonObject &editResultsJson);
     void processingAvatarsUpdateFromServer(const QJsonObject &avatarsUpdateJson);
 private:
-    bool isAvatarUpToDate(QString avatar_url,int user_id);
+    int deleteUserFromInfoFile(const int& group_id, const int& user_id);
+    bool isAvatarUpToDate(QString avatar_url,int user_id,const QString& type);
 
     int user_id;
     QString activeUserName;

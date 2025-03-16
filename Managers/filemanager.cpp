@@ -32,10 +32,11 @@ QString FileManager::openFile(QString type)
     return "";
 }
 
-void FileManager::sendAvatarUrl(const QString &avatar_url,const int& user_id)
+void FileManager::sendAvatarUrl(const QString &avatar_url,const int& user_id, const QString& type)
 {
     QJsonObject avatarUrlJson;
     avatarUrlJson["flag"] = "avatarUrl";
+    avatarUrlJson["type"] = type;
     avatarUrlJson["avatar_url"] = avatar_url;
     avatarUrlJson["user_id"] = user_id;
     QJsonDocument doc(avatarUrlJson);
@@ -128,29 +129,41 @@ void FileManager::uploadAvatar(const QJsonObject &avatarDataJson)
 {
     logger->log(Logger::INFO,"filemanager.cpp::uploadAvatar", "uploadAvatar start");
     QString avatarDataString = avatarDataJson["avatarData"].toString();
+    QString type = avatarDataJson["type"].toString();
     QByteArray avatarData = QByteArray::fromBase64(avatarDataString.toUtf8());
 
-    checkingForFileChecker();
-    QFile avatarChecker(QCoreApplication::applicationDirPath() + "/.fileChecker/" + activeUserName + "/avatarChecker.json");
-    QJsonArray avatarCheckerArray = loadJsonArrayFromFile(avatarChecker);
-
-    QJsonObject newAvatarDataJson;
-    newAvatarDataJson["user_id"] = avatarDataJson["user_id"].toInt();
-    newAvatarDataJson["avatar_url"] = avatarDataJson["avatar_url"].toString();
-    avatarCheckerArray.append(newAvatarDataJson);
-
-    if (!avatarChecker.open(QIODevice::WriteOnly)) {
-        logger->log(Logger::WARN,"filemanager.cpp::uploadAvatar", "Failed to save avatarChecker");
-        return;
+    QString chattype = type == "personal" ? "/dialogsInfo/" : "/groupsInfo/";
+    QString pathToInfo = QCoreApplication::applicationDirPath() + "/.data/" + activeUserName + chattype + QString::number(avatarDataJson["user_id"].toInt()) + ".json";
+    QFileInfo fileInfo(pathToInfo);
+    QDir dir(fileInfo.path());
+    if (!dir.exists()) {
+        dir.mkpath(".");
     }
-    QJsonDocument jsonDoc(avatarCheckerArray);
-    avatarChecker.write(jsonDoc.toJson());
-    avatarChecker.close();
-    QDir avatarDir(QCoreApplication::applicationDirPath() + "/avatars/" + activeUserName);
+
+    QFile avatarChecker(pathToInfo);
+
+    if (!avatarChecker.open(QIODevice::ReadOnly)) {
+        logger->log(Logger::WARN,"filemanager.cpp::uploadAvatar", "Failed to read info file: " + pathToInfo);
+    } else {
+        QJsonDocument doc = QJsonDocument::fromJson(avatarChecker.readAll());
+        avatarChecker.close();
+        QJsonObject json = doc.object();
+        json["avatar_url"] = avatarDataJson["avatar_url"];
+        QJsonDocument updatedDoc(json);
+        if (!avatarChecker.open(QIODevice::WriteOnly | QIODevice::Truncate)) {
+            logger->log(Logger::WARN,"filemanager.cpp::uploadAvatar", "Failed to write into info file: " + pathToInfo);
+        }
+        avatarChecker.write(updatedDoc.toJson());
+        avatarChecker.close();
+    }
+
+
+    QString pathToSave = QCoreApplication::applicationDirPath() + "/.data/" + activeUserName + "/avatars/" + type;
+    QDir avatarDir(pathToSave);
     if (!avatarDir.exists()) {
         avatarDir.mkpath(".");
     }
-    QFile avatar(QCoreApplication::applicationDirPath() + "/avatars/" + activeUserName + "/" + QString::number(avatarDataJson["user_id"].toInt()) + ".png");
+    QFile avatar(pathToSave + "/" + QString::number(avatarDataJson["user_id"].toInt()) + ".png");
 
     if (!avatar.open(QIODevice::WriteOnly)) {
         logger->log(Logger::WARN,"filemanager.cpp::uploadAvatar", "Failed to save avatar");
@@ -227,7 +240,6 @@ void FileManager::checkingForFileChecker()
 {
     logger->log(Logger::INFO,"filemanager.cpp::checkingForFileChecker", "checkingForFileChecker starts");
     QFile fileChecker(QCoreApplication::applicationDirPath() + "/.fileChecker/" + activeUserName + "/checker.json");
-    QFile avatarChecker(QCoreApplication::applicationDirPath() + "/.fileChecker/" + activeUserName + "/avatarChecker.json");
     QDir dirFileChecker(QCoreApplication::applicationDirPath() + "/.fileChecker/" + activeUserName);
     QDir dirUploadFiles(QCoreApplication::applicationDirPath() + "/uploads/" + activeUserName);
     if (dirFileChecker.exists()) {
@@ -238,11 +250,6 @@ void FileManager::checkingForFileChecker()
                 fileChecker.close();
             } else {
                 logger->log(Logger::WARN,"filemanager.cpp::checkingForFileChecker", "Failed to create fileChecker");
-            }
-            if(avatarChecker.open(QIODevice::WriteOnly)){
-                avatarChecker.close();
-            } else {
-                logger->log(Logger::WARN,"filemanager.cpp::checkingForFileChecker", "Failed to create avatarChecker");
             }
         }
     } else {

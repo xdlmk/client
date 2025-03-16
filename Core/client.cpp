@@ -29,10 +29,16 @@ void Client::setupNetworkConnections() {
     connect(networkManager, &NetworkManager::loginResultsReceived, accountManager, &AccountManager::processingLoginResultsFromServer);
     connect(networkManager, &NetworkManager::registrationResultsReceived, accountManager, &AccountManager::processingRegistrationResultsFromServer);
     connect(networkManager, &NetworkManager::messageReceived, messageManager, &MessageManager::savePersonalMessage);
+    connect(networkManager, &NetworkManager::groupMessageReceived, messageManager, &MessageManager::saveGroupMessage);
     connect(networkManager, &NetworkManager::searchDataReceived, accountManager, &AccountManager::processingSearchDataFromServer);
     connect(networkManager, &NetworkManager::chatsUpdateDataReceived, messageManager, &MessageManager::saveMessageFromDatabase);
+    connect(networkManager, &NetworkManager::loadMeassgesReceived, messageManager, &MessageManager::loadingNextMessages);
     connect(networkManager, &NetworkManager::editResultsReceived, accountManager, &AccountManager::processingEditProfileFromServer);
     connect(networkManager, &NetworkManager::avatarsUpdateReceived, accountManager, &AccountManager::processingAvatarsUpdateFromServer);
+    connect(networkManager, &NetworkManager::groupInfoReceived, accountManager, &AccountManager::saveGroupInfo);
+    connect(networkManager, &NetworkManager::dialogsInfoReceived, accountManager, &AccountManager::saveDialogsInfo);
+    connect(networkManager, &NetworkManager::deleteGroupMemberReceived, accountManager, &AccountManager::deleteGroupMemberReceived);
+    connect(networkManager, &NetworkManager::addGroupMemberReceived, accountManager, &AccountManager::addGroupMemberReceived);
 }
 
 void Client::setupAccountConnections() {
@@ -43,11 +49,22 @@ void Client::setupAccountConnections() {
 
     connect(accountManager, &AccountManager::clientLogout, this, &Client::clientLogout);
     connect(this, &Client::clientLogout, accountManager, &AccountManager::logout);
+    connect(this, &Client::checkAndSendAvatarUpdate, accountManager, &AccountManager::checkAndSendAvatarUpdate);
 
     connect(this, &Client::sendLoginRequest, accountManager, &AccountManager::login);
     connect(this, &Client::sendRegisterRequest, accountManager, &AccountManager::registerAccount);
     connect(this, &Client::sendEditProfileRequest, accountManager, &AccountManager::sendEditProfileRequest);
     connect(this,&Client::sendSearchToServer,accountManager,&AccountManager::sendSearchToServer);
+    connect(this,&Client::showContacts,accountManager,&AccountManager::showContacts);
+    connect(accountManager, &AccountManager::loadContacts, this, &Client::loadContacts);
+    connect(accountManager, &AccountManager::loadGroupMembers, this, &Client::loadGroupMembers);
+    connect(accountManager, &AccountManager::clearMessagesAfterDelete, this, &Client::clearMessagesAfterDelete);
+
+
+    connect(this,&Client::createGroup,accountManager,&AccountManager::createGroup);
+    connect(this,&Client::addGroupMembers,accountManager,&AccountManager::addGroupMembers);
+    connect(this,&Client::getGroupMembers,accountManager,&AccountManager::getGroupMembers);
+    connect(this, &Client::deleteMemberFromGroup, accountManager, &AccountManager::deleteMemberFromGroup);
 
     connect(accountManager, &AccountManager::editUserlogin, this, &Client::editUserlogin);
     connect(accountManager, &AccountManager::editPhoneNumber, this, &Client::editPhoneNumber);
@@ -60,13 +77,16 @@ void Client::setupAccountConnections() {
 }
 
 void Client::setupMessageConnections() {
-    connect(this, &Client::loadingPersonalChat, messageManager, &MessageManager::loadingPersonalChat);
-    connect(this, &Client::sendPersonalMessage, messageManager, &MessageManager::sendPersonalMessage);
-    connect(this, &Client::sendPersonalMessageWithFile, messageManager, &MessageManager::saveMessageAndSendFile);
+    connect(this, &Client::loadingChat, messageManager, &MessageManager::loadingChat);
+    connect(this, &Client::sendMessage, messageManager, &MessageManager::sendMessage);
+    connect(this, &Client::requestMessageDownload, messageManager, &MessageManager::requestMessageDownload);
+    connect(this, &Client::sendMessageWithFile, messageManager, &MessageManager::saveMessageAndSendFile);
 
     connect(messageManager, &MessageManager::sendMessageJson, networkManager, &NetworkManager::sendData);
     connect(messageManager, &MessageManager::sendFile, networkManager, &NetworkManager::sendFile);
     connect(messageManager,&MessageManager::checkAndSendAvatarUpdate,accountManager,&AccountManager::checkAndSendAvatarUpdate);
+    connect(messageManager,&MessageManager::getContactList,accountManager,&AccountManager::getContactList);
+    connect(messageManager,&MessageManager::getChatsInfo,accountManager,&AccountManager::getChatsInfo);
 
     connect(accountManager, &AccountManager::checkingChatAvailability, messageManager, &MessageManager::checkingChatAvailability);
     connect(messageManager, &MessageManager::showPersonalChat, this, &Client::showPersonalChat);
@@ -82,10 +102,12 @@ void Client::setupMessageConnections() {
     connect(messageManager, &MessageManager::clearMainListView, this, &Client::clearMainListView);
     connect(accountManager, &AccountManager::newUser, this, &Client::newUser);
     connect(messageManager, &MessageManager::checkActiveDialog, this, &Client::checkActiveDialog);
+    connect(messageManager, &MessageManager::returnChatToPosition, this, &Client::returnChatToPosition);
+    connect(messageManager, &MessageManager::insertMessage, this, &Client::insertMessage);
 }
 
 void Client::setupFileConnections() {
-    connect(networkManager, &NetworkManager::sendPersonalMessageWithFile, messageManager, &MessageManager::sendPersonalMessageWithFile);
+    connect(networkManager, &NetworkManager::sendMessageWithFile, messageManager, &MessageManager::sendMessageWithFile);
     connect(networkManager, &NetworkManager::uploadFiles, fileManager, &FileManager::uploadFiles);
     connect(networkManager, &NetworkManager::uploadVoiceFile, fileManager, &FileManager::uploadVoiceFile);
     connect(networkManager, &NetworkManager::uploadAvatar, fileManager, &FileManager::uploadAvatar);

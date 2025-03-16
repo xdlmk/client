@@ -28,8 +28,8 @@ public:
 public slots:
     void sendData(const QJsonObject &jsonToSend);
     void sendToFileServer(const QJsonDocument &doc);
-    void sendFile(const QString &filePath);
-    void sendAvatar(const QString &avatarPath);
+    void sendFile(const QString &filePath,const QString &flag);
+    void sendAvatar(const QString &avatarPath, const QString &type, const int& id);
 
     void setActiveUser(const QString &userName,const int &userId);
     void setLogger(Logger *logger);
@@ -38,17 +38,23 @@ signals:
     void uploadFiles(const QJsonObject &fileDataJson);
     void uploadVoiceFile(const QJsonObject &fileDataJson);
     void uploadAvatar(const QJsonObject &avatarDataJson);
-    void sendAvatarUrl(const QString &avatar_url,const int& user_id);
+    void sendAvatarUrl(const QString &avatar_url,const int& user_id, const QString& type);
 
     void messageReceived(const QJsonObject &receivedMessageJson);
+    void groupMessageReceived(const QJsonObject &receivedMessageJson);
+    void groupInfoReceived(const QJsonObject &receivedGroupInfoJson);
+    void deleteGroupMemberReceived(const QJsonObject &receivedDeleteMemberFromGroup);
+    void addGroupMemberReceived(const QJsonObject &receivedAddMemberFromGroup);
+    void dialogsInfoReceived(const QJsonObject &receivedDialogInfoJson);
     void loginResultsReceived(const QJsonObject &loginResultsJson);
     void registrationResultsReceived(const QJsonObject &registrationResultsJson);
     void searchDataReceived(const QJsonObject &searchDataJson);
     void chatsUpdateDataReceived(QJsonObject &chatsUpdateDataJson);
+    void loadMeassgesReceived(QJsonObject &messagesJson);
     void editResultsReceived(const QJsonObject &editResultsJson);
     void avatarsUpdateReceived(const QJsonObject &avatarsUpdateJson);
 
-    void sendPersonalMessageWithFile(const QString& fileUrl);
+    void sendMessageWithFile(const QString& fileUrl,const QString &flag);
 
     void connectionError();
     void connectionSuccess();

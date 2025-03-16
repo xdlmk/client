@@ -144,10 +144,6 @@ int main(int argc, char *argv[])
 
     });
 
-    QObject::connect(&client, &Client::changeReceiverUserSignal, [&client,&logger](QString userlogin, int id) {
-        logger.log(Logger::INFO,"main.cpp","changeReceiverUserSignal received");
-        client.loadingPersonalChat(userlogin);
-    });
     QObject::connect(&client, &Client::connectionSuccess,&loop,&QEventLoop::quit);
     loop.exec();
 

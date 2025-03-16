@@ -12,8 +12,13 @@ Window {
 
     property bool isProfileExtended: false
     property bool isSearchListExtended: false
-    property string avatarSource: "../../avatars/" + userlogin + "/"
+    property string avatarSource: "../../.data/" + userlogin + "/avatars/personal/"
+    property string groupAvatarSource: "../../.data/" + userlogin + "/avatars/group/"
     property int timestamp: new Date().getTime()
+
+    property string activeChatTypeBeforeRequest: "default"
+    property int activeChatIdBeforeRequest: 0
+
 
     Rectangle {
         id: leftLine
@@ -95,6 +100,9 @@ Window {
             contentItem: Rectangle { implicitWidth: 10; color: "gray"; radius: 5 }
         }
 
+        highlightFollowsCurrentItem: false
+        focus: false
+
         boundsBehavior: Flickable.StopAtBounds
         model: listModel
 
@@ -108,6 +116,18 @@ Window {
             property bool isOutgoing: model.isOutgoing
             property string fileUrl: model.fileUrl
             property string fileName: model.fileName
+            isWaitingForVoice: false
+        }
+
+        property int savedIndexFromEnd: 0
+
+        onAtYBeginningChanged: {
+            if (atYBeginning && upLine.currentState !== "default" && listModel.count !== 0) {
+                listView.savedIndexFromEnd = listModel.count;
+                client.requestMessageDownload(upLine.user_id, nameText.text, upLine.currentState, listModel.count);
+                activeChatIdBeforeRequest = upLine.user_id;
+                activeChatTypeBeforeRequest = upLine.currentState;
+            }
         }
     }
 
@@ -145,19 +165,27 @@ Window {
                 hoverEnabled: true
                 cursorShape: Qt.PointingHandCursor
                 onClicked: {
-                    overlay.visible = true
-                    myProfileWindow.setUserId(upLine.user_id);
-                    myProfileWindow.open()
-                    myProfileWindow.userProfile(nameText.text)
+                    if(upLine.currentState === "personal"){
+                        overlay.visible = true
+                        myProfileWindow.setUserId(upLine.user_id);
+                        myProfileWindow.open()
+                        myProfileWindow.userProfile(nameText.text)
+                    } else if(upLine.currentState === "group") {
+                        overlay.visible = true
+                        groupInfoForm.setGroupId(upLine.user_id);
+                        groupInfoForm.setGroupName(nameText.text);
+                        groupInfoForm.open();
+                    }
                 }
             }
         }
 
         Text {
             id: valueText
-            text: "5 participants"
+            text: "Offline"
             font.pointSize: 8
             color: "grey"
+            visible: false
             anchors{
                 left: parent.left
                 leftMargin: 10
@@ -239,6 +267,18 @@ Window {
         user_id: 0
     }
 
+    GroupInfoForm {
+        id: groupInfoForm
+    }
+
+    CreateGroupForm {
+        id: createGroupForm
+    }
+
+    SelectContactsForm {
+        id:selectContactsForm
+    }
+
     Timer {
         id: updateAvatarsTimer
         interval: 1000
@@ -259,10 +299,10 @@ Window {
 
     function connectSuccess() { connectRect.visible = false; }
 
-    function onCheckActiveDialog(login,message,out,time,fileName,fileUrl)
+    function onCheckActiveDialog(id,login,message,out,time,fileName,fileUrl,type)
     {
         logger.qmlLog("INFO","Main.qml::onCheckActiveDialog","Dialog active: " + (nameText.text === login));
-        if (nameText.text === login)
+        if (upLine.user_id === id && upLine.currentState === type)
         {
             if(out === "out") {
                 onNewMessage(userlogin,message,time,fileName,fileUrl,true);
@@ -272,7 +312,29 @@ Window {
         }
     }
 
+    function loadCountOfGroupMembers(jsonArray, group_id){
+        valueText.text = jsonArray.length + " participants";
+        valueText.visible = true;
+    }
+
+    function returnPosition() {
+        listView.forceLayout()
+        listView.positionViewAtIndex(listModel.count - listView.savedIndexFromEnd, ListView.Beginning)
+    }
+
+    function addMessageToTop(name,message,time,fileName,fileUrl,isOutgoing) {
+        if(activeChatIdBeforeRequest === upLine.user_id && activeChatTypeBeforeRequest === upLine.currentState) {
+            listModel.insert(0, {text: message, time: time, name: name, isOutgoing: isOutgoing,fileName: fileName, fileUrl: fileUrl});
+        }
+    }
+
     function onClearMainListView() { listModel.clear(); }
+    function onClearMessagesAfterDelete(group_id) {
+        if(upLine.currentState === "group" && upLine.user_id === group_id) {
+            listModel.clear();
+            upLine.currentState = "default";
+        }
+    }
 
     function getFileNameFromPath(filePath) {
         if (!filePath || filePath.trim === "") {
@@ -302,9 +364,13 @@ Window {
 
     Component.onCompleted: {
         clearMainListView.connect(onClearMainListView);
+        clearMessagesAfterDelete.connect(onClearMessagesAfterDelete);
+        loadGroupMembers.connect(loadCountOfGroupMembers);
         newMessage.connect(onNewMessage);
+        insertMessage.connect(addMessageToTop);
         checkActiveDialog.connect(onCheckActiveDialog);
         connectionError.connect(connectError);
         connectionSuccess.connect(connectSuccess);
+        returnChatToPosition.connect(returnPosition);
     }
 }
