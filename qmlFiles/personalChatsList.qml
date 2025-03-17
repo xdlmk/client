@@ -42,16 +42,17 @@ Rectangle {
                         top: parent.top
                         topMargin: 6
                     }
-                    Image {
+                    SmartImage {
                         id:profileImage
                         anchors.fill: parent
+                        textImage: userLogin.text
                         source: (chatType == "group" ? groupAvatarSource : avatarSource) + user_id + ".png?" + timestamp
                         fillMode: Image.PreserveAspectFit
                     }
                 }
 
                 Text {
-                    id: userLoginId
+                    id: userLogin
                     text: userlogin
                     color: "white"
                     font.pointSize: 10
@@ -69,7 +70,7 @@ Rectangle {
                     anchors{
                         left: personalChatAvatar.right
                         leftMargin: 10
-                        top: userLoginId.bottom
+                        top: userLogin.bottom
                         topMargin: 10
                     }
                     text: message.length > 15 ? message.substring(0, 15) + "..." : message

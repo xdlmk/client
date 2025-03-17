@@ -91,8 +91,9 @@ Dialog {
         color: "transparent"
         border.color: "lightblue"
         clip: true
-        Image {
+        SmartImage {
             anchors.fill: parent
+            textImage: userLoginText.text
             source: user_id !== 0 ? avatarSource + user_id + ".png?" + timestamp : ""
             visible: source !== ""
             fillMode: Image.PreserveAspectFit

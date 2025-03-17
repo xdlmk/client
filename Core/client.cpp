@@ -35,10 +35,10 @@ void Client::setupNetworkConnections() {
     connect(networkManager, &NetworkManager::loadMeassgesReceived, messageManager, &MessageManager::loadingNextMessages);
     connect(networkManager, &NetworkManager::editResultsReceived, accountManager, &AccountManager::processingEditProfileFromServer);
     connect(networkManager, &NetworkManager::avatarsUpdateReceived, accountManager, &AccountManager::processingAvatarsUpdateFromServer);
-    connect(networkManager, &NetworkManager::groupInfoReceived, accountManager, &AccountManager::saveGroupInfo);
-    connect(networkManager, &NetworkManager::dialogsInfoReceived, accountManager, &AccountManager::saveDialogsInfo);
-    connect(networkManager, &NetworkManager::deleteGroupMemberReceived, accountManager, &AccountManager::deleteGroupMemberReceived);
-    connect(networkManager, &NetworkManager::addGroupMemberReceived, accountManager, &AccountManager::addGroupMemberReceived);
+    connect(networkManager, &NetworkManager::groupInfoReceived, accountManager, &AccountManager::processingGroupInfoSave);
+    connect(networkManager, &NetworkManager::dialogsInfoReceived, accountManager, &AccountManager::processingDialogsInfoSave);
+    connect(networkManager, &NetworkManager::deleteGroupMemberReceived, accountManager, &AccountManager::processingDeleteGroupMember);
+    connect(networkManager, &NetworkManager::addGroupMemberReceived, accountManager, &AccountManager::processingAddGroupMember);
 }
 
 void Client::setupAccountConnections() {

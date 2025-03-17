@@ -26,6 +26,10 @@ public slots:
     void processingSearchData(const QJsonObject &searchDataJson);
     void processingEditProfile(const QJsonObject &editResultsJson);
     void processingAvatarsUpdate(const QJsonObject &avatarsUpdateJson);
+    void processingGroupInfoSave(const QJsonObject &receivedGroupInfoJson);
+    void processingDialogsInfoSave(const QJsonObject &receivedDialogInfoJson);
+    void processingDeleteGroupMember(const QJsonObject &receivedDeleteMemberFromGroup);
+    void processingAddGroupMember(const QJsonObject &receivedAddMemberFromGroup);
 
 signals:
     void transferUserNameAndIdAfterLogin(const QString &activeUserName,const int &activeUserId);
@@ -48,7 +52,14 @@ signals:
 
     void getChatsInfo();
 
+    void getGroupMembers(const int& group_id);
+    void clearMessagesAfterDelete(const int& group_id);
 private:
+    int deleteUserFromInfoFile(const int& group_id, const int& user_id);
+    bool writeJsonToFile(const QString& path, const QJsonObject& json);
+    bool readJsonFromFile(const QString &path, QJsonObject &jsonForWriting);
+
+
     Logger *logger;
     QString activeUserLogin;
     int activeUserId;

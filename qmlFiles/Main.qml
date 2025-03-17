@@ -373,4 +373,15 @@ Window {
         connectionSuccess.connect(connectSuccess);
         returnChatToPosition.connect(returnPosition);
     }
+
+    QtObject {
+        Component.onCompleted: {
+            Qt.setWarningHandler(function(message) {
+                if (message.includes("SmartImage.qml") &&message.includes("QML QQuickImage:") && message.includes("Cannot open")) {
+                } else {
+                    console.warn(message);
+                }
+            });
+        }
+    }
 }

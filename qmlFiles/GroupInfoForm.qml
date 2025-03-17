@@ -71,8 +71,9 @@ Dialog {
         color: "transparent"
         border.color: "lightblue"
         clip: true
-        Image {
+        SmartImage {
             anchors.fill: parent
+            textImage: groupNameText.text
             source: group_id !== 0 ? groupAvatarSource + group_id + ".png?" + timestamp : ""
             visible: source !== ""
             fillMode: Image.PreserveAspectFit
@@ -185,10 +186,11 @@ Dialog {
             width: membersListView.width
             height: 40
             color: "#626a72"
-            Image {
+            SmartImage {
                 id:profileImage
                 width: 30
                 height: 30
+                textImage: model.username
                 source: avatarSource + model.user_id + ".png?" + timestamp
                 anchors {
                     left: parent.left

@@ -29,11 +29,12 @@ Rectangle {
             anchors.left: parent.left
             anchors.leftMargin: 10
             clip: true
-            Image {
+            SmartImage {
                 id: profileImage
                 source: avatarSource + activeUserId + ".png?" + timestamp
                 width: parent.width
                 height: parent.height
+                textImage: userLoginText.text
                 cache: false
                 anchors.fill: parent
                 smooth: true
@@ -87,8 +88,9 @@ Rectangle {
                             color: "transparent"
                             border.color: "lightblue"
                             clip: true
-                            Image {
+                            SmartImage {
                                 anchors.fill: parent
+                                textImage: username
                                 source: avatarSource + id + ".png?" + timestamp
                                 fillMode: Image.PreserveAspectFit
                             }

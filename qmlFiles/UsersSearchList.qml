@@ -33,8 +33,9 @@ Rectangle {
                     color: "transparent"
                     border.color: "lightblue"
                     clip: true
-                    Image {
+                    SmartImage {
                         anchors.fill: parent
+                        textImage: userlogin
                         source: avatarSource + user_id + ".png?" + timestamp
                         fillMode: Image.PreserveAspectFit
                     }
