@@ -25,20 +25,17 @@ Rectangle {
                 anchors.fill: parent
                 anchors.leftMargin: 10
 
-                Rectangle {
+                SmartImage {
                     id:userAvatar
                     width: 48
                     height: 48
-                    radius: 24
-                    color: "transparent"
-                    border.color: "lightblue"
-                    clip: true
-                    SmartImage {
-                        anchors.fill: parent
-                        textImage: userlogin
-                        source: avatarSource + user_id + ".png?" + timestamp
-                        fillMode: Image.PreserveAspectFit
+                    anchors {
+                        left: parent.left
+                        verticalCenter: parent.verticalCenter
                     }
+                    textImage: userlogin
+                    source: avatarSource + user_id + ".png?" + timestamp
+                    fillMode: Image.PreserveAspectFit
                 }
 
                 Text {
@@ -46,10 +43,12 @@ Rectangle {
                     color: "white"
                     font.pointSize: 10
                     font.bold: true
-                    anchors.left: userAvatar.right
-                    anchors.top:parent.top
-                    anchors.topMargin: 10
-                    anchors.leftMargin: 10
+                    anchors{
+                        left: userAvatar.right
+                        leftMargin: 10
+                        top:parent.top
+                        topMargin: 10
+                    }
                 }
             }
             MouseArea {

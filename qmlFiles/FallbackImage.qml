@@ -3,7 +3,6 @@ import QtQuick
 Canvas {
     id: canvas
     property string textImage: "A"
-    property int fontSize: 40
     property color baseColor: generateColor()
 
     width: 200
@@ -17,7 +16,8 @@ Canvas {
         ctx.fillStyle = gradient
         ctx.fillRect(0, 0, width, height)
 
-        ctx.font = fontSize + "px Arial"
+        var fontSize = Math.min(width, height) * 0.5;
+        ctx.font = fontSize + "px Helvetica, 'Segoe UI', Arial"
         ctx.textAlign = "center"
         ctx.textBaseline = "middle"
         ctx.fillStyle = "white"
@@ -37,8 +37,8 @@ Canvas {
 
     function getFirstLetter() {
         if (typeof textImage !== "string" || textImage.trim() === "") {
-               return " ";
-           }
-           return textImage.trim().charAt(0).toUpperCase();
+            return " ";
+        }
+        return textImage.trim().charAt(0).toUpperCase();
     }
 }

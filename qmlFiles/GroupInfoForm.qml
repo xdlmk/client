@@ -60,24 +60,19 @@ Dialog {
         }
     }
 
-    Rectangle {
+    SmartImage {
         id:groupAvatar
         width: 80
         height: 80
-        radius: 40
-        anchors.top: groupInfoText.bottom
-        anchors.topMargin: 30
-        anchors.left: groupInfoText.left
-        color: "transparent"
-        border.color: "lightblue"
-        clip: true
-        SmartImage {
-            anchors.fill: parent
-            textImage: groupNameText.text
-            source: group_id !== 0 ? groupAvatarSource + group_id + ".png?" + timestamp : ""
-            visible: source !== ""
-            fillMode: Image.PreserveAspectFit
+        anchors {
+            top: groupInfoText.bottom
+            topMargin: 30
+            left: groupInfoText.left
         }
+        textImage: groupNameText.text
+        source: group_id !== 0 ? groupAvatarSource + group_id + ".png?" + timestamp : ""
+        visible: source !== ""
+        fillMode: Image.PreserveAspectFit
     }
     Rectangle {
         id:changeGroupAvatarButton
@@ -197,15 +192,16 @@ Dialog {
                     leftMargin: 5
                     verticalCenter: parent.verticalCenter
                 }
-
             }
             Text {
                 text: model.username
                 color: "White"
                 font.pointSize: 14
-                anchors.left: profileImage.right
-                anchors.leftMargin: 10
-                anchors.verticalCenter: parent.verticalCenter
+                anchors {
+                    left: profileImage.right
+                    leftMargin: 10
+                    verticalCenter: parent.verticalCenter
+                }
             }
             MouseArea {
                 anchors.fill: parent

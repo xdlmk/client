@@ -12,7 +12,7 @@
 #include "Core/client.h"
 #include "Managers/accountmanager.h"
 #include "Managers/filemanager.h"
-#include "Core/logger.h"
+#include "Utils/logger.h"
 
 int main(int argc, char *argv[])
 {

@@ -86,25 +86,18 @@ Dialog {
             topMargin: 12
             left: information.left
         }
-        Rectangle {
-            id:userAvatar
+        SmartImage {
+            id: userAvatar
             width: 120
             height: 120
-            radius: 60
             anchors{
                 left: parent.left
                 leftMargin: (parent.width - width)/4
                 top: parent.top
             }
-            color: "transparent"
-            border.color: "lightblue"
-            clip: true
-            SmartImage {
-                anchors.fill: parent
-                textImage: userLoginText.text
-                source: avatarSource + activeUserId + ".png?" + timestamp
-                fillMode: Image.PreserveAspectFit
-            }
+            textImage: userLoginText.text
+            source: avatarSource + activeUserId + ".png?" + timestamp
+            fillMode: Image.PreserveAspectFit
         }
         Rectangle {
             id:changeUserAvatarButton

@@ -11,7 +11,7 @@
 #include <QJsonArray>
 #include <QJsonDocument>
 
-#include "Core/logger.h"
+#include "Utils/logger.h"
 
 class ResponseHandler : public QObject
 {

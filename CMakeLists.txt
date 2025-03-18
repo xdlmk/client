@@ -39,16 +39,21 @@ qt_add_qml_module(regagram
         qmlFiles/SelectContactsForm.qml
         qmlFiles/GroupInfoForm.qml
         qmlFiles/SmartImage.qml
+        qmlFiles/FallbackImage.qml
     SOURCES
         Core/client.h Core/client.cpp
-        Core/logger.h Core/logger.cpp
         Core/configmanager.h Core/configmanager.cpp
+        Utils/logger.h Utils/logger.cpp
+        Utils/avatargenerator.h Utils/avatargenerator.cpp
         Network/networkmanager.h Network/networkmanager.cpp
         Managers/accountmanager.h Managers/accountmanager.cpp
         Managers/audiomanager.h Managers/audiomanager.cpp
         Managers/filemanager.h Managers/filemanager.cpp
         Managers/messagemanager.h Managers/messagemanager.cpp
         Managers/responsehandler.h Managers/responsehandler.cpp
+        Managers/MessageManagers/messagehandler.h Managers/MessageManagers/messagehandler.cpp
+        Managers/MessageManagers/messagestorage.h Managers/MessageManagers/messagestorage.cpp
+        Managers/MessageManagers/messagesender.h Managers/MessageManagers/messagesender.cpp
     RESOURCES
         images/logo.png
         images/logo2.png

@@ -20,26 +20,17 @@ Rectangle {
         anchors.margins: 2
         spacing: 10
 
-        Rectangle {
-            id: profileImageContainer
+        SmartImage {
+            id: profileImage
+            source: avatarSource + activeUserId + ".png?" + timestamp
             width: 50
             height: 50
-            radius: width/2
-            color: "transparent"
+            textImage: userLoginText.text
+            cache: false
             anchors.left: parent.left
             anchors.leftMargin: 10
-            clip: true
-            SmartImage {
-                id: profileImage
-                source: avatarSource + activeUserId + ".png?" + timestamp
-                width: parent.width
-                height: parent.height
-                textImage: userLoginText.text
-                cache: false
-                anchors.fill: parent
-                smooth: true
-                fillMode: Image.PreserveAspectCrop
-            }
+            smooth: true
+            fillMode: Image.PreserveAspectCrop
         }
 
         Text {
@@ -79,21 +70,13 @@ Rectangle {
                         anchors.fill: parent
                         anchors.leftMargin: 10
                         anchors.topMargin: 3
-
-                        Rectangle {
-                            id:userAvatar
+                        SmartImage {
+                            id: userAvatar
                             width: 24
                             height: 24
-                            radius: 12
-                            color: "transparent"
-                            border.color: "lightblue"
-                            clip: true
-                            SmartImage {
-                                anchors.fill: parent
-                                textImage: username
-                                source: avatarSource + id + ".png?" + timestamp
-                                fillMode: Image.PreserveAspectFit
-                            }
+                            textImage: username
+                            source: avatarSource + id + ".png?" + timestamp
+                            fillMode: Image.PreserveAspectFit
                         }
 
                         Text {

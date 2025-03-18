@@ -27,28 +27,19 @@ Rectangle {
             Item {
                 anchors.fill: parent
                 anchors.leftMargin: 10
-
-                Rectangle {
+                SmartImage {
                     id:personalChatAvatar
                     width: 48
                     height: 48
-                    radius: 24
-                    color: "transparent"
-                    border.color: "lightblue"
-                    clip: true
                     anchors{
                         left: parent.left
                         leftMargin: 6
                         top: parent.top
                         topMargin: 6
                     }
-                    SmartImage {
-                        id:profileImage
-                        anchors.fill: parent
-                        textImage: userLogin.text
-                        source: (chatType == "group" ? groupAvatarSource : avatarSource) + user_id + ".png?" + timestamp
-                        fillMode: Image.PreserveAspectFit
-                    }
+                    textImage: userLogin.text
+                    source: (chatType == "group" ? groupAvatarSource : avatarSource) + user_id + ".png?" + timestamp
+                    fillMode: Image.PreserveAspectFit
                 }
 
                 Text {

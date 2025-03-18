@@ -13,7 +13,7 @@
 #include "Network/networkmanager.h"
 #include "Core/configmanager.h"
 #include "Managers/responsehandler.h"
-#include "Core/logger.h"
+#include "Utils/logger.h"
 
 class AccountManager : public QObject
 {
