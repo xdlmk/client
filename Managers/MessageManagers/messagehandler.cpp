@@ -80,8 +80,8 @@ void MessageHandler::loadMessageToQml(QJsonObject& messageToDisplay)
         if (underscoreIndex != -1 && underscoreIndex + 1 < fileUrl.length()) {
             messageToDisplay["fileName"] = fileUrl.mid(underscoreIndex + 1);
         }
-    }
-    QVariantMap message = messageToDisplay.toVariantMap();
+    } else messageToDisplay["fileName"] = "";
+    QVariant message = messageToDisplay.toVariantMap();
     emit newMessage(message);
 }
 
@@ -104,12 +104,14 @@ void MessageHandler::processingPersonalMessage(const QJsonObject &personalMessag
     if(personalMessageJson.contains("receiver_login")) {
         messageToSave["login"] = personalMessageJson["receiver_login"].toString();
         id = personalMessageJson["receiver_id"].toInt();
+        messageToSave["id"] = id;
         avatar_url = personalMessageJson["receiver_avatar_url"].toString();
         messageToSave["Out"] = "out";
         messageStorage->saveMessageToJson(messageToSave);
     } else {
         messageToSave["login"] = personalMessageJson["sender_login"].toString();
         id = personalMessageJson["sender_id"].toInt();
+        messageToSave["id"] = id;
         avatar_url = personalMessageJson["sender_avatar_url"].toString();
         messageToSave["Out"] = "";
         messageStorage->saveMessageToJson(messageToSave);
@@ -128,8 +130,7 @@ void MessageHandler::processingPersonalMessage(const QJsonObject &personalMessag
     messageToSave["fileName"] = fileName;
 
     QVariantMap message = messageToSave.toVariantMap();
-    QString type = "personal";
-    emit checkActiveDialog(message,type);
+    emit checkActiveDialog(message,"personal");
     emit getContactList();
 }
 
@@ -179,7 +180,7 @@ void MessageHandler::processingGroupMessage(const QJsonObject &groupMessageJson)
     }
     messageToSave["fileName"] = fileName;
 
-    QVariantMap message = messageToSave.toVariantMap();
+    QVariant message = messageToSave.toVariantMap();
     emit checkActiveDialog(message,"group");
 }
 
@@ -222,7 +223,7 @@ void MessageHandler::loadingChat(const QString userlogin, const QString &flag)
             QJsonObject messageObject = value.toObject();
             QJsonObject messageToDisplay;
             messageToDisplay["login"] = messageObject["login"].toString();
-            messageToDisplay["str"] = messageObject["str"].toString();
+            messageToDisplay["message"] = messageObject["str"].toString();
             messageToDisplay["Out"] = messageObject["Out"].toString();
 
             if(messageObject.contains("fileUrl")) messageToDisplay["fileUrl"] = messageObject["fileUrl"].toString();
@@ -242,7 +243,7 @@ void MessageHandler::loadingNextMessages(QJsonObject &messagesJson)
     QString chatName = messagesJson["chat_name"].toString();
     QJsonArray newMessages = messagesJson["messages"].toArray();
 
-    logger->log(Logger::INFO, "messagemanager.cpp::loadingNextMessages", "Start processing messages");
+    logger->log(Logger::INFO, "messagehandler.cpp::loadingNextMessages", "Start processing messages");
 
     QJsonArray messagesArray = messagesJson["messages"].toArray();
 
@@ -254,8 +255,8 @@ void MessageHandler::loadingNextMessages(QJsonObject &messagesJson)
         messageToLoad["time"] = json["time"].toString();
         messageToLoad["FullDate"] = json["FullDate"].toString();
         messageToLoad["message_id"] = json["message_id"].toInt();
-        messageToLoad["sender_login"] = json["sender_login"].toString();
-        messageToLoad["sender_id"] = json["sender_id"].toInt();
+        messageToLoad["login"] = json["sender_login"].toString();
+        messageToLoad["id"] = json["sender_id"].toInt();
         messageToLoad["fileUrl"] = json["fileUrl"].toString();
         QString fileUrl = messageToLoad["fileUrl"].toString();
 
@@ -271,8 +272,8 @@ void MessageHandler::loadingNextMessages(QJsonObject &messagesJson)
         if (json.contains("group_id")) {
             messageToLoad["group_id"] = json["group_id"].toInt();
             messageToLoad["group_name"] = json["group_name"].toString();
-            QVariantMap message = messageToLoad.toVariantMap();
-            if (messageToLoad["sender_id"].toInt() == activeUserId) emit insertMessage(message, true);
+            QVariant message = messageToLoad.toVariantMap();
+            if (messageToLoad["id"].toInt() == activeUserId) emit insertMessage(message, true);
             else emit insertMessage(message, false);
 
             continue;
@@ -280,13 +281,13 @@ void MessageHandler::loadingNextMessages(QJsonObject &messagesJson)
 
         messageToLoad["dialog_id"] = json["dialog_id"].toInt();
 
-        if (messageToLoad["sender_login"].toString() == activeUserLogin) {
-            messageToLoad["receiver_login"] = json["receiver_login"].toString();
-            messageToLoad["receiver_id"] = json["receiver_id"].toInt();
-            QVariantMap message = messageToLoad.toVariantMap();
+        if (messageToLoad["login"].toString() == activeUserLogin) {
+            messageToLoad["login"] = json["receiver_login"].toString();
+            messageToLoad["id"] = json["receiver_id"].toInt();
+            QVariant message = messageToLoad.toVariantMap();
             emit insertMessage(message, true);
         } else {
-            QVariantMap message = messageToLoad.toVariantMap();
+            QVariant message = messageToLoad.toVariantMap();
             emit insertMessage(message, false);
         }
     }

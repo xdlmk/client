@@ -37,11 +37,11 @@ public slots:
 
     void loadingNextMessages(QJsonObject &messagesJson);
 signals:
-    void newMessage(QVariantMap& message);
+    void newMessage(QVariant message);
     void clearMainListView();
 
     void checkAndSendAvatarUpdate(const QString &avatar_url,const int &user_id,const QString& type);
-    void checkActiveDialog(QVariantMap& message, QString& type);
+    void checkActiveDialog(QVariant message, const QString& type);
     void showPersonalChat(QString login, QString message, int id, QString out, QString type);
 
     void sendAvatarsUpdate();
@@ -52,7 +52,7 @@ signals:
     void sendFile(const QString& filePath,const QString &flag);
     void sendToFileServer(const QJsonDocument &doc);
 
-    void insertMessage(QVariantMap message, bool isOutgoing);
+    void insertMessage(QVariant message, bool isOutgoing);
     void returnChatToPosition();
 
     void updatingLatestMessagesFromServer(QJsonObject &latestMessages);

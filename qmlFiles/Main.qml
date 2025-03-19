@@ -289,14 +289,14 @@ Window {
         }
     }
 
-    function onNewMessage(name,message,time,fileName,fileUrl,isOutgoing) {
-        listModel.append({text: message, time: time, name: name, isOutgoing: isOutgoing,fileName: fileName, fileUrl: fileUrl});
+    function onNewMessage(data) {
+        listModel.append({text: data.message, time: data.time, name: data.login, isOutgoing: data.Out === "out" ? true : false,fileName: data.fileName, fileUrl: data.fileUrl});
         listView.positionViewAtIndex(listModel.count - 1, ListView.End);
     }
 
-    function addMessageToTop(data) {
+    function addMessageToTop(data,isOutgoing) {
         if(activeChatIdBeforeRequest === upLine.user_id && activeChatTypeBeforeRequest === upLine.currentState) {
-            listModel.insert(0, {text: message, time: time, name: name, isOutgoing: isOutgoing,fileName: fileName, fileUrl: fileUrl});
+            listModel.insert(0, {text: data.message, time: data.time, name: data.login, isOutgoing: isOutgoing,fileName: data.fileName, fileUrl: data.fileUrl});
         }
     }
 
@@ -304,16 +304,13 @@ Window {
 
     function connectSuccess() { connectRect.visible = false; }
 
-    function onCheckActiveDialog(id,login,message,out,time,fileName,fileUrl,type)
-    {
-        logger.qmlLog("INFO","Main.qml::onCheckActiveDialog","Dialog active: " + (nameText.text === login));
-        if (upLine.user_id === id && upLine.currentState === type)
-        {
-            if(out === "out") {
-                onNewMessage(userlogin,message,time,fileName,fileUrl,true);
-            } else {
-                onNewMessage(login,message,time,fileName,fileUrl,false);
-            }
+    function onCheckActiveDialog(data,type) {
+        if(type === "group") {
+            logger.qmlLog("INFO","Main.qml::onCheckActiveDialog","Dialog active: " + (nameText.text === data.group_name));
+            if (upLine.user_id === data.group_id && upLine.currentState === type) onNewMessage(data);
+        } else if (type === "personal") {
+            logger.qmlLog("INFO","Main.qml::onCheckActiveDialog","Dialog active: " + (nameText.text === data.login));
+            if (upLine.user_id === data.id && upLine.currentState === type) onNewMessage(data);
         }
     }
 

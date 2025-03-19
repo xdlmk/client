@@ -49,7 +49,6 @@ qt_add_qml_module(regagram
         Managers/accountmanager.h Managers/accountmanager.cpp
         Managers/audiomanager.h Managers/audiomanager.cpp
         Managers/filemanager.h Managers/filemanager.cpp
-        Managers/messagemanager.h Managers/messagemanager.cpp
         Managers/responsehandler.h Managers/responsehandler.cpp
         Managers/MessageManagers/messagehandler.h Managers/MessageManagers/messagehandler.cpp
         Managers/MessageManagers/messagestorage.h Managers/MessageManagers/messagestorage.cpp

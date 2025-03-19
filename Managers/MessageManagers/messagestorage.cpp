@@ -30,11 +30,11 @@ void MessageStorage::saveMessageToJson(const QJsonObject &messageToSave)
             file.write(doc.toJson());
             file.close();
         } else {
-            logger->log(Logger::ERROR,"messagemanager.cpp::saveMessageToJson","File dont create " + messageToSave["login"].toString());
+            logger->log(Logger::ERROR,"messagestorage.cpp::saveMessageToJson","File dont create " + messageToSave["login"].toString());
         }
     }
     if (!file.open(QIODevice::ReadWrite)) {
-        logger->log(Logger::ERROR,"messagemanager.cpp::saveMessageToJson","File did not open with error: " + file.errorString());
+        logger->log(Logger::ERROR,"messagestorage.cpp::saveMessageToJson","File did not open with error: " + file.errorString());
         return;
     }
 
@@ -65,7 +65,7 @@ void MessageStorage::saveMessageToJson(const QJsonObject &messageToSave)
     file.write(updatedDoc.toJson());
     file.close();
 
-    emit showPersonalChat(messageToSave["login"].toString(), messageToSave["message"].toString(), messageToSave["id"].toInt(), messageToSave["Out"].toString(), "personal");
+    emit showPersonalChat(messageToSave["login"].toString(), messageObject["str"].toString(), messageObject["id"].toInt(), messageObject["Out"].toString(), "personal");
 }
 
 void MessageStorage::saveGroupMessageToJson(const QJsonObject &messageToSave)
@@ -74,7 +74,7 @@ void MessageStorage::saveGroupMessageToJson(const QJsonObject &messageToSave)
     if (!dir.exists()) {
         dir.mkpath(".");
     }
-    QFile file(QCoreApplication::applicationDirPath() + "/resources/" + activeUserLogin + "/group" +"/message_" + messageToSave["groupName"].toString() + ".json");
+    QFile file(QCoreApplication::applicationDirPath() + "/resources/" + activeUserLogin + "/group" +"/message_" + messageToSave["group_name"].toString() + ".json");
 
     if (!file.exists()) {
         if (file.open(QIODevice::WriteOnly)) {
@@ -83,12 +83,12 @@ void MessageStorage::saveGroupMessageToJson(const QJsonObject &messageToSave)
             file.write(doc.toJson());
             file.close();
         } else {
-            logger->log(Logger::ERROR,"messagemanager.cpp::saveGroupMessageToJson","File dont create " + messageToSave["login"].toString());
+            logger->log(Logger::ERROR,"messagestorage.cpp::saveGroupMessageToJson","File dont create " + messageToSave["login"].toString());
         }
     }
 
     if (!file.open(QIODevice::ReadWrite)) {
-        logger->log(Logger::ERROR,"messagemanager.cpp::saveGroupMessageToJson","File did not open with error: " + file.errorString());
+        logger->log(Logger::ERROR,"messagestorage.cpp::saveGroupMessageToJson","File did not open with error: " + file.errorString());
         return;
     }
 
@@ -118,12 +118,12 @@ void MessageStorage::saveGroupMessageToJson(const QJsonObject &messageToSave)
     file.write(updatedDoc.toJson());
     file.close();
 
-    emit showPersonalChat(messageToSave["group_name"].toString(), messageToSave["message"].toString(), messageToSave["group_id"].toInt(), messageToSave["Out"].toString(), "group");
+    emit showPersonalChat(messageObject["group_name"].toString(), messageObject["str"].toString(), messageObject["group_id"].toInt(), messageObject["Out"].toString(), "group");
 }
 
 void MessageStorage::updatingLatestMessagesFromServer(QJsonObject &latestMessages)
 {
-    logger->log(Logger::INFO,"messagemanager.cpp::saveMessageFromDatabase","saveMessageFromDatabase starts");
+    logger->log(Logger::INFO,"messagestorage.cpp::saveMessageFromDatabase","saveMessageFromDatabase starts");
     QJsonArray messagesArray = latestMessages["messages"].toArray();
 
     QDir mesDir(QCoreApplication::applicationDirPath() + "/resources/" + activeUserLogin);
@@ -142,8 +142,8 @@ void MessageStorage::updatingLatestMessagesFromServer(QJsonObject &latestMessage
         messageToSave["Out"] = "";
 
         if(json.contains("group_id")){
-            int group_id = json["group_id"].toInt();
-            QString group_name = json["group_name"].toString();
+            messageToSave["group_id"] = json["group_id"].toInt();
+            messageToSave["group_name"] = json["group_name"].toString();
             if( messageToSave["id"].toInt() == activeUserId) messageToSave["Out"] = "out";
             saveGroupMessageToJson(messageToSave);
             continue;

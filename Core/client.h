@@ -23,7 +23,6 @@
 #include "Managers/accountmanager.h"
 #include "Managers/audiomanager.h"
 #include "Managers/filemanager.h"
-#include "Managers/messagemanager.h"
 #include "Managers/MessageManagers/messagehandler.h"
 #include "Network/networkmanager.h"
 #include "Utils/logger.h"
@@ -39,9 +38,7 @@ public:
     FileManager *getFileManager();
 
 signals:
-    //void newMessage(QString username,QString message,QString time,
-    //                QString fileUrl,QString fileName, bool isOutgoing);
-    void newMessage(QVariantMap& message);
+    void newMessage(QVariant message);
 
     void connectionSuccess();
     void connectionError();
@@ -57,9 +54,7 @@ signals:
     void loadingChat(const QString userlogin, const QString &flag);
 
     void showPersonalChat(QString login,QString message, int id, QString out, QString type);
-    //void checkActiveDialog(int user_id,QString login,QString message, QString out,
-    //                       QString time,QString fileName,QString fileUrl,QString type);
-    void checkActiveDialog(QVariantMap& message,QString& type);
+    void checkActiveDialog(QVariant message,const QString& type);
 
     void newSearchUser(QString userlogin,int id);
 
@@ -105,9 +100,7 @@ signals:
     void deleteMemberFromGroup(const int& user_id, const int &group_id);
 
     void requestMessageDownload(const int &chat_id, const QString &chat_name, const QString& flag, const int& offset);
-    //void insertMessage(QString username,QString message,QString time,
-    //                   QString fileUrl,QString fileName, bool isOutgoing);
-    void insertMessage(QVariantMap message, bool isOutgoing);
+    void insertMessage(QVariant message, bool isOutgoing);
     void returnChatToPosition();
 
     void setLoggers(Logger* logger);
@@ -122,7 +115,6 @@ private:
 
     Logger* logger;
     NetworkManager *networkManager;
-    MessageManager *messageManager;
     MessageHandler *messageHandler;
     AccountManager *accountManager;
     FileManager *fileManager;
