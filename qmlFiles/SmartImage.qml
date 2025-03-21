@@ -9,6 +9,7 @@ Item {
     property alias cache: image.cache
     property alias fillMode: image.fillMode
     property alias smooth: image.smooth
+    property bool rounded: true
 
     width: imageWidth
     height: imageHeight
@@ -21,15 +22,16 @@ Item {
         cache: false
         smooth: false
         fillMode: Image.PreserveAspectFit
-        visible: status === Image.Ready || status === Image.Loading
+        visible: false
 
         onStatusChanged: {
             if (status === Image.Error) {
                 fallback.visible = true
                 image.visible = false
+                shaderEffect.visible = false
             } else if(status === Image.Ready || status === Image.Loading) {
                 fallback.visible = false
-                image.visible = true
+                shaderEffect.visible = true
             }
         }
     }
@@ -41,5 +43,15 @@ Item {
         width: parent.width
         height: parent.height
         textImage: root.textImage
+    }
+    ShaderEffect {
+        id: shaderEffect
+        anchors.fill: parent
+
+        property Image src: image
+        property real radius: root.rounded ? 1 : 0
+
+        vertexShader: "qrc:/shaders/roundImage.vert.qsb"
+        fragmentShader: "qrc:/shaders/roundImage.frag.qsb"
     }
 }

@@ -201,59 +201,22 @@ void NetworkManager::onDataReceived()
         QString flag = receivedFromServerJson["flag"].toString();
         logger->log(Logger::INFO,"networkmanager.cpp::onDataReceived","Readings JSON for " + flag);
 
-        if(flag == "login")
-        {
-            emit loginResultsReceived(receivedFromServerJson);
-        }
-        else if(flag == "reg")
-        {
-            emit registrationResultsReceived(receivedFromServerJson);
-        }
-        else if(flag == "personal_message")
-        {
-            emit messageReceived(receivedFromServerJson);
-        }
-        else if(flag == "group_message")
-        {
-            emit groupMessageReceived(receivedFromServerJson);
-        }
-        else if(flag == "delete_member")
-        {
-            emit deleteGroupMemberReceived(receivedFromServerJson);
-        }
-        else if(flag == "add_group_members")
-        {
-            emit addGroupMemberReceived(receivedFromServerJson);
-        }
-        else if(flag == "chats_info")
-        {
+        if(flag == "login") emit loginResultsReceived(receivedFromServerJson);
+        else if(flag == "reg") emit registrationResultsReceived(receivedFromServerJson);
+        else if(flag == "personal_message") emit messageReceived(receivedFromServerJson);
+        else if(flag == "group_message") emit groupMessageReceived(receivedFromServerJson);
+        else if(flag == "delete_member") emit deleteGroupMemberReceived(receivedFromServerJson);
+        else if(flag == "add_group_members") emit addGroupMemberReceived(receivedFromServerJson);
+        else if(flag == "chats_info") {
             emit dialogsInfoReceived(receivedFromServerJson["dialogs_info"].toObject());
             emit groupInfoReceived(receivedFromServerJson["groups_info"].toObject());
         }
-        else if(flag == "search")
-        {
-            emit searchDataReceived(receivedFromServerJson);
-        }
-        else if(flag == "updating_chats")
-        {
-            emit chatsUpdateDataReceived(receivedFromServerJson);
-        }
-        else if(flag == "load_messages")
-        {
-            emit loadMeassgesReceived(receivedFromServerJson);
-        }
-        else if(flag == "edit")
-        {
-            emit editResultsReceived(receivedFromServerJson);
-        }
-        else if(flag == "avatars_update")
-        {
-            emit avatarsUpdateReceived(receivedFromServerJson);
-        }
-        else if(flag == "avatarUrl")
-        {
-            emit sendAvatarUrl(receivedFromServerJson["avatar_url"].toString(),receivedFromServerJson["id"].toInt(),receivedFromServerJson["type"].toString());
-        }
+        else if(flag == "search")  emit searchDataReceived(receivedFromServerJson);
+        else if(flag == "updating_chats") emit chatsUpdateDataReceived(receivedFromServerJson);
+        else if(flag == "load_messages") emit loadMeassgesReceived(receivedFromServerJson);
+        else if(flag == "edit") emit editResultsReceived(receivedFromServerJson);
+        else if(flag == "avatars_update") emit avatarsUpdateReceived(receivedFromServerJson);
+        else if(flag == "avatarUrl") emit sendAvatarUrl(receivedFromServerJson["avatar_url"].toString(),receivedFromServerJson["id"].toInt(),receivedFromServerJson["type"].toString());
 
         blockSize = 0;
         logger->log(Logger::INFO,"networkmanager.cpp::onDataReceived","Leave onDataReceived");

@@ -5,6 +5,7 @@
 
 #include <QImage>
 #include <QColor>
+#include <QtGlobal>
 #include <QFont>
 #include <QPainter>
 #include <QCoreApplication>
@@ -18,6 +19,7 @@ public:
 
     void setActiveUser(const QString &userLogin, const int &userId);
 private:
+    QColor generateColor(const QString& text);
     QString activeUserLogin;
     int activeUserId;
 };

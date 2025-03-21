@@ -18,10 +18,9 @@ Rectangle {
         delegate: Rectangle {
             id:personalChat
             width: personalChatsListView.width
-            color: model.currentStateText === "active" ? "#2b5278" : (personalChatMouseArea.containsMouse ? "#626a72" : "#1e2a36")
+            color: upLine.user_id === user_id ? "#2b5278" : (personalChatMouseArea.containsMouse ? "#626a72" : "#1e2a36")
             height: 60
             property int user_id: id
-            property string currentState: currentStateText
             property string chatType: currentChatType
 
             Item {
@@ -78,11 +77,6 @@ Rectangle {
                 onClicked: {
                     valueText.visible = false;
                     upLine.currentState = chatType;
-
-                    for (var i = 0; i < personalChatsListModel.count; ++i) {
-                        personalChatsListModel.setProperty(i, "currentStateText", "static");
-                    }
-                    personalChatsListModel.setProperty(index, "currentStateText", "active");
 
                     upLine.user_id = user_id;
                     nameText.text = userlogin;

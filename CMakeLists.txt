@@ -7,6 +7,7 @@ set(CMAKE_CXX_STANDARD_REQUIRED ON)
 find_package(Qt6 6.4 REQUIRED COMPONENTS
     Quick Core Network Gui
     QuickControls2 Widgets Multimedia
+    ShaderTools
 )
 
 qt_standard_project_setup()
@@ -59,6 +60,17 @@ qt_add_qml_module(regagram
         images/profile.png
 )
 
+qt6_add_shaders(regagram "Shaders"
+    GLSL "430"
+    HLSL 50
+    MSL 12
+    BATCHABLE
+    PRECOMPILE
+    OPTIMIZED
+    FILES
+        shaders/roundImage.frag
+        shaders/roundImage.vert
+)
 # Qt for iOS sets MACOSX_BUNDLE_GUI_IDENTIFIER automatically since Qt 6.1.
 # If you are developing for iOS or macOS you should consider setting an
 # explicit, fixed bundle identifier manually though.
