@@ -63,7 +63,11 @@ Rectangle {
                         top: userLogin.bottom
                         topMargin: 10
                     }
-                    text: message.length > 15 ? message.substring(0, 15) + "..." : message
+                    text: message.indexOf('\n') !== -1 && message.indexOf('\n') < 15
+                          ? message.substring(0, message.indexOf('\n')) + "..."
+                          : message.length > 15
+                              ? message.substring(0, 15) + "..."
+                              : message;
                     font.pointSize: 10
                     color: "white"
                 }
@@ -78,12 +82,14 @@ Rectangle {
                     valueText.visible = false;
                     upLine.currentState = chatType;
 
-                    upLine.user_id = user_id;
-                    nameText.text = userlogin;
-                    client.loadingChat(userlogin,chatType);
+                    if(user_id !== 0) {
+                        upLine.user_id = user_id;
+                        nameText.text = userlogin;
+                        client.loadingChat(userlogin,chatType);
 
-                    if(chatType === "group") {
-                        client.getGroupMembers(user_id);
+                        if(chatType === "group") {
+                            client.getGroupMembers(user_id);
+                        }
                     }
                 }
             }

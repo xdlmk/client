@@ -132,8 +132,14 @@ Rectangle{
                 Keys.onPressed: function(event) {
                     if (event.key === Qt.Key_Return || event.key === Qt.Key_Enter) {
                         if (event.modifiers & Qt.ShiftModifier) {
-                            edtText.text = edtText.text.slice(0, edtText.cursorPosition) + "\n" + edtText.text.slice(edtText.cursorPosition);
-                            edtText.cursorPosition += 1;
+                            if (edtText.text.trim() === "") {
+                                event.accepted = true;
+                                return;
+                            }
+                            let textBeforeCursor = edtText.text.slice(0, edtText.cursorPosition);
+                            let textAfterCursor = edtText.text.slice(edtText.cursorPosition);
+                            edtText.text = textBeforeCursor + "\n" + textAfterCursor;
+                            edtText.cursorPosition = textBeforeCursor.length + 1;
                         } else {
                             wordProcessing();
                         }
@@ -233,26 +239,27 @@ Rectangle{
     }
 
     function wordProcessing() {
-        if (edtText.text.trim() !== "") {
-            if(upLine.currentState == "default");
-            else if (upLine.currentState == "personal") {
-                if(fileLoad) {
-                    client.sendMessageWithFile(edtText.text, nameText.text,upLine.user_id,filePath,"personal")
-                    fileLoad = false;
-                    filePath = "";
-                } else {
-                    client.sendMessage(edtText.text, nameText.text,upLine.user_id,"personal");
+        if(upLine.user_id !== 0 && upLine.currentState !== "default") {
+            if (edtText.text.trim() !== "") {
+                if (upLine.currentState == "personal") {
+                    if(fileLoad) {
+                        client.sendMessageWithFile(edtText.text.trim(), nameText.text,upLine.user_id,filePath,"personal")
+                        fileLoad = false;
+                        filePath = "";
+                    } else {
+                        client.sendMessage(edtText.text.trim(), nameText.text,upLine.user_id,"personal");
+                    }
+                } else if (upLine.currentState == "group") {
+                    if(fileLoad) {
+                        client.sendMessageWithFile(edtText.text.trim(), nameText.text,upLine.user_id,filePath,"group")
+                        fileLoad = false;
+                        filePath = "";
+                    } else {
+                        client.sendMessage(edtText.text.trim(), nameText.text,upLine.user_id,"group");
+                    }
                 }
-            } else if (upLine.currentState == "group") {
-                if(fileLoad) {
-                    client.sendMessageWithFile(edtText.text, nameText.text,upLine.user_id,filePath,"group")
-                    fileLoad = false;
-                    filePath = "";
-                } else {
-                    client.sendMessage(edtText.text, nameText.text,upLine.user_id,"group");
-                }
+                edtText.clear();
             }
-            edtText.clear();
         }
     }
 }
