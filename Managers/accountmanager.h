@@ -13,7 +13,7 @@
 #include "Network/networkmanager.h"
 #include "Core/configmanager.h"
 #include "Managers/responsehandler.h"
-#include "Core/logger.h"
+#include "Utils/logger.h"
 
 class AccountManager : public QObject
 {
@@ -32,18 +32,14 @@ public slots:
     void sendSearchToServer(const QString &searchable);
     void sendEditProfileRequest(const QString editable,const QString editInformation);
 
-    void setActiveUser(const QString &userName,const int &userId);
+    void setActiveUser(const QString &user_login,const int &user_id);
     void setLogger(Logger* logger);
 
     void createGroup(const QString& groupName, const QString& avatarPath, const QVariantList &selectedContacts);
     void addGroupMembers(const int& group_id, const QVariantList &selectedContacts);
-    void saveGroupInfo(const QJsonObject &receivedGroupInfoJson);
-    void saveDialogsInfo(const QJsonObject &receivedDialogInfoJson);
 
     void getGroupMembers(const int& group_id);
     void deleteMemberFromGroup(const int& user_id, const int &group_id);
-    void deleteGroupMemberReceived(const QJsonObject &receivedDeleteMemberFromGroup);
-    void addGroupMemberReceived(const QJsonObject &receivedAddMemberFromGroup);
 
     void getContactList();
     void showContacts();
@@ -83,12 +79,19 @@ signals:
     void processingSearchDataFromServer(const QJsonObject &searchDataJson);
     void processingEditProfileFromServer(const QJsonObject &editResultsJson);
     void processingAvatarsUpdateFromServer(const QJsonObject &avatarsUpdateJson);
+    void processingGroupInfoSave(const QJsonObject &receivedGroupInfoJson);
+    void processingDialogsInfoSave(const QJsonObject &receivedDialogInfoJson);
+    void processingDeleteGroupMember(const QJsonObject &receivedDeleteMemberFromGroup);
+    void processingAddGroupMember(const QJsonObject &receivedAddMemberFromGroup);
 private:
-    int deleteUserFromInfoFile(const int& group_id, const int& user_id);
     bool isAvatarUpToDate(QString avatar_url,int user_id,const QString& type);
 
-    int user_id;
-    QString activeUserName;
+    void sendAuthRequest(const QString& flag, const QString& login, const QString& password);
+    QJsonArray convertContactsToArray(const QVariantList &contacts);
+    QVariantList convertArrayToVariantList(const QJsonArray &array);
+
+    int activeUserId;
+    QString activeUserLogin;
 
     NetworkManager* networkManager;
     Logger* logger;

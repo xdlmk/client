@@ -19,7 +19,7 @@
 
 #include <QCryptographicHash>
 
-#include "Core/logger.h"
+#include "Utils/logger.h"
 
 class FileManager : public QObject
 {

@@ -18,40 +18,31 @@ Rectangle {
         delegate: Rectangle {
             id:personalChat
             width: personalChatsListView.width
-            color: model.currentStateText === "active" ? "#2b5278" : (personalChatMouseArea.containsMouse ? "#626a72" : "#1e2a36")
+            color: upLine.user_id === user_id ? "#2b5278" : (personalChatMouseArea.containsMouse ? "#626a72" : "#1e2a36")
             height: 60
             property int user_id: id
-            property string currentState: currentStateText
             property string chatType: currentChatType
 
             Item {
                 anchors.fill: parent
                 anchors.leftMargin: 10
-
-                Rectangle {
+                SmartImage {
                     id:personalChatAvatar
                     width: 48
                     height: 48
-                    radius: 24
-                    color: "transparent"
-                    border.color: "lightblue"
-                    clip: true
                     anchors{
                         left: parent.left
                         leftMargin: 6
                         top: parent.top
                         topMargin: 6
                     }
-                    Image {
-                        id:profileImage
-                        anchors.fill: parent
-                        source: (chatType == "group" ? groupAvatarSource : avatarSource) + user_id + ".png?" + timestamp
-                        fillMode: Image.PreserveAspectFit
-                    }
+                    textImage: userLogin.text
+                    source: (chatType == "group" ? groupAvatarSource : avatarSource) + user_id + ".png?" + timestamp
+                    fillMode: Image.PreserveAspectFit
                 }
 
                 Text {
-                    id: userLoginId
+                    id: userLogin
                     text: userlogin
                     color: "white"
                     font.pointSize: 10
@@ -69,10 +60,14 @@ Rectangle {
                     anchors{
                         left: personalChatAvatar.right
                         leftMargin: 10
-                        top: userLoginId.bottom
+                        top: userLogin.bottom
                         topMargin: 10
                     }
-                    text: message.length > 15 ? message.substring(0, 15) + "..." : message
+                    text: message.indexOf('\n') !== -1 && message.indexOf('\n') < 15
+                          ? message.substring(0, message.indexOf('\n')) + "..."
+                          : message.length > 15
+                              ? message.substring(0, 15) + "..."
+                              : message;
                     font.pointSize: 10
                     color: "white"
                 }
@@ -87,17 +82,14 @@ Rectangle {
                     valueText.visible = false;
                     upLine.currentState = chatType;
 
-                    for (var i = 0; i < personalChatsListModel.count; ++i) {
-                        personalChatsListModel.setProperty(i, "currentStateText", "static");
-                    }
-                    personalChatsListModel.setProperty(index, "currentStateText", "active");
+                    if(user_id !== 0) {
+                        upLine.user_id = user_id;
+                        nameText.text = userlogin;
+                        client.loadingChat(userlogin,chatType);
 
-                    upLine.user_id = user_id;
-                    nameText.text = userlogin;
-                    client.loadingChat(userlogin,chatType);
-
-                    if(chatType === "group") {
-                        client.getGroupMembers(user_id);
+                        if(chatType === "group") {
+                            client.getGroupMembers(user_id);
+                        }
                     }
                 }
             }

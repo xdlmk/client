@@ -80,23 +80,19 @@ Dialog {
         }
     }
 
-    Rectangle {
+    SmartImage {
         id:userAvatar
         width: 80
         height: 80
-        radius: 40
-        anchors.top: myProfileText.bottom
-        anchors.topMargin: 30
-        anchors.left: myProfileText.left
-        color: "transparent"
-        border.color: "lightblue"
-        clip: true
-        Image {
-            anchors.fill: parent
-            source: user_id !== 0 ? avatarSource + user_id + ".png?" + timestamp : ""
-            visible: source !== ""
-            fillMode: Image.PreserveAspectFit
+        anchors {
+            top: myProfileText.bottom
+            topMargin: 30
+            left: myProfileText.left
         }
+        textImage: userLoginText.text
+        source: user_id !== 0 ? avatarSource + user_id + ".png?" + timestamp : ""
+        visible: source !== ""
+        fillMode: Image.PreserveAspectFit
     }
 
     Text{

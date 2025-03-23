@@ -52,10 +52,11 @@ Dialog {
             width: contactsListView.width
             height: 40
             color: model.selected ? "#626a72" : "transparent"
-            Image {
+            SmartImage {
                 id:profileImage
                 width: 30
                 height: 30
+                textImage: model.username
                 source: avatarSource + model.id + ".png?" + timestamp
                 anchors {
                     left: parent.left

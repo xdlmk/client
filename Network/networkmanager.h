@@ -15,7 +15,7 @@
 
 #include <QTimer>
 
-#include "Core/logger.h"
+#include "Utils/logger.h"
 
 class NetworkManager : public QObject
 {

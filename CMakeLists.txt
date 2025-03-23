@@ -7,6 +7,7 @@ set(CMAKE_CXX_STANDARD_REQUIRED ON)
 find_package(Qt6 6.4 REQUIRED COMPONENTS
     Quick Core Network Gui
     QuickControls2 Widgets Multimedia
+    ShaderTools
 )
 
 qt_standard_project_setup()
@@ -38,22 +39,38 @@ qt_add_qml_module(regagram
         qmlFiles/CreateGroupForm.qml
         qmlFiles/SelectContactsForm.qml
         qmlFiles/GroupInfoForm.qml
+        qmlFiles/SmartImage.qml
+        qmlFiles/FallbackImage.qml
     SOURCES
         Core/client.h Core/client.cpp
-        Core/logger.h Core/logger.cpp
         Core/configmanager.h Core/configmanager.cpp
+        Utils/logger.h Utils/logger.cpp
+        Utils/avatargenerator.h Utils/avatargenerator.cpp
         Network/networkmanager.h Network/networkmanager.cpp
         Managers/accountmanager.h Managers/accountmanager.cpp
         Managers/audiomanager.h Managers/audiomanager.cpp
         Managers/filemanager.h Managers/filemanager.cpp
-        Managers/messagemanager.h Managers/messagemanager.cpp
         Managers/responsehandler.h Managers/responsehandler.cpp
+        Managers/MessageManagers/messagehandler.h Managers/MessageManagers/messagehandler.cpp
+        Managers/MessageManagers/messagestorage.h Managers/MessageManagers/messagestorage.cpp
+        Managers/MessageManagers/messagesender.h Managers/MessageManagers/messagesender.cpp
     RESOURCES
         images/logo.png
         images/logo2.png
         images/profile.png
 )
 
+qt6_add_shaders(regagram "Shaders"
+    GLSL "430"
+    HLSL 50
+    MSL 12
+    BATCHABLE
+    PRECOMPILE
+    OPTIMIZED
+    FILES
+        shaders/roundImage.frag
+        shaders/roundImage.vert
+)
 # Qt for iOS sets MACOSX_BUNDLE_GUI_IDENTIFIER automatically since Qt 6.1.
 # If you are developing for iOS or macOS you should consider setting an
 # explicit, fixed bundle identifier manually though.
