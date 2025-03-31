@@ -12,8 +12,8 @@ Window {
 
     property bool isProfileExtended: false
     property bool isSearchListExtended: false
-    property string avatarSource: "../../.data/" + userlogin + "/avatars/personal/"
-    property string groupAvatarSource: "../../.data/" + userlogin + "/avatars/group/"
+    property string avatarSource: "../../.data/" + activeUserId + "/avatars/personal/"
+    property string groupAvatarSource: "../../.data/" + activeUserId + "/avatars/group/"
     property int timestamp: new Date().getTime()
 
     property string activeChatTypeBeforeRequest: "default"

@@ -15,7 +15,7 @@ class AvatarGenerator : public QObject
     Q_OBJECT
 public:
     explicit AvatarGenerator(QObject *parent = nullptr);
-    void generateAvatarImage(const QString& text, const int& id,const QString& type);// avatar generator
+    void generateAvatarImage(const QString& text, const int& id,const QString& type);
 
     void setActiveUser(const QString &userLogin, const int &userId);
 private:

@@ -83,11 +83,11 @@ void AccountManager::sendAvatarsUpdate()
         return ids;
     };
 
-    QString dialogsInfoDirPath = appDir + "/.data/" + activeUserLogin + "/dialogsInfo";
+    QString dialogsInfoDirPath = appDir + "/.data/" + QString::number(activeUserId) + "/dialogsInfo";
     avatarsUpdateJson["ids"] = collectIdsFromDir(dialogsInfoDirPath);
 
 
-    QString groupInfoDirPath = appDir + "/.data/" + activeUserLogin + "/groupsInfo";
+    QString groupInfoDirPath = appDir + "/.data/" + QString::number(activeUserId) + "/groupsInfo";
     avatarsUpdateJson["groups_ids"] = collectIdsFromDir(groupInfoDirPath);
 
     networkManager->sendData(avatarsUpdateJson);
@@ -146,7 +146,7 @@ void AccountManager::addGroupMembers(const int &group_id, const QVariantList &se
 
 void AccountManager::getGroupMembers(const int &group_id)
 {
-    QString filePath = QCoreApplication::applicationDirPath() + "/.data/" + activeUserLogin + "/groupsInfo/" + QString::number(group_id) + ".json";
+    QString filePath = QCoreApplication::applicationDirPath() + "/.data/" + QString::number(activeUserId) + "/groupsInfo/" + QString::number(group_id) + ".json";
     QFile groupInfoFile(filePath);
     if(!groupInfoFile.exists()){
         logger->log(Logger::WARN,"accountmanager.cpp::getGroupMembers", "Group info file not exists: " + filePath);
@@ -180,12 +180,17 @@ void AccountManager::deleteMemberFromGroup(const int &user_id, const int &group_
     }
 }
 
+void AccountManager::removeAccountFromConfigManager()
+{
+    configManager.removeAccount(configManager.getActiveAccount());
+}
+
 void AccountManager::getContactList()
 {
     logger->log(Logger::DEBUG,"accountmanager.cpp::getContactList", "getContactList starts!");
     QString appPath = QCoreApplication::applicationDirPath();
 
-    QString personalDirPath = appPath + "/.data/" + activeUserLogin + "/dialogsInfo";
+    QString personalDirPath = appPath + "/.data/" + QString::number(activeUserId) + "/dialogsInfo";
     QDir personalDir(personalDirPath);
     if (!personalDir.exists()) {
         logger->log(Logger::DEBUG,"accountmanager.cpp::getContactList", "personalDir not exists!");
@@ -215,7 +220,7 @@ void AccountManager::getContactList()
 
         QString userlogin = json["userlogin"].toString();
 
-        if(userlogin == activeUserLogin) continue;
+        if(id == activeUserId) continue;
 
         QJsonObject contact;
         contact["id"] = id;
@@ -223,7 +228,7 @@ void AccountManager::getContactList()
         contactsArray.append(contact);
     }
 
-    QString savePath = appPath + "/.data/" + activeUserLogin + "/contacts/contacts.json";
+    QString savePath = appPath + "/.data/" + QString::number(activeUserId) + "/contacts/contacts.json";
     QDir saveDir(QFileInfo(savePath).absolutePath());
     if (!saveDir.exists()) {
         saveDir.mkpath(".");
@@ -266,7 +271,7 @@ void AccountManager::getChatsInfo()
 {
     QJsonObject infoObject;
     infoObject["flag"] = "chats_info";
-    infoObject["userlogin"] = activeUserLogin;
+    infoObject["user_id"] = activeUserId;
     networkManager->sendData(infoObject);
 }
 
@@ -276,11 +281,11 @@ bool AccountManager::isAvatarUpToDate(QString avatar_url, int user_id,const QStr
     QString pathToAvatar;
     QString avatarCheckerPath;
     if(type == "personal") {
-        pathToAvatar = QCoreApplication::applicationDirPath() + "/.data/" + activeUserLogin + "/avatars/" + type + "/" + QString::number(user_id) + ".png";
-        avatarCheckerPath = QCoreApplication::applicationDirPath() + "/.data/" + activeUserLogin + "/dialogsInfo/" + QString::number(user_id) + ".json";
+        pathToAvatar = QCoreApplication::applicationDirPath() + "/.data/" + QString::number(activeUserId) + "/avatars/" + type + "/" + QString::number(user_id) + ".png";
+        avatarCheckerPath = QCoreApplication::applicationDirPath() + "/.data/" + QString::number(activeUserId) + "/dialogsInfo/" + QString::number(user_id) + ".json";
     } else if(type == "group") {
-        pathToAvatar = QCoreApplication::applicationDirPath() + "/.data/" + activeUserLogin + "/avatars/" + type + "/" + QString::number(user_id) + ".png";
-        avatarCheckerPath = QCoreApplication::applicationDirPath() + "/.data/" + activeUserLogin + "/groupsInfo/" + QString::number(user_id) + ".json";
+        pathToAvatar = QCoreApplication::applicationDirPath() + "/.data/" + QString::number(activeUserId) + "/avatars/" + type + "/" + QString::number(user_id) + ".png";
+        avatarCheckerPath = QCoreApplication::applicationDirPath() + "/.data/" + QString::number(activeUserId) + "/groupsInfo/" + QString::number(user_id) + ".json";
     }
     QFile avatar(pathToAvatar);
     if(!avatar.exists() || avatar.size() == 0) {
@@ -387,6 +392,6 @@ void AccountManager::updatingChats()
 {
     QJsonObject mainObject;
     mainObject["flag"] = "updating_chats";
-    mainObject["userlogin"] = activeUserLogin;
+    mainObject["user_id"] = activeUserId;
     networkManager->sendData(mainObject);
 }

@@ -39,6 +39,8 @@ void Client::setupNetworkConnections() {
     connect(networkManager, &NetworkManager::dialogsInfoReceived, accountManager, &AccountManager::processingDialogsInfoSave);
     connect(networkManager, &NetworkManager::deleteGroupMemberReceived, accountManager, &AccountManager::processingDeleteGroupMember);
     connect(networkManager, &NetworkManager::addGroupMemberReceived, accountManager, &AccountManager::processingAddGroupMember);
+
+    connect(networkManager, &NetworkManager::removeAccountFromConfigManager, accountManager, &AccountManager::removeAccountFromConfigManager);
 }
 
 void Client::setupAccountConnections() {
@@ -87,6 +89,8 @@ void Client::setupMessageConnections() {
     connect(messageHandler,&MessageHandler::checkAndSendAvatarUpdate,accountManager,&AccountManager::checkAndSendAvatarUpdate);
     connect(messageHandler,&MessageHandler::getContactList,accountManager,&AccountManager::getContactList);
     connect(messageHandler,&MessageHandler::getChatsInfo,accountManager,&AccountManager::getChatsInfo);
+
+    connect(messageHandler,&MessageHandler::removeAccountFromConfigManager,accountManager,&AccountManager::removeAccountFromConfigManager);
 
     connect(accountManager, &AccountManager::checkingChatAvailability, messageHandler, &MessageHandler::checkingChatAvailability);
 

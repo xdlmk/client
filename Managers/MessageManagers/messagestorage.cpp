@@ -17,11 +17,11 @@ void MessageStorage::setLogger(Logger *logger)
 
 void MessageStorage::saveMessageToJson(const QJsonObject &messageToSave)
 {
-    QDir dir(QCoreApplication::applicationDirPath() + "/resources/" + activeUserLogin + "/personal");
+    QDir dir(QCoreApplication::applicationDirPath() + "/.data/" + QString::number(activeUserId) + "/messages/personal");
     if (!dir.exists()) {
         dir.mkpath(".");
     }
-    QFile file(QCoreApplication::applicationDirPath() + "/resources/" + activeUserLogin + "/personal" +"/message_" + messageToSave["login"].toString() + ".json");
+    QFile file(QCoreApplication::applicationDirPath() + "/.data/" + QString::number(activeUserId) + "/messages/personal" +"/message_" + messageToSave["login"].toString() + ".json");
 
     if (!file.exists()) {
         if (file.open(QIODevice::WriteOnly)) {
@@ -70,11 +70,11 @@ void MessageStorage::saveMessageToJson(const QJsonObject &messageToSave)
 
 void MessageStorage::saveGroupMessageToJson(const QJsonObject &messageToSave)
 {
-    QDir dir(QCoreApplication::applicationDirPath() + "/resources/" + activeUserLogin + "/group");
+    QDir dir(QCoreApplication::applicationDirPath() + "/.data/" + QString::number(activeUserId) + "/messages/group");
     if (!dir.exists()) {
         dir.mkpath(".");
     }
-    QFile file(QCoreApplication::applicationDirPath() + "/resources/" + activeUserLogin + "/group" +"/message_" + messageToSave["group_name"].toString() + ".json");
+    QFile file(QCoreApplication::applicationDirPath() + "/.data/" + QString::number(activeUserId) + "/messages/group" +"/message_" + messageToSave["group_name"].toString() + ".json");
 
     if (!file.exists()) {
         if (file.open(QIODevice::WriteOnly)) {
@@ -124,9 +124,15 @@ void MessageStorage::saveGroupMessageToJson(const QJsonObject &messageToSave)
 void MessageStorage::updatingLatestMessagesFromServer(QJsonObject &latestMessages)
 {
     logger->log(Logger::INFO,"messagestorage.cpp::saveMessageFromDatabase","saveMessageFromDatabase starts");
+    if(latestMessages["status"].toString() == "error") {
+        logger->log(Logger::FATAL,"messagestorage.cpp::updatingLatestMessagesFromServer", "Userlogin was processed incorrectly when starting the program");
+        //emit removeAccountFromConfigManager();
+        QCoreApplication::quit();
+        return;
+    }
     QJsonArray messagesArray = latestMessages["messages"].toArray();
 
-    QDir mesDir(QCoreApplication::applicationDirPath() + "/resources/" + activeUserLogin);
+    QDir mesDir(QCoreApplication::applicationDirPath() + "/.data/" + QString::number(activeUserId) + "/messages");
     mesDir.removeRecursively();
 
     for (const QJsonValue &value : messagesArray) {

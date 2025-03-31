@@ -33,7 +33,7 @@ void AvatarGenerator::generateAvatarImage(const QString &text, const int &id, co
     painter.drawText(x, y, text.mid(0, 1));
     painter.end();
 
-    image.save(QCoreApplication::applicationDirPath() + "/.data/" + activeUserLogin + "/avatars/" + type + "/" + QString::number(id) + ".png", "PNG");
+    image.save(QCoreApplication::applicationDirPath() + "/.data/" + QString::number(activeUserId) + "/avatars/" + type + "/" + QString::number(id) + ".png", "PNG");
 
 }
 

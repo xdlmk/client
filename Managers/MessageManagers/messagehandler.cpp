@@ -12,6 +12,7 @@ MessageHandler::MessageHandler(QObject *parent)
     connect(messageStorage,&MessageStorage::getContactList,this,&MessageHandler::getContactList);
     connect(messageStorage,&MessageStorage::sendAvatarsUpdate,this,&MessageHandler::sendAvatarsUpdate);
     connect(messageStorage,&MessageStorage::showPersonalChat,this,&MessageHandler::showPersonalChat);
+    connect(messageStorage,&MessageStorage::removeAccountFromConfigManager,this,&MessageHandler::removeAccountFromConfigManager);
 
     connect(this,&MessageHandler::sendMessage,messageSender,&MessageSender::sendMessage);
     connect(this,&MessageHandler::saveMessageAndSendFile,messageSender,&MessageSender::saveMessageAndSendFile);
@@ -43,7 +44,7 @@ void MessageHandler::setLogger(Logger *logger)
 void MessageHandler::checkingChatAvailability(QString &login, const QString &flag)
 {
     logger->log(Logger::INFO,"messagehandler.cpp::checkingChatAvailability","Checking if a chat exists in a local save");
-    QFile file(QCoreApplication::applicationDirPath() + "/resources/" + activeUserLogin + "/" + flag + "/message_" + login + ".json");
+    QFile file(QCoreApplication::applicationDirPath() + "/.data/" + QString::number(activeUserId) + "/messages/" + flag + "/message_" + login + ".json");
     if (!file.open(QIODevice::ReadWrite)) {
         logger->log(Logger::ERROR,"messagehandler.cpp::checkingChatAvailability","File did not open with error: " + file.errorString());
         return;
@@ -159,16 +160,15 @@ void MessageHandler::processingGroupMessage(const QJsonObject &groupMessageJson)
         }
     }
 
-    if(groupMessageJson["sender_login"].toString() != activeUserLogin) {
-        messageToSave["login"] = groupMessageJson["sender_login"].toString();
-        messageToSave["id"] = groupMessageJson["sender_id"].toInt();
+    if(groupMessageJson["sender_id"].toInt() != activeUserId) {
         messageToSave["Out"] = "";
         emit checkAndSendAvatarUpdate(groupMessageJson["sender_avatar_url"].toString(),groupMessageJson["sender_id"].toInt(), "personal");
     } else {
         messageToSave["Out"] = "out";
-        messageToSave["login"] = activeUserLogin;
-        messageToSave["id"] = activeUserId;
     }
+    messageToSave["login"] = groupMessageJson["sender_login"].toString();
+    messageToSave["id"] = groupMessageJson["sender_id"].toInt();
+
     messageStorage->saveGroupMessageToJson(messageToSave);
 
     QString fileName = "";
@@ -186,12 +186,12 @@ void MessageHandler::processingGroupMessage(const QJsonObject &groupMessageJson)
 
 void MessageHandler::loadingChat(const QString userlogin, const QString &flag)
 {
-    QDir dir(QCoreApplication::applicationDirPath() + "/resources/"+ activeUserLogin + "/" + flag);
+    QDir dir(QCoreApplication::applicationDirPath() + "/.data/"+ QString::number(activeUserId) + "/messages/" + flag);
     if (!dir.exists()) {
         dir.mkpath(".");
     }
 
-    QFile file(QCoreApplication::applicationDirPath() + "/resources/" + activeUserLogin + "/" + flag +"/message_" + userlogin + ".json");
+    QFile file(QCoreApplication::applicationDirPath() + "/.data/" + QString::number(activeUserId) + "/messages/" + flag +"/message_" + userlogin + ".json");
 
     if (!file.exists()) {
         logger->log(Logger::INFO,"messagehandler.cpp::loadingChat","File not exist, creating new file");
@@ -281,7 +281,7 @@ void MessageHandler::loadingNextMessages(QJsonObject &messagesJson)
 
         messageToLoad["dialog_id"] = json["dialog_id"].toInt();
 
-        if (messageToLoad["login"].toString() == activeUserLogin) {
+        if (messageToLoad["id"].toInt() == activeUserId) {
             messageToLoad["login"] = json["receiver_login"].toString();
             messageToLoad["id"] = json["receiver_id"].toInt();
             QVariant message = messageToLoad.toVariantMap();

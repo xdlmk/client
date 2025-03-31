@@ -52,12 +52,12 @@ void MessageSender::saveMessageAndSendFile(const QString &message, const QString
     QByteArray jsonData = jsonDocument.toJson(QJsonDocument::Compact);
 
 
-    QDir dir(QCoreApplication::applicationDirPath() + "/.tempData/" + activeUserLogin + "/" + flag + "_messages");
+    QDir dir(QCoreApplication::applicationDirPath() + "/.tempData/" + QString::number(activeUserId) + "/" + flag + "_messages");
     if (!dir.exists()) {
         dir.mkpath(".");
     }
 
-    QFile file(QCoreApplication::applicationDirPath() + "/.tempData/" + activeUserLogin + "/" + flag + "_messages/" +"data.json");
+    QFile file(QCoreApplication::applicationDirPath() + "/.tempData/" + QString::number(activeUserId) + "/" + flag + "_messages/" +"data.json");
     if (file.open(QIODevice::WriteOnly | QIODevice::Text)) {
         file.write(jsonData);
         file.close();
@@ -69,12 +69,12 @@ void MessageSender::saveMessageAndSendFile(const QString &message, const QString
 
 void MessageSender::sendMessageWithFile(const QString &fileUrl, const QString &flag)
 {
-    QDir dir(QCoreApplication::applicationDirPath() + "/.tempData/" + activeUserLogin + "/" + flag + "_messages");
+    QDir dir(QCoreApplication::applicationDirPath() + "/.tempData/" + QString::number(activeUserId) + "/" + flag + "_messages");
     if (!dir.exists()) {
         dir.mkpath(".");
     }
 
-    QFile file(QCoreApplication::applicationDirPath() + "/.tempData/" + activeUserLogin + "/" + flag + "_messages/" +"data.json");
+    QFile file(QCoreApplication::applicationDirPath() + "/.tempData/" + QString::number(activeUserId) + "/" + flag + "_messages/" +"data.json");
     QByteArray jsonData;
     if (file.open(QIODevice::ReadOnly | QIODevice::Text)) {
         jsonData = file.readAll();
@@ -108,7 +108,7 @@ void MessageSender::sendVoiceMessage(const QString &receiver_login, const int &r
 
     QJsonObject voiceMessageJson;
     voiceMessageJson["flag"] = flag + "_voice_message";
-    QString voicePath = QCoreApplication::applicationDirPath() + "/.tempData/" + activeUserLogin + "/voice_messages" + "/voiceMessage.wav";
+    QString voicePath = QCoreApplication::applicationDirPath() + "/.tempData/" + QString::number(activeUserId) + "/voice_messages" + "/voiceMessage.wav";
     QFile file(voicePath);
     QFileInfo fileInfo(voicePath);
     if (!file.open(QIODevice::ReadOnly)) {

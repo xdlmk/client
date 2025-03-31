@@ -208,8 +208,13 @@ void NetworkManager::onDataReceived()
         else if(flag == "delete_member") emit deleteGroupMemberReceived(receivedFromServerJson);
         else if(flag == "add_group_members") emit addGroupMemberReceived(receivedFromServerJson);
         else if(flag == "chats_info") {
-            emit dialogsInfoReceived(receivedFromServerJson["dialogs_info"].toObject());
-            emit groupInfoReceived(receivedFromServerJson["groups_info"].toObject());
+            if(receivedFromServerJson.contains("dialogs_info") && receivedFromServerJson.contains("groups_info")){
+                emit dialogsInfoReceived(receivedFromServerJson["dialogs_info"].toObject());
+                emit groupInfoReceived(receivedFromServerJson["groups_info"].toObject());
+            } else {
+                emit removeAccountFromConfigManager();
+                QCoreApplication::quit();
+            }
         }
         else if(flag == "search")  emit searchDataReceived(receivedFromServerJson);
         else if(flag == "updating_chats") emit chatsUpdateDataReceived(receivedFromServerJson);

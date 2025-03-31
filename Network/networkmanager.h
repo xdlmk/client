@@ -59,6 +59,8 @@ signals:
     void connectionError();
     void connectionSuccess();
 
+    void removeAccountFromConfigManager();
+
 
 private slots:
     void onDisconnected();

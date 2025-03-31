@@ -32,6 +32,8 @@ signals:
 
     void sendAvatarsUpdate();
     void getContactList();
+
+    void removeAccountFromConfigManager();
 private:
     QString activeUserLogin;
     int activeUserId;

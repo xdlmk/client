@@ -9,11 +9,11 @@ void AudioManager::startRecording() {
     captureSession->setRecorder(recorder);
     recorder->setQuality(QMediaRecorder::HighQuality);
     recorder->setMediaFormat(QMediaFormat(QMediaFormat::Wave));
-    QDir dir(QCoreApplication::applicationDirPath() + "/.tempData/" + activeUserLogin + "/voice_messages");
+    QDir dir(QCoreApplication::applicationDirPath() + "/.tempData/" + QString::number(activeUserId) + "/voice_messages");
     if (!dir.exists()) {
         dir.mkpath(".");
     }
-    QString filePath = QDir::cleanPath(QCoreApplication::applicationDirPath()) + "/.tempData/" + activeUserLogin + "/voice_messages" + "/voiceMessage.wav";
+    QString filePath = QDir::cleanPath(QCoreApplication::applicationDirPath()) + "/.tempData/" + QString::number(activeUserId) + "/voice_messages" + "/voiceMessage.wav";
     recorder->setOutputLocation(QUrl::fromLocalFile(filePath));
     recorder->record();
 }

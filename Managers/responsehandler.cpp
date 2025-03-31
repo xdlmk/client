@@ -134,7 +134,7 @@ void ResponseHandler::processingAvatarsUpdate(const QJsonObject &avatarsUpdateJs
 void ResponseHandler::processingGroupInfoSave(const QJsonObject &receivedGroupInfoJson)
 {
     QJsonArray groupsInfoArray = receivedGroupInfoJson["info"].toArray();
-    QDir saveDir(QCoreApplication::applicationDirPath() + "/.data/" + activeUserLogin + "/groupsInfo");
+    QDir saveDir(QCoreApplication::applicationDirPath() + "/.data/" + QString::number(activeUserId) + "/groupsInfo");
     if (!saveDir.exists()) {
         saveDir.mkpath(".");
     } else {
@@ -146,7 +146,7 @@ void ResponseHandler::processingGroupInfoSave(const QJsonObject &receivedGroupIn
         QJsonObject groupInfo = value.toObject();
         int group_id = groupInfo["group_id"].toInt();
 
-        QString savePath = QCoreApplication::applicationDirPath() + "/.data/" + activeUserLogin + "/groupsInfo/" + QString::number(group_id) + ".json";
+        QString savePath = QCoreApplication::applicationDirPath() + "/.data/" + QString::number(activeUserId) + "/groupsInfo/" + QString::number(group_id) + ".json";
 
         if(!writeJsonToFile(savePath,groupInfo)) {
             logger->log(Logger::WARN, "responsehandler.cpp::processingGroupInfoSave", "writeJsonToFile return false");
@@ -158,7 +158,7 @@ void ResponseHandler::processingDialogsInfoSave(const QJsonObject &receivedDialo
 {
     QJsonArray dialogsInfoArray = receivedDialogInfoJson["info"].toArray();
 
-    QDir saveDir(QCoreApplication::applicationDirPath() + "/.data/" + activeUserLogin + "/dialogsInfo");
+    QDir saveDir(QCoreApplication::applicationDirPath() + "/.data/" + QString::number(activeUserId) + "/dialogsInfo");
     if (!saveDir.exists()) {
         saveDir.mkpath(".");
     } else {
@@ -170,7 +170,7 @@ void ResponseHandler::processingDialogsInfoSave(const QJsonObject &receivedDialo
         if(!dialogInfo.contains("user_id")) continue;
         int user_id = dialogInfo["user_id"].toInt();
 
-        QString savePath = QCoreApplication::applicationDirPath() + "/.data/" + activeUserLogin + "/dialogsInfo/" + QString::number(user_id) + ".json";
+        QString savePath = QCoreApplication::applicationDirPath() + "/.data/" + QString::number(activeUserId) + "/dialogsInfo/" + QString::number(user_id) + ".json";
         if(!writeJsonToFile(savePath,dialogInfo)) {
             logger->log(Logger::WARN, "responsehandler.cpp::processingDialogsInfoSave", "writeJsonToFile return false");
         }
@@ -209,7 +209,7 @@ void ResponseHandler::processingAddGroupMember(const QJsonObject &receivedAddMem
         }
     }
 
-    QString pathToGroupInfo = QCoreApplication::applicationDirPath() + "/.data/" + activeUserLogin + "/groupsInfo/" + QString::number(group_id) + ".json";
+    QString pathToGroupInfo = QCoreApplication::applicationDirPath() + "/.data/" + QString::number(activeUserId) + "/groupsInfo/" + QString::number(group_id) + ".json";
     QJsonObject json;
     readJsonFromFile(pathToGroupInfo,json);
     QJsonArray members = json["members"].toArray();
@@ -226,11 +226,11 @@ void ResponseHandler::processingAddGroupMember(const QJsonObject &receivedAddMem
 
 int ResponseHandler::deleteUserFromInfoFile(const int &group_id, const int &user_id)
 {
-    QString pathToGroupInfo = QCoreApplication::applicationDirPath() + "/.data/" + activeUserLogin + "/groupsInfo/" + QString::number(group_id) + ".json";
+    QString pathToGroupInfo = QCoreApplication::applicationDirPath() + "/.data/" + QString::number(activeUserId) + "/groupsInfo/" + QString::number(group_id) + ".json";
     QFile file(pathToGroupInfo);
     if(user_id == this->activeUserId) {
         QFile::remove(pathToGroupInfo);
-        QFile::remove(QCoreApplication::applicationDirPath() + "/resources/" + activeUserLogin + "/group/message_" + QString::number(group_id) + ".json");
+        QFile::remove(QCoreApplication::applicationDirPath() + "/.data/" + QString::number(activeUserId) + "/messages/group/message_" + QString::number(group_id) + ".json");
         emit clearMessagesAfterDelete(group_id);
     }
     QJsonObject json;

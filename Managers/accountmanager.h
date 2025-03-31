@@ -41,6 +41,8 @@ public slots:
     void getGroupMembers(const int& group_id);
     void deleteMemberFromGroup(const int& user_id, const int &group_id);
 
+    void removeAccountFromConfigManager();
+
     void getContactList();
     void showContacts();
     void getChatsInfo();

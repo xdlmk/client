@@ -64,6 +64,8 @@ signals:
 
     void sendRequestMessagesLoading(const int &chat_id, const QString &chat_name, const QString& flag, const int& offset);
 
+    void removeAccountFromConfigManager();
+
 private:
     void loadMessageToQml(QJsonObject& messageToDisplay);
 
