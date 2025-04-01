@@ -67,29 +67,7 @@ void AccountManager::sendAvatarsUpdate()
 
     QJsonObject avatarsUpdateJson;
     avatarsUpdateJson["flag"] = "avatars_update";
-
-    auto collectIdsFromDir = [](const QString& dirPath) {
-        QJsonArray ids;
-        QDir dir(dirPath);
-        if (dir.exists()) {
-            QStringList filters;
-            filters << "*.json";
-            for (const QFileInfo& fileInfo : dir.entryInfoList(filters, QDir::Files)) {
-                bool ok;
-                int id = fileInfo.baseName().toInt(&ok);
-                if (ok) ids.append(id);
-            }
-        }
-        return ids;
-    };
-
-    QString dialogsInfoDirPath = appDir + "/.data/" + QString::number(activeUserId) + "/dialogsInfo";
-    avatarsUpdateJson["ids"] = collectIdsFromDir(dialogsInfoDirPath);
-
-
-    QString groupInfoDirPath = appDir + "/.data/" + QString::number(activeUserId) + "/groupsInfo";
-    avatarsUpdateJson["groups_ids"] = collectIdsFromDir(groupInfoDirPath);
-
+    avatarsUpdateJson["user_id"] = activeUserId;
     networkManager->sendData(avatarsUpdateJson);
 }
 
