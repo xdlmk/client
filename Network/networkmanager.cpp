@@ -5,22 +5,38 @@ NetworkManager::NetworkManager(QObject *parent)
 {
     socket = new QTcpSocket(this);
     fileSocket = new QTcpSocket(this);
-    QObject::connect(socket, &QTcpSocket::connected, [&]() {
-        logger->log(Logger::INFO,"networkmanager.cpp::constructor","Connection to the server established");
-        reconnectTimer.stop();
+
+    activeUserId = 0;
+    activeUserLogin = "";
+
+    QObject::connect(socket, &QTcpSocket::connected, [this]() {
+        logger->log(Logger::INFO,"networkmanager.cpp::constructor","Connection to the MessageServer established");
         emit connectionSuccess();
     });
-    QObject::connect(socket, &QAbstractSocket::errorOccurred, [&](QAbstractSocket::SocketError socketError) {
+    connect(socket,&QTcpSocket::readyRead,this,&NetworkManager::onDataReceived);
+    connect(socket,&QTcpSocket::disconnected,this,&NetworkManager::onDisconnected);
+
+    QObject::connect(fileSocket, &QTcpSocket::connected, [this]() {
+        logger->log(Logger::INFO,"networkmanager.cpp::constructor","Connection to the FileServer established");
+    });
+    connect(fileSocket,&QTcpSocket::readyRead,this,&NetworkManager::onFileServerReceived);
+    connect(fileSocket,&QTcpSocket::disconnected,this,&NetworkManager::onDisconnected);
+
+    connect(&reconnectTimer, &QTimer::timeout, this, &NetworkManager::attemptReconnect);
+
+    QObject::connect(socket, &QAbstractSocket::errorOccurred, [this](QAbstractSocket::SocketError socketError) {
         if (!reconnectTimer.isActive()) {
             reconnectTimer.start(2000);
         }
-        logger->log(Logger::ERROR,"networkmanager.cpp::constructor","Connection error: " + socket->errorString());
+        logger->log(Logger::ERROR,"networkmanager.cpp::constructor","Connection to the MessageServer error: " + socket->errorString());
+    });
+    QObject::connect(fileSocket, &QAbstractSocket::errorOccurred, [this](QAbstractSocket::SocketError socketError) {
+        if (!reconnectTimer.isActive()) {
+            reconnectTimer.start(2000);
+        }
+        logger->log(Logger::ERROR,"networkmanager.cpp::constructor","Connection to the FileServer error: " + fileSocket->errorString());
     });
     connectToServer();
-
-    connect(socket,&QTcpSocket::readyRead,this,&NetworkManager::onDataReceived);
-    connect(socket,&QTcpSocket::disconnected,this,&NetworkManager::onDisconnected);
-    connect(&reconnectTimer, &QTimer::timeout, this, &NetworkManager::attemptReconnect);
 }
 
 void NetworkManager::connectToServer()
@@ -35,6 +51,25 @@ void NetworkManager::connectToServer()
     QString ip = QString::fromUtf8(file.readLine()).trimmed();
     file.close();
     socket->connectToHost(ip,2020);
+}
+
+void NetworkManager::connectToFileServer(QString &userlogin, int &user_id)
+{
+    QFile file("ip.txt");
+    if (!file.exists() || file.size() == 0) {
+        file.open(QIODevice::WriteOnly | QIODevice::Text);
+        file.write("127.0.0.1\n");
+        file.close();
+    }
+    file.open(QIODevice::ReadOnly | QIODevice::Text);
+    QString ip = QString::fromUtf8(file.readLine()).trimmed();
+    file.close();
+    fileSocket->connectToHost(ip,2021);
+    QJsonObject setIdentifiers;
+    setIdentifiers["flag"] = "identifiers";
+    setIdentifiers["userlogin"] = userlogin;
+    setIdentifiers["user_id"] = user_id;
+    sendData(setIdentifiers);
 }
 
 void NetworkManager::sendData(const QJsonObject &jsonToSend)
@@ -62,24 +97,6 @@ void NetworkManager::sendToFileServer(const QJsonDocument &doc)
     out.setVersion(QDataStream::Qt_6_7);
     out << quint32(fileDataOut.size());
     out.writeRawData(fileDataOut.data(),fileDataOut.size());
-
-    if(fileSocket->state() == QAbstractSocket::UnconnectedState){
-        QFile file("ip.txt");
-        if (!file.exists() || file.size() == 0) {
-            file.open(QIODevice::WriteOnly | QIODevice::Text);
-            file.write("127.0.0.1\n");
-            file.close();
-        }
-        file.open(QIODevice::ReadOnly | QIODevice::Text);
-        QString ip = QString::fromUtf8(file.readLine()).trimmed();
-        file.close();
-        fileSocket->connectToHost(ip,2021);
-        if (!fileSocket->waitForConnected(5000)) {
-            logger->log(Logger::WARN,"networkmanager.cpp::sendToFileServer","Failed to connect to fileServer");
-        }
-    }
-
-    connect(fileSocket,&QTcpSocket::readyRead,this,&NetworkManager::onFileServerReceived);
     fileSocket->write(data);
     fileSocket->flush();
 }
@@ -144,8 +161,8 @@ void NetworkManager::setLogger(Logger *logger)
 
 void NetworkManager::onDisconnected()
 {
-    logger->log(Logger::INFO,"networkmanager.cpp::onDisconnected","Disconnecting from the server");
     if (!reconnectTimer.isActive()) {
+        logger->log(Logger::INFO,"networkmanager.cpp::onDisconnected","reconnectTimer starting");
         reconnectTimer.start(2000);
     }
 }
@@ -153,11 +170,27 @@ void NetworkManager::onDisconnected()
 void NetworkManager::attemptReconnect()
 {
     emit connectionError();
-    if(socket->state() == QAbstractSocket::UnconnectedState)
+    if(socket->state() == QAbstractSocket::UnconnectedState || (activeUserId != 0 ? fileSocket->state() == QAbstractSocket::UnconnectedState : true))
     {
         logger->log(Logger::INFO,"networkmanager.cpp::attemptReconnect","Trying to connect to the server");
-        socket->abort();
-        connectToServer();
+        if(activeUserId != 0){
+            logger->log(Logger::INFO,"networkmanager.cpp::attemptReconnect","activeUserId != 0");
+            socket->abort();
+            connectToServer(activeUserLogin,activeUserId);
+            if(fileSocket->state() == QAbstractSocket::UnconnectedState) {
+                logger->log(Logger::INFO,"networkmanager.cpp::attemptReconnect","fileSocket UnconnectedState");
+                fileSocket->abort();
+                connectToFileServer(activeUserLogin,activeUserId);
+            }
+        } else {
+            logger->log(Logger::INFO,"networkmanager.cpp::attemptReconnect","activeUserId == 0");
+            socket->abort();
+            connectToServer();
+        }
+    } else if(socket->state() == QAbstractSocket::ConnectedState && (activeUserId != 0 ? fileSocket->state() == QAbstractSocket::ConnectedState : true)) {
+        logger->log(Logger::INFO,"networkmanager.cpp::attemptReconnect","Connected");
+        emit connectionSuccess();
+        reconnectTimer.stop();
     }
 }
 
@@ -288,4 +321,25 @@ void NetworkManager::onFileServerReceived()
         logger->log(Logger::ERROR, "networkmanager.cpp::onFileServerReceived", "Error reading data from socket: " + QString::number(in.status()));
     }
     blockSize = 0;
+}
+
+void NetworkManager::connectToServer(const QString &userlogin, const int &user_id)
+{
+    logger->log(Logger::INFO,"networkmanager.cpp::connectToServer(with ident)","Trying to connect to the MessageServer");
+    QFile file("ip.txt");
+    if (!file.exists() || file.size() == 0) {
+        file.open(QIODevice::WriteOnly | QIODevice::Text);
+        file.write("127.0.0.1\n");
+        file.close();
+    }
+    file.open(QIODevice::ReadOnly | QIODevice::Text);
+    QString ip = QString::fromUtf8(file.readLine()).trimmed();
+    file.close();
+    socket->connectToHost(ip,2020);
+
+    QJsonObject setIdentifiers;
+    setIdentifiers["flag"] = "identifiers";
+    setIdentifiers["userlogin"] = userlogin;
+    setIdentifiers["user_id"] = user_id;
+    sendData(setIdentifiers);
 }

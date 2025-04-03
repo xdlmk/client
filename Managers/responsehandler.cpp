@@ -19,7 +19,7 @@ void ResponseHandler::processingLoginResults(const QJsonObject &loginResultsJson
 {
     logger->log(Logger::INFO,"responsehandler.cpp::processingLoginResults","processingLoginResults has begun");
     QString success = loginResultsJson["success"].toString();
-    QString name = loginResultsJson["name"].toString();
+    QString userlogin = loginResultsJson["userlogin"].toString();
     QString password = loginResultsJson["password"].toString();
     int userId = loginResultsJson["user_id"].toInt();
 
@@ -27,10 +27,10 @@ void ResponseHandler::processingLoginResults(const QJsonObject &loginResultsJson
 
     if(success == "ok")
     {
-        emit transferUserNameAndIdAfterLogin(name,userId);
+        emit transferUserNameAndIdAfterLogin(userlogin,userId);
         emit checkAndSendAvatarUpdate(avatar_url, userId, "personal");
-        emit loginSuccess(name, userId);
-        emit addAccount(name,password,userId);
+        emit loginSuccess(userlogin, userId);
+        emit addAccount(userlogin,password,userId);
         emit updatingChats();
     }
     else if(success == "poor")
