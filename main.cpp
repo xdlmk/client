@@ -56,11 +56,6 @@ int main(int argc, char *argv[])
         if (rootObjects.isEmpty()) {
             engine.load(switchUrl);
         }
-        /*if (!rootObjects.isEmpty()) {
-            QObject *rootObject = rootObjects.first();
-            rootObject->deleteLater();
-        }
-        engine.load(switchUrl);*/
     });
     QObject::connect(&client, &Client::connectionError, [&engine, switchUrl]() {
         QList<QObject*> rootObjects = engine.rootObjects();

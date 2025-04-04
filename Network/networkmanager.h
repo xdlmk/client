@@ -26,7 +26,7 @@ public:
     void connectToServer();
 
 public slots:
-    void connectToFileServer(QString &userlogin,int &user_id);
+    void connectToFileServer();
 
     void sendData(const QJsonObject &jsonToSend);
     void sendToFileServer(const QJsonDocument &doc);
@@ -72,8 +72,6 @@ private slots:
     void onFileServerReceived();
 
 private:
-    void connectToServer(const QString &userlogin,const int &user_id);
-
     QString activeUserLogin;
     int activeUserId;
 

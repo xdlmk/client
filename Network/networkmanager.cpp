@@ -12,12 +12,25 @@ NetworkManager::NetworkManager(QObject *parent)
     QObject::connect(socket, &QTcpSocket::connected, [this]() {
         logger->log(Logger::INFO,"networkmanager.cpp::constructor","Connection to the MessageServer established");
         emit connectionSuccess();
+
+        if(activeUserId != 0) {
+            QJsonObject setIdentifiers;
+            setIdentifiers["flag"] = "identifiers";
+            setIdentifiers["userlogin"] = activeUserLogin;
+            setIdentifiers["user_id"] = activeUserId;
+            sendData(setIdentifiers);
+        }
     });
     connect(socket,&QTcpSocket::readyRead,this,&NetworkManager::onDataReceived);
     connect(socket,&QTcpSocket::disconnected,this,&NetworkManager::onDisconnected);
 
     QObject::connect(fileSocket, &QTcpSocket::connected, [this]() {
         logger->log(Logger::INFO,"networkmanager.cpp::constructor","Connection to the FileServer established");
+        QJsonObject setIdentifiers;
+        setIdentifiers["flag"] = "identifiers";
+        setIdentifiers["userlogin"] = activeUserLogin;
+        setIdentifiers["user_id"] = activeUserId;
+        sendToFileServer(QJsonDocument(setIdentifiers));
     });
     connect(fileSocket,&QTcpSocket::readyRead,this,&NetworkManager::onFileServerReceived);
     connect(fileSocket,&QTcpSocket::disconnected,this,&NetworkManager::onDisconnected);
@@ -53,7 +66,7 @@ void NetworkManager::connectToServer()
     socket->connectToHost(ip,2020);
 }
 
-void NetworkManager::connectToFileServer(QString &userlogin, int &user_id)
+void NetworkManager::connectToFileServer()
 {
     QFile file("ip.txt");
     if (!file.exists() || file.size() == 0) {
@@ -65,11 +78,6 @@ void NetworkManager::connectToFileServer(QString &userlogin, int &user_id)
     QString ip = QString::fromUtf8(file.readLine()).trimmed();
     file.close();
     fileSocket->connectToHost(ip,2021);
-    QJsonObject setIdentifiers;
-    setIdentifiers["flag"] = "identifiers";
-    setIdentifiers["userlogin"] = userlogin;
-    setIdentifiers["user_id"] = user_id;
-    sendData(setIdentifiers);
 }
 
 void NetworkManager::sendData(const QJsonObject &jsonToSend)
@@ -175,12 +183,15 @@ void NetworkManager::attemptReconnect()
         logger->log(Logger::INFO,"networkmanager.cpp::attemptReconnect","Trying to connect to the server");
         if(activeUserId != 0){
             logger->log(Logger::INFO,"networkmanager.cpp::attemptReconnect","activeUserId != 0");
-            socket->abort();
-            connectToServer(activeUserLogin,activeUserId);
+            if(socket->state() == QAbstractSocket::UnconnectedState) {
+                logger->log(Logger::INFO,"networkmanager.cpp::attemptReconnect","socket UnconnectedState");
+                socket->abort();
+                connectToServer();
+            }
             if(fileSocket->state() == QAbstractSocket::UnconnectedState) {
                 logger->log(Logger::INFO,"networkmanager.cpp::attemptReconnect","fileSocket UnconnectedState");
                 fileSocket->abort();
-                connectToFileServer(activeUserLogin,activeUserId);
+                connectToFileServer();
             }
         } else {
             logger->log(Logger::INFO,"networkmanager.cpp::attemptReconnect","activeUserId == 0");
@@ -321,25 +332,4 @@ void NetworkManager::onFileServerReceived()
         logger->log(Logger::ERROR, "networkmanager.cpp::onFileServerReceived", "Error reading data from socket: " + QString::number(in.status()));
     }
     blockSize = 0;
-}
-
-void NetworkManager::connectToServer(const QString &userlogin, const int &user_id)
-{
-    logger->log(Logger::INFO,"networkmanager.cpp::connectToServer(with ident)","Trying to connect to the MessageServer");
-    QFile file("ip.txt");
-    if (!file.exists() || file.size() == 0) {
-        file.open(QIODevice::WriteOnly | QIODevice::Text);
-        file.write("127.0.0.1\n");
-        file.close();
-    }
-    file.open(QIODevice::ReadOnly | QIODevice::Text);
-    QString ip = QString::fromUtf8(file.readLine()).trimmed();
-    file.close();
-    socket->connectToHost(ip,2020);
-
-    QJsonObject setIdentifiers;
-    setIdentifiers["flag"] = "identifiers";
-    setIdentifiers["userlogin"] = userlogin;
-    setIdentifiers["user_id"] = user_id;
-    sendData(setIdentifiers);
 }
