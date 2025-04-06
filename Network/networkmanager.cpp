@@ -20,9 +20,16 @@ NetworkManager::NetworkManager(QObject *parent)
             setIdentifiers["user_id"] = activeUserId;
             sendData(setIdentifiers);
         }
+        {
+            QMutexLocker lock(&messageMutex);
+            if (!sendMessageQueue.isEmpty()) {
+                QMetaObject::invokeMethod(this, "processSendMessageQueue", Qt::QueuedConnection);
+            }
+        }
     });
     connect(socket,&QTcpSocket::readyRead,this,&NetworkManager::onDataReceived);
     connect(socket,&QTcpSocket::disconnected,this,&NetworkManager::onDisconnected);
+    connect(socket,&QTcpSocket::bytesWritten,this,&NetworkManager::handleMessageBytesWritten);
 
     QObject::connect(fileSocket, &QTcpSocket::connected, [this]() {
         logger->log(Logger::INFO,"networkmanager.cpp::constructor","Connection to the FileServer established");
@@ -31,9 +38,17 @@ NetworkManager::NetworkManager(QObject *parent)
         setIdentifiers["userlogin"] = activeUserLogin;
         setIdentifiers["user_id"] = activeUserId;
         sendToFileServer(QJsonDocument(setIdentifiers));
+
+        {
+            QMutexLocker lock(&fileMutex);
+            if (!sendFileQueue.isEmpty()) {
+                QMetaObject::invokeMethod(this, "processSendFileQueue", Qt::QueuedConnection);
+            }
+        }
     });
     connect(fileSocket,&QTcpSocket::readyRead,this,&NetworkManager::onFileServerReceived);
     connect(fileSocket,&QTcpSocket::disconnected,this,&NetworkManager::onDisconnected);
+    connect(fileSocket,&QTcpSocket::bytesWritten,this,&NetworkManager::handleFileBytesWritten);
 
     connect(&reconnectTimer, &QTimer::timeout, this, &NetworkManager::attemptReconnect);
 
@@ -85,28 +100,62 @@ void NetworkManager::sendData(const QJsonObject &jsonToSend)
     QJsonDocument doc(jsonToSend);
     logger->log(Logger::INFO,"networkmanager.cpp::sendData","Sending json for " + jsonToSend["flag"].toString());
     QByteArray jsonDataOut = doc.toJson(QJsonDocument::Compact);
-    QByteArray data;
+
+    bool shouldStartProcessing = false;
+    {
+        QMutexLocker lock(&messageMutex);
+        if (sendMessageQueue.size() >= MAX_QUEUE_SIZE) {
+            logger->log(Logger::DEBUG, "networkmanager.cpp::sendData", "Send queue overflow! Dropping message.");
+            return;
+        }
+        sendMessageQueue.enqueue(jsonDataOut);
+        logger->log(Logger::INFO, "networkmanager.cpp::sendData", "Message added to queue. Queue size: " + QString::number(sendMessageQueue.size()));
+        shouldStartProcessing = sendMessageQueue.size() == 1;
+    }
+
+    if (shouldStartProcessing) {
+        logger->log(Logger::INFO, "networkmanager.cpp::sendData", "Starting to process the send queue.");
+        processSendMessageQueue();
+    }
+    /*QByteArray data;
     data.clear();
     QDataStream out(&data,QIODevice::WriteOnly);
     out.setVersion(QDataStream::Qt_6_7);
     out << quint32(jsonDataOut.size());
     out.writeRawData(jsonDataOut.data(),jsonDataOut.size());
     socket->write(data);
-    socket->flush();
+    socket->flush();*/
 }
 
 void NetworkManager::sendToFileServer(const QJsonDocument &doc)
 {
     logger->log(Logger::INFO,"networkmanager.cpp::sendToFileServer","sendToFileServer starts");
     QByteArray fileDataOut = doc.toJson(QJsonDocument::Compact);
-    QByteArray data;
+
+    bool shouldStartProcessing = false;
+    {
+        QMutexLocker lock(&fileMutex);
+        if (sendFileQueue.size() >= MAX_QUEUE_SIZE) {
+            logger->log(Logger::DEBUG, "networkmanager.cpp::sendToFileServer", "Send queue overflow! Dropping message.");
+            return;
+        }
+        sendFileQueue.enqueue(fileDataOut);
+        logger->log(Logger::INFO, "networkmanager.cpp::sendToFileServer", "Message added to queue. Queue size: " + QString::number(sendFileQueue.size()));
+        shouldStartProcessing = sendFileQueue.size() == 1;
+    }
+
+    if (shouldStartProcessing) {
+        logger->log(Logger::INFO, "networkmanager.cpp::sendToFileServer", "Starting to process the send queue.");
+        processSendFileQueue();
+    }
+    /*QByteArray data;
     data.clear();
     QDataStream out(&data,QIODevice::WriteOnly);
     out.setVersion(QDataStream::Qt_6_7);
     out << quint32(fileDataOut.size());
     out.writeRawData(fileDataOut.data(),fileDataOut.size());
     fileSocket->write(data);
-    fileSocket->flush();
+    fileSocket->flush();*/
 }
 
 void NetworkManager::sendFile(const QString &filePath,const QString &flag)
@@ -332,4 +381,95 @@ void NetworkManager::onFileServerReceived()
         logger->log(Logger::ERROR, "networkmanager.cpp::onFileServerReceived", "Error reading data from socket: " + QString::number(in.status()));
     }
     blockSize = 0;
+}
+
+void NetworkManager::handleMessageBytesWritten(qint64 bytes)
+{
+    QMutexLocker lock(&messageMutex);
+
+    logger->log(Logger::INFO, "networkmanager.cpp::handleMessageBytesWritten", "Bytes written: " + QString::number(bytes));
+
+    if (!sendMessageQueue.isEmpty()) {
+        sendMessageQueue.dequeue();
+        logger->log(Logger::INFO, "networkmanager.cpp::handleMessageBytesWritten", "Message dequeued. Queue size: " + QString::number(sendMessageQueue.size()));
+        if (!sendMessageQueue.isEmpty()) {
+            logger->log(Logger::INFO, "networkmanager.cpp::handleMessageBytesWritten", "More messages in queue. Scheduling next processing.");
+            QTimer::singleShot(10, this, &NetworkManager::processSendMessageQueue);
+        }
+    }
+}
+
+void NetworkManager::handleFileBytesWritten(qint64 bytes)
+{
+    QMutexLocker lock(&fileMutex);
+
+    logger->log(Logger::INFO, "networkmanager.cpp::handleFileBytesWritten", "Bytes written: " + QString::number(bytes));
+
+    if (!sendFileQueue.isEmpty()) {
+        sendFileQueue.dequeue();
+        logger->log(Logger::INFO, "networkmanager.cpp::handleFileBytesWritten", "Message dequeued. Queue size: " + QString::number(sendFileQueue.size()));
+        if (!sendFileQueue.isEmpty()) {
+            logger->log(Logger::INFO, "networkmanager.cpp::handleFileBytesWritten", "More messages in queue. Scheduling next processing.");
+            QTimer::singleShot(10, this, &NetworkManager::processSendFileQueue);
+        }
+    }
+}
+
+void NetworkManager::processSendFileQueue()
+{
+    QMutexLocker lock(&fileMutex);
+    if (sendFileQueue.isEmpty()) {
+        logger->log(Logger::DEBUG, "networkmanager.cpp::processSendFileQueue", "Send file queue is empty. Nothing to process.");
+        return;
+    }
+
+    QByteArray jsonData = sendFileQueue.head();
+    QByteArray bytes;
+    QDataStream out(&bytes, QIODevice::WriteOnly);
+    out.setVersion(QDataStream::Qt_6_7);
+
+    out << quint32(jsonData.size());
+    out.writeRawData(jsonData.data(), jsonData.size());
+    logger->log(Logger::INFO, "networkmanager.cpp::processSendFileQueue", "Preparing to send data. Data size: " + QString::number(jsonData.size()) + " bytes");
+
+    if (fileSocket->state() != QAbstractSocket::ConnectedState) {
+        logger->log(Logger::DEBUG, "networkmanager.cpp::processSendFileQueue", "Socket is not connected. Cannot send data.");
+        return;
+    }
+
+    qDebug() << QJsonDocument::fromJson(jsonData).object();
+
+    if (fileSocket->write(bytes) == -1) {
+        logger->log(Logger::DEBUG, "networkmanager.cpp::processSendFileQueue", "Failed to write data: " + fileSocket->errorString());
+        return;
+    }
+    logger->log(Logger::INFO, "networkmanager.cpp::processSendFileQueue", "Data written to socket. Data size: " + QString::number(bytes.size()) + " bytes");
+}
+
+void NetworkManager::processSendMessageQueue()
+{
+    QMutexLocker lock(&messageMutex);
+    if (sendMessageQueue.isEmpty()) {
+        logger->log(Logger::DEBUG, "networkmanager.cpp::processSendMessageQueue", "Send queue is empty. Nothing to process.");
+        return;
+    }
+
+    QByteArray jsonData = sendMessageQueue.head();
+    QByteArray bytes;
+    QDataStream out(&bytes, QIODevice::WriteOnly);
+    out.setVersion(QDataStream::Qt_6_7);
+
+    out << quint32(jsonData.size());
+    out.writeRawData(jsonData.data(), jsonData.size());
+    logger->log(Logger::INFO, "networkmanager.cpp::processSendMessageQueue", "Preparing to send data. Data size: " + QString::number(jsonData.size()) + " bytes");
+
+    if (socket->state() != QAbstractSocket::ConnectedState) {
+        logger->log(Logger::DEBUG, "networkmanager.cpp::processSendMessageQueue", "Socket is not connected. Cannot send data.");
+        return;
+    }
+    if (socket->write(bytes) == -1) {
+        logger->log(Logger::DEBUG, "networkmanager.cpp::processSendMessageQueue", "Failed to write data: " + socket->errorString());
+        return;
+    }
+    logger->log(Logger::INFO, "networkmanager.cpp::processSendMessageQueue", "Data written to socket. Data size: " + QString::number(bytes.size()) + " bytes");
 }

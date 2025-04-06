@@ -28,8 +28,8 @@ void ResponseHandler::processingLoginResults(const QJsonObject &loginResultsJson
     if(success == "ok")
     {
         emit transferUserNameAndIdAfterLogin(userlogin,userId);
-        emit checkAndSendAvatarUpdate(avatar_url, userId, "personal");
         emit loginSuccess(userlogin, userId);
+        emit checkAndSendAvatarUpdate(avatar_url, userId, "personal");
         emit addAccount(userlogin,password,userId);
         emit updatingChats();
     }
