@@ -117,14 +117,6 @@ void NetworkManager::sendData(const QJsonObject &jsonToSend)
         logger->log(Logger::INFO, "networkmanager.cpp::sendData", "Starting to process the send queue.");
         processSendMessageQueue();
     }
-    /*QByteArray data;
-    data.clear();
-    QDataStream out(&data,QIODevice::WriteOnly);
-    out.setVersion(QDataStream::Qt_6_7);
-    out << quint32(jsonDataOut.size());
-    out.writeRawData(jsonDataOut.data(),jsonDataOut.size());
-    socket->write(data);
-    socket->flush();*/
 }
 
 void NetworkManager::sendToFileServer(const QJsonDocument &doc)
@@ -148,14 +140,6 @@ void NetworkManager::sendToFileServer(const QJsonDocument &doc)
         logger->log(Logger::INFO, "networkmanager.cpp::sendToFileServer", "Starting to process the send queue.");
         processSendFileQueue();
     }
-    /*QByteArray data;
-    data.clear();
-    QDataStream out(&data,QIODevice::WriteOnly);
-    out.setVersion(QDataStream::Qt_6_7);
-    out << quint32(fileDataOut.size());
-    out.writeRawData(fileDataOut.data(),fileDataOut.size());
-    fileSocket->write(data);
-    fileSocket->flush();*/
 }
 
 void NetworkManager::sendFile(const QString &filePath,const QString &flag)
@@ -262,20 +246,20 @@ void NetworkManager::onDataReceived()
 
     static quint32 blockSize = 0;
 
-    if(in.status() == QDataStream::Ok)
+    if(in.status() != QDataStream::Ok)
     {
+        logger->log(Logger::WARN,"networkmanager.cpp::onDataReceived","QDataStream status error");
+        return;
+    }
+
+    while (true) {
         if (blockSize == 0) {
             if (socket->bytesAvailable() < sizeof(quint32))
-            {
                 return;
-            }
             in >> blockSize;
         }
 
-        if (socket->bytesAvailable() < blockSize)
-        {
-            return;
-        }
+        if (socket->bytesAvailable() < blockSize) return;
 
         QByteArray jsonData;
         jsonData.resize(blockSize);
@@ -317,12 +301,9 @@ void NetworkManager::onDataReceived()
         else if(flag == "avatarUrl") emit sendAvatarUrl(receivedFromServerJson["avatar_url"].toString(),receivedFromServerJson["id"].toInt(),receivedFromServerJson["type"].toString());
 
         blockSize = 0;
-        logger->log(Logger::INFO,"networkmanager.cpp::onDataReceived","Leave onDataReceived");
     }
-    else
-    {
-        logger->log(Logger::WARN,"networkmanager.cpp::onDataReceived","QDataStream status error");
-    }
+    logger->log(Logger::INFO,"networkmanager.cpp::onDataReceived","Leave onDataReceived");
+
 }
 
 void NetworkManager::onFileServerReceived()
@@ -333,20 +314,20 @@ void NetworkManager::onFileServerReceived()
 
     static quint32 blockSize = 0;
 
-    if(in.status() == QDataStream::Ok)
-    {
+    if(in.status() == QDataStream::Ok) {
+        logger->log(Logger::ERROR, "networkmanager.cpp::onFileServerReceived", "Error reading data from socket: " + QString::number(in.status()));
+        return;
+    }
+
+    while (true) {
         if (blockSize == 0) {
             if (fileSocket->bytesAvailable() < sizeof(quint32))
-            {
                 return;
-            }
             in >> blockSize;
         }
 
         if (fileSocket->bytesAvailable() < blockSize)
-        {
             return;
-        }
 
         QByteArray jsonData;
         jsonData.resize(blockSize);
@@ -377,10 +358,8 @@ void NetworkManager::onFileServerReceived()
             emit uploadVoiceFile(receivedFromServerJson);
         }
 
-    } else {
-        logger->log(Logger::ERROR, "networkmanager.cpp::onFileServerReceived", "Error reading data from socket: " + QString::number(in.status()));
+        blockSize = 0;
     }
-    blockSize = 0;
 }
 
 void NetworkManager::handleMessageBytesWritten(qint64 bytes)
@@ -436,8 +415,6 @@ void NetworkManager::processSendFileQueue()
         logger->log(Logger::DEBUG, "networkmanager.cpp::processSendFileQueue", "Socket is not connected. Cannot send data.");
         return;
     }
-
-    qDebug() << QJsonDocument::fromJson(jsonData).object();
 
     if (fileSocket->write(bytes) == -1) {
         logger->log(Logger::DEBUG, "networkmanager.cpp::processSendFileQueue", "Failed to write data: " + fileSocket->errorString());
