@@ -45,6 +45,7 @@ void Client::setupNetworkConnections() {
 
 void Client::setupAccountConnections() {
     connect(accountManager, &AccountManager::loginSuccess, this, &Client::loginSuccess);
+    connect(accountManager, &AccountManager::loginSuccess,networkManager,&NetworkManager::connectToFileServer);
     connect(accountManager, &AccountManager::loginFail, this, &Client::loginFail);
     connect(accountManager, &AccountManager::registrationSuccess, this, &Client::registrationSuccess);
     connect(accountManager, &AccountManager::registrationFail, this, &Client::registrationFail);

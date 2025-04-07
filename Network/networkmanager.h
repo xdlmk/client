@@ -12,6 +12,9 @@
 #include <QJsonDocument>
 #include <QJsonObject>
 #include <QJsonArray>
+#include <QQueue>
+
+#include <QMutex>
 
 #include <QTimer>
 
@@ -26,10 +29,15 @@ public:
     void connectToServer();
 
 public slots:
+    void connectToFileServer();
+
     void sendData(const QJsonObject &jsonToSend);
     void sendToFileServer(const QJsonDocument &doc);
     void sendFile(const QString &filePath,const QString &flag);
     void sendAvatar(const QString &avatarPath, const QString &type, const int& id);
+
+    void processSendFileQueue();
+    void processSendMessageQueue();
 
     void setActiveUser(const QString &userName,const int &userId);
     void setLogger(Logger *logger);
@@ -69,7 +77,16 @@ private slots:
     void onDataReceived();
     void onFileServerReceived();
 
+    void handleMessageBytesWritten(qint64 bytes);
+    void handleFileBytesWritten(qint64 bytes);
+
 private:
+
+    QQueue<QByteArray> sendFileQueue;
+    QQueue<QByteArray> sendMessageQueue;
+    QMutex fileMutex;
+    QMutex messageMutex;
+
     QString activeUserLogin;
     int activeUserId;
 
@@ -77,6 +94,8 @@ private:
     QTcpSocket* socket;
     QTimer reconnectTimer;
     Logger* logger;
+
+    const int MAX_QUEUE_SIZE = 1000;
 };
 
 #endif // NETWORKMANAGER_H
