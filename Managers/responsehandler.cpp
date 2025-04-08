@@ -27,6 +27,10 @@ void ResponseHandler::processingLoginResults(const QJsonObject &loginResultsJson
 
     if(success == "ok")
     {
+        QJsonObject setIdentifiers;
+        setIdentifiers["flag"] = "identifiers";
+        setIdentifiers["user_id"] = userId;
+        emit sendData(setIdentifiers);
         emit transferUserNameAndIdAfterLogin(userlogin,userId);
         emit loginSuccess(userlogin, userId);
         emit checkAndSendAvatarUpdate(avatar_url, userId, "personal");

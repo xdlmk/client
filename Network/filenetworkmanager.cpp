@@ -12,7 +12,6 @@ FileNetworkManager::FileNetworkManager(QObject *parent)
         logger->log(Logger::INFO,"filenetworkmanager.cpp::constructor","Connection to the FileServer established");
         QJsonObject setIdentifiers;
         setIdentifiers["flag"] = "identifiers";
-        setIdentifiers["userlogin"] = activeUserLogin;
         setIdentifiers["user_id"] = activeUserId;
         sendToFileServer(QJsonDocument(setIdentifiers));
 
@@ -236,8 +235,8 @@ void FileNetworkManager::processSendFileQueue()
     }
 
     QByteArray jsonData = sendFileQueue.head();
-    QByteArray bytes;
-    QDataStream out(&bytes, QIODevice::WriteOnly);
+    writeBuffer.clear();
+    QDataStream out(&writeBuffer, QIODevice::WriteOnly);
     out.setVersion(QDataStream::Qt_6_7);
 
     out << quint32(jsonData.size());
@@ -249,11 +248,11 @@ void FileNetworkManager::processSendFileQueue()
         return;
     }
 
-    if (fileSocket->write(bytes) == -1) {
+    if (fileSocket->write(writeBuffer) == -1) {
         logger->log(Logger::DEBUG, "filenetworkmanager.cpp::processSendFileQueue", "Failed to write data: " + fileSocket->errorString());
         return;
     }
-    logger->log(Logger::INFO, "filenetworkmanager.cpp::processSendFileQueue", "Data written to socket. Data size: " + QString::number(bytes.size()) + " bytes");
+    logger->log(Logger::INFO, "filenetworkmanager.cpp::processSendFileQueue", "Data written to socket. Data size: " + QString::number(writeBuffer.size()) + " bytes");
 }
 
 const std::unordered_map<std::string_view, uint> FileNetworkManager::flagMap = {

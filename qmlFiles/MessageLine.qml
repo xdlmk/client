@@ -243,19 +243,19 @@ Rectangle{
             if (edtText.text.trim() !== "") {
                 if (upLine.currentState == "personal") {
                     if(fileLoad) {
-                        client.sendMessageWithFile(edtText.text.trim(), nameText.text,upLine.user_id,filePath,"personal")
+                        client.sendMessageWithFile(edtText.text.trim(), upLine.user_id, filePath, "personal")
                         fileLoad = false;
                         filePath = "";
                     } else {
-                        client.sendMessage(edtText.text.trim(), nameText.text,upLine.user_id,"personal");
+                        client.sendMessage(edtText.text.trim(), upLine.user_id, "personal");
                     }
                 } else if (upLine.currentState == "group") {
                     if(fileLoad) {
-                        client.sendMessageWithFile(edtText.text.trim(), nameText.text,upLine.user_id,filePath,"group")
+                        client.sendMessageWithFile(edtText.text.trim(), upLine.user_id, filePath, "group")
                         fileLoad = false;
                         filePath = "";
                     } else {
-                        client.sendMessage(edtText.text.trim(), nameText.text,upLine.user_id,"group");
+                        client.sendMessage(edtText.text.trim(), upLine.user_id, "group");
                     }
                 }
                 edtText.clear();

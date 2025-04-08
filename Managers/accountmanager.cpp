@@ -342,6 +342,10 @@ void AccountManager::setupResponseHandler()
     connect(this,&AccountManager::processingDeleteGroupMember,&responseHandler,&ResponseHandler::processingDeleteGroupMember);
     connect(this,&AccountManager::processingAddGroupMember,&responseHandler,&ResponseHandler::processingAddGroupMember);
 
+    connect(&responseHandler,&ResponseHandler::sendData, [this](const QJsonObject& json) {
+        networkManager->getMessageNetwork()->sendData(json);
+    });
+
     connect(&responseHandler,&ResponseHandler::transferUserNameAndIdAfterLogin,this,&AccountManager::transferUserNameAndIdAfterLogin);
     connect(&responseHandler,&ResponseHandler::checkAndSendAvatarUpdate,this,&AccountManager::checkAndSendAvatarUpdate);
     connect(&responseHandler,&ResponseHandler::loginSuccess,this,&AccountManager::loginSuccess);

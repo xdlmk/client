@@ -15,7 +15,6 @@ MessageNetworkManager::MessageNetworkManager(QObject *parent)
         if(activeUserId != 0) {
             QJsonObject setIdentifiers;
             setIdentifiers["flag"] = "identifiers";
-            setIdentifiers["userlogin"] = activeUserLogin;
             setIdentifiers["user_id"] = activeUserId;
             sendData(setIdentifiers);
         }

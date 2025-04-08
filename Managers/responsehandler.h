@@ -39,6 +39,8 @@ signals:
     void addAccount(const QString &login, const QString &password, int userId);
     void updatingChats();
 
+    void sendData(const QJsonObject& json);
+
     void registrationSuccess();
     void registrationFail(QString error);
 

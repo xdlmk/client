@@ -15,7 +15,7 @@ void MessageSender::setLogger(Logger *logger)
     this->logger = logger;
 }
 
-void MessageSender::sendMessage(const QString &message, const QString &receiver_login, const int &receiver_id, const QString &flag)
+void MessageSender::sendMessage(const QString &message, const int &receiver_id, const QString &flag)
 {
     QJsonObject personalMessageJson;
 
@@ -26,25 +26,21 @@ void MessageSender::sendMessage(const QString &message, const QString &receiver_
     personalMessageJson["sender_id"] = activeUserId;
 
     if(flag == "personal") {
-        personalMessageJson["receiver_login"] = receiver_login;
         personalMessageJson["receiver_id"] = receiver_id;
     } else if(flag == "group") {
-        personalMessageJson["group_name"] = receiver_login;
         personalMessageJson["group_id"] = receiver_id;
     }
 
     emit sendMessageJson(personalMessageJson);
 }
 
-void MessageSender::saveMessageAndSendFile(const QString &message, const QString &receiver_login, const int &receiver_id, const QString &filePath, const QString &flag)
+void MessageSender::saveMessageAndSendFile(const QString &message, const int &receiver_id, const QString &filePath, const QString &flag)
 {
     QJsonObject jsonMessage;
     jsonMessage["message"] = message;
     if(flag == "personal") {
-        jsonMessage["receiver_login"] = receiver_login;
         jsonMessage["receiver_id"] = receiver_id;
     } else if(flag == "group") {
-        jsonMessage["group_name"] = receiver_login;
         jsonMessage["group_id"] = receiver_id;
     }
 
@@ -88,14 +84,11 @@ void MessageSender::sendMessageWithFile(const QString &fileUrl, const QString &f
     messageJson["flag"] = flag + "_message";
     messageJson["message"] = jsonObject["message"].toString();
     messageJson["fileUrl"] = fileUrl;
-    messageJson["sender_login"] = activeUserLogin;
     messageJson["sender_id"] = activeUserId;
 
     if(flag == "personal") {
-        messageJson["receiver_login"] = jsonObject["receiver_login"].toString();;
         messageJson["receiver_id"] = jsonObject["receiver_id"].toInt();
     } else if(flag == "group") {
-        messageJson["group_name"] = jsonObject["group_name"].toString();;
         messageJson["group_id"] = jsonObject["group_id"].toInt();
     }
 

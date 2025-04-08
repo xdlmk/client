@@ -51,6 +51,7 @@ private slots:
 private:
 
     QTcpSocket* fileSocket;
+    QByteArray writeBuffer;
     QQueue<QByteArray> sendFileQueue;
     QMutex fileMutex;
 
