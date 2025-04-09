@@ -26,25 +26,26 @@ void Client::setupNetworkConnections() {
     connect(networkManager, &NetworkManager::connectionSuccess, this, &Client::connectionSuccess);
     connect(networkManager, &NetworkManager::connectionError, this, &Client::connectionError);
 
-    connect(networkManager, &NetworkManager::loginResultsReceived, accountManager, &AccountManager::processingLoginResultsFromServer);
-    connect(networkManager, &NetworkManager::registrationResultsReceived, accountManager, &AccountManager::processingRegistrationResultsFromServer);
-    connect(networkManager, &NetworkManager::messageReceived, messageHandler, &MessageHandler::processingPersonalMessage);
-    connect(networkManager, &NetworkManager::groupMessageReceived, messageHandler, &MessageHandler::processingGroupMessage);
-    connect(networkManager, &NetworkManager::searchDataReceived, accountManager, &AccountManager::processingSearchDataFromServer);
-    connect(networkManager, &NetworkManager::chatsUpdateDataReceived, messageHandler, &MessageHandler::updatingLatestMessagesFromServer);
-    connect(networkManager, &NetworkManager::loadMeassgesReceived, messageHandler, &MessageHandler::loadingNextMessages);
-    connect(networkManager, &NetworkManager::editResultsReceived, accountManager, &AccountManager::processingEditProfileFromServer);
-    connect(networkManager, &NetworkManager::avatarsUpdateReceived, accountManager, &AccountManager::processingAvatarsUpdateFromServer);
-    connect(networkManager, &NetworkManager::groupInfoReceived, accountManager, &AccountManager::processingGroupInfoSave);
-    connect(networkManager, &NetworkManager::dialogsInfoReceived, accountManager, &AccountManager::processingDialogsInfoSave);
-    connect(networkManager, &NetworkManager::deleteGroupMemberReceived, accountManager, &AccountManager::processingDeleteGroupMember);
-    connect(networkManager, &NetworkManager::addGroupMemberReceived, accountManager, &AccountManager::processingAddGroupMember);
+    connect(networkManager->getMessageNetwork(), &MessageNetworkManager::loginResultsReceived, accountManager, &AccountManager::processingLoginResultsFromServer);
+    connect(networkManager->getMessageNetwork(), &MessageNetworkManager::registrationResultsReceived, accountManager, &AccountManager::processingRegistrationResultsFromServer);
+    connect(networkManager->getMessageNetwork(), &MessageNetworkManager::messageReceived, messageHandler, &MessageHandler::processingPersonalMessage);
+    connect(networkManager->getMessageNetwork(), &MessageNetworkManager::groupMessageReceived, messageHandler, &MessageHandler::processingGroupMessage);
+    connect(networkManager->getMessageNetwork(), &MessageNetworkManager::searchDataReceived, accountManager, &AccountManager::processingSearchDataFromServer);
+    connect(networkManager->getMessageNetwork(), &MessageNetworkManager::chatsUpdateDataReceived, messageHandler, &MessageHandler::updatingLatestMessagesFromServer);
+    connect(networkManager->getMessageNetwork(), &MessageNetworkManager::loadMeassgesReceived, messageHandler, &MessageHandler::loadingNextMessages);
+    connect(networkManager->getMessageNetwork(), &MessageNetworkManager::editResultsReceived, accountManager, &AccountManager::processingEditProfileFromServer);
+    connect(networkManager->getMessageNetwork(), &MessageNetworkManager::avatarsUpdateReceived, accountManager, &AccountManager::processingAvatarsUpdateFromServer);
+    connect(networkManager->getMessageNetwork(), &MessageNetworkManager::groupInfoReceived, accountManager, &AccountManager::processingGroupInfoSave);
+    connect(networkManager->getMessageNetwork(), &MessageNetworkManager::dialogsInfoReceived, accountManager, &AccountManager::processingDialogsInfoSave);
+    connect(networkManager->getMessageNetwork(), &MessageNetworkManager::deleteGroupMemberReceived, accountManager, &AccountManager::processingDeleteGroupMember);
+    connect(networkManager->getMessageNetwork(), &MessageNetworkManager::addGroupMemberReceived, accountManager, &AccountManager::processingAddGroupMember);
 
-    connect(networkManager, &NetworkManager::removeAccountFromConfigManager, accountManager, &AccountManager::removeAccountFromConfigManager);
+    connect(networkManager->getMessageNetwork(), &MessageNetworkManager::removeAccountFromConfigManager, accountManager, &AccountManager::removeAccountFromConfigManager);
 }
 
 void Client::setupAccountConnections() {
     connect(accountManager, &AccountManager::loginSuccess, this, &Client::loginSuccess);
+    connect(accountManager, &AccountManager::loginSuccess,networkManager->getFileNetwork(),&FileNetworkManager::connectToFileServer);
     connect(accountManager, &AccountManager::loginFail, this, &Client::loginFail);
     connect(accountManager, &AccountManager::registrationSuccess, this, &Client::registrationSuccess);
     connect(accountManager, &AccountManager::registrationFail, this, &Client::registrationFail);
@@ -84,8 +85,8 @@ void Client::setupMessageConnections() {
     connect(this, &Client::requestMessageDownload, messageHandler, &MessageHandler::sendRequestMessagesLoading);
     connect(this, &Client::sendMessageWithFile, messageHandler, &MessageHandler::saveMessageAndSendFile);
 
-    connect(messageHandler, &MessageHandler::sendMessageJson, networkManager, &NetworkManager::sendData);
-    connect(messageHandler, &MessageHandler::sendFile, networkManager, &NetworkManager::sendFile);
+    connect(messageHandler, &MessageHandler::sendMessageJson, networkManager->getMessageNetwork(), &MessageNetworkManager::sendData);
+    connect(messageHandler, &MessageHandler::sendFile, networkManager->getFileNetwork(), &FileNetworkManager::sendFile);
     connect(messageHandler,&MessageHandler::checkAndSendAvatarUpdate,accountManager,&AccountManager::checkAndSendAvatarUpdate);
     connect(messageHandler,&MessageHandler::getContactList,accountManager,&AccountManager::getContactList);
     connect(messageHandler,&MessageHandler::getChatsInfo,accountManager,&AccountManager::getChatsInfo);
@@ -112,19 +113,19 @@ void Client::setupMessageConnections() {
 }
 
 void Client::setupFileConnections() {
-    connect(networkManager, &NetworkManager::sendMessageWithFile, messageHandler, &MessageHandler::sendMessageWithFile);
-    connect(networkManager, &NetworkManager::uploadFiles, fileManager, &FileManager::uploadFiles);
-    connect(networkManager, &NetworkManager::uploadVoiceFile, fileManager, &FileManager::uploadVoiceFile);
-    connect(networkManager, &NetworkManager::uploadAvatar, fileManager, &FileManager::uploadAvatar);
+    connect(networkManager->getFileNetwork(), &FileNetworkManager::sendMessageWithFile, messageHandler, &MessageHandler::sendMessageWithFile);
+    connect(networkManager->getFileNetwork(), &FileNetworkManager::uploadFiles, fileManager, &FileManager::uploadFiles);
+    connect(networkManager->getFileNetwork(), &FileNetworkManager::uploadVoiceFile, fileManager, &FileManager::uploadVoiceFile);
+    connect(networkManager->getFileNetwork(), &FileNetworkManager::uploadAvatar, fileManager, &FileManager::uploadAvatar);
 
     connect(this, &Client::getFile, fileManager, &FileManager::getFile);
-    connect(fileManager, &FileManager::sendToFileServer, networkManager, &NetworkManager::sendToFileServer);
-    connect(messageHandler, &MessageHandler::sendToFileServer, networkManager, &NetworkManager::sendToFileServer);
+    connect(fileManager, &FileManager::sendToFileServer, networkManager->getFileNetwork(), &FileNetworkManager::sendToFileServer);
+    connect(messageHandler, &MessageHandler::sendToFileServer, networkManager->getFileNetwork(), &FileNetworkManager::sendToFileServer);
 
     connect(messageHandler, &MessageHandler::sendAvatarsUpdate, accountManager, &AccountManager::sendAvatarsUpdate);
     connect(accountManager, &AccountManager::sendAvatarUrl, fileManager, &FileManager::sendAvatarUrl);
-    connect(networkManager, &NetworkManager::sendAvatarUrl, fileManager, &FileManager::sendAvatarUrl);
-    connect(this, &Client::sendNewAvatar, networkManager, &NetworkManager::sendAvatar);
+    connect(networkManager->getFileNetwork(), &FileNetworkManager::sendAvatarUrl, fileManager, &FileManager::sendAvatarUrl);
+    connect(this, &Client::sendNewAvatar, networkManager->getFileNetwork(), &FileNetworkManager::sendAvatar);
 }
 
 void Client::setupLoggingConnections() {

@@ -57,8 +57,8 @@ signals:
 
     void updatingLatestMessagesFromServer(QJsonObject &latestMessages);
 
-    void sendMessage(const QString &message, const QString &receiver_login, const int &receiver_id, const QString &flag);
-    void saveMessageAndSendFile(const QString &message, const QString &receiver_login, const int &receiver_id,const QString& filePath, const QString &flag);
+    void sendMessage(const QString &message, const int &receiver_id, const QString &flag);
+    void saveMessageAndSendFile(const QString &message, const int &receiver_id,const QString& filePath, const QString &flag);
     void sendMessageWithFile(const QString &fileUrl,const QString &flag);
     void sendVoiceMessage(const QString &receiver_login, const int &receiver_id, const QString &flag);
 

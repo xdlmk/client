@@ -47,6 +47,8 @@ qt_add_qml_module(regagram
         Utils/logger.h Utils/logger.cpp
         Utils/avatargenerator.h Utils/avatargenerator.cpp
         Network/networkmanager.h Network/networkmanager.cpp
+        Network/filenetworkmanager.h Network/filenetworkmanager.cpp
+        Network/messagenetworkmanager.h Network/messagenetworkmanager.cpp
         Managers/accountmanager.h Managers/accountmanager.cpp
         Managers/audiomanager.h Managers/audiomanager.cpp
         Managers/filemanager.h Managers/filemanager.cpp

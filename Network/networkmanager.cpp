@@ -1,151 +1,42 @@
 #include "networkmanager.h"
 
 NetworkManager::NetworkManager(QObject *parent)
-    : QObject{parent}
-{
-    socket = new QTcpSocket(this);
-    fileSocket = new QTcpSocket(this);
-    QObject::connect(socket, &QTcpSocket::connected, [&]() {
-        logger->log(Logger::INFO,"networkmanager.cpp::constructor","Connection to the server established");
-        reconnectTimer.stop();
-        emit connectionSuccess();
-    });
-    QObject::connect(socket, &QAbstractSocket::errorOccurred, [&](QAbstractSocket::SocketError socketError) {
-        if (!reconnectTimer.isActive()) {
-            reconnectTimer.start(2000);
-        }
-        logger->log(Logger::ERROR,"networkmanager.cpp::constructor","Connection error: " + socket->errorString());
-    });
-    connectToServer();
+    : QObject{parent}, fileNetwork(new FileNetworkManager(this)),
+    messageNetwork(new MessageNetworkManager(this)) {
+    connect(fileNetwork, &FileNetworkManager::onDisconnected, this, &NetworkManager::onDisconnected);
+    connect(messageNetwork, &MessageNetworkManager::onDisconnected, this, &NetworkManager::onDisconnected);
+    connect(messageNetwork, &MessageNetworkManager::connectionSuccess, this, &NetworkManager::connectionSuccess);
 
-    connect(socket,&QTcpSocket::readyRead,this,&NetworkManager::onDataReceived);
-    connect(socket,&QTcpSocket::disconnected,this,&NetworkManager::onDisconnected);
     connect(&reconnectTimer, &QTimer::timeout, this, &NetworkManager::attemptReconnect);
 }
 
-void NetworkManager::connectToServer()
-{
-    QFile file("ip.txt");
-    if (!file.exists() || file.size() == 0) {
-        file.open(QIODevice::WriteOnly | QIODevice::Text);
-        file.write("127.0.0.1\n");
-        file.close();
-    }
-    file.open(QIODevice::ReadOnly | QIODevice::Text);
-    QString ip = QString::fromUtf8(file.readLine()).trimmed();
-    file.close();
-    socket->connectToHost(ip,2020);
+FileNetworkManager *NetworkManager::getFileNetwork() {
+    return this->fileNetwork;
 }
 
-void NetworkManager::sendData(const QJsonObject &jsonToSend)
-{
-    QJsonDocument doc(jsonToSend);
-    logger->log(Logger::INFO,"networkmanager.cpp::sendData","Sending json for " + jsonToSend["flag"].toString());
-    QByteArray jsonDataOut = doc.toJson(QJsonDocument::Compact);
-    QByteArray data;
-    data.clear();
-    QDataStream out(&data,QIODevice::WriteOnly);
-    out.setVersion(QDataStream::Qt_6_7);
-    out << quint32(jsonDataOut.size());
-    out.writeRawData(jsonDataOut.data(),jsonDataOut.size());
-    socket->write(data);
-    socket->flush();
-}
-
-void NetworkManager::sendToFileServer(const QJsonDocument &doc)
-{
-    logger->log(Logger::INFO,"networkmanager.cpp::sendToFileServer","sendToFileServer starts");
-    QByteArray fileDataOut = doc.toJson(QJsonDocument::Compact);
-    QByteArray data;
-    data.clear();
-    QDataStream out(&data,QIODevice::WriteOnly);
-    out.setVersion(QDataStream::Qt_6_7);
-    out << quint32(fileDataOut.size());
-    out.writeRawData(fileDataOut.data(),fileDataOut.size());
-
-    if(fileSocket->state() == QAbstractSocket::UnconnectedState){
-        QFile file("ip.txt");
-        if (!file.exists() || file.size() == 0) {
-            file.open(QIODevice::WriteOnly | QIODevice::Text);
-            file.write("127.0.0.1\n");
-            file.close();
-        }
-        file.open(QIODevice::ReadOnly | QIODevice::Text);
-        QString ip = QString::fromUtf8(file.readLine()).trimmed();
-        file.close();
-        fileSocket->connectToHost(ip,2021);
-        if (!fileSocket->waitForConnected(5000)) {
-            logger->log(Logger::WARN,"networkmanager.cpp::sendToFileServer","Failed to connect to fileServer");
-        }
-    }
-
-    connect(fileSocket,&QTcpSocket::readyRead,this,&NetworkManager::onFileServerReceived);
-    fileSocket->write(data);
-    fileSocket->flush();
-}
-
-void NetworkManager::sendFile(const QString &filePath,const QString &flag)
-{
-    logger->log(Logger::INFO,"networkmanager.cpp::sendFile","Sending file");
-    logger->log(Logger::INFO,"networkmanager.cpp::sendFile","filePath = " + filePath);
-    QFile file(filePath);
-    QFileInfo fileInfo(filePath);
-    if (!file.open(QIODevice::ReadOnly)) {
-        logger->log(Logger::WARN,"networkmanager.cpp::sendFile","Failed open file");
-    }
-
-    QByteArray fileData = file.readAll();
-    file.close();
-
-    QJsonObject fileDataJson;
-    fileDataJson["flag"] = flag;
-    fileDataJson["fileName"] = fileInfo.baseName();
-    fileDataJson["fileExtension"] = fileInfo.suffix();
-    fileDataJson["fileData"] = QString(fileData.toBase64());
-
-    QJsonDocument doc(fileDataJson);
-    sendToFileServer(doc);
-}
-
-void NetworkManager::sendAvatar(const QString &avatarPath, const QString &type, const int& id)
-{
-    logger->log(Logger::INFO,"networkmanager.cpp::sendAvatar","Sending avatar");
-    QFile file(avatarPath);
-    QFileInfo fileInfo(avatarPath);
-    if (!file.open(QIODevice::ReadOnly)) {
-        logger->log(Logger::WARN,"networkmanager.cpp::sendAvatar","Failed open avatar");
-    }
-
-    QByteArray fileData = file.readAll();
-    file.close();
-
-    QJsonObject fileDataJson;
-    fileDataJson["flag"] = "newAvatarData";
-    fileDataJson["type"] = type;
-    fileDataJson["id"] = id;
-    fileDataJson["fileName"] = fileInfo.baseName();
-    fileDataJson["fileExtension"] = fileInfo.suffix();
-    fileDataJson["fileData"] = QString(fileData.toBase64());
-
-    QJsonDocument doc(fileDataJson);
-    sendToFileServer(doc);
+MessageNetworkManager *NetworkManager::getMessageNetwork() {
+    return this->messageNetwork;
 }
 
 void NetworkManager::setActiveUser(const QString &userName, const int &userId)
 {
     activeUserId = userId;
     activeUserLogin = userName;
+    fileNetwork->setActiveUser(userName,userId);
+    messageNetwork->setActiveUser(userName,userId);
 }
 
 void NetworkManager::setLogger(Logger *logger)
 {
     this->logger = logger;
+    fileNetwork->setLogger(logger);
+    messageNetwork->setLogger(logger);
 }
 
 void NetworkManager::onDisconnected()
 {
-    logger->log(Logger::INFO,"networkmanager.cpp::onDisconnected","Disconnecting from the server");
     if (!reconnectTimer.isActive()) {
+        logger->log(Logger::INFO,"networkmanager.cpp::onDisconnected","reconnectTimer starting");
         reconnectTimer.start(2000);
     }
 }
@@ -153,139 +44,26 @@ void NetworkManager::onDisconnected()
 void NetworkManager::attemptReconnect()
 {
     emit connectionError();
-    if(socket->state() == QAbstractSocket::UnconnectedState)
+    if(messageNetwork->getSocketState() == QAbstractSocket::UnconnectedState || (activeUserId != 0 ? fileNetwork->getSocketState() == QAbstractSocket::UnconnectedState : true))
     {
         logger->log(Logger::INFO,"networkmanager.cpp::attemptReconnect","Trying to connect to the server");
-        socket->abort();
-        connectToServer();
-    }
-}
-
-void NetworkManager::onDataReceived()
-{
-    QDataStream in(socket);
-    logger->log(Logger::INFO,"networkmanager.cpp::onDataReceived","Data packets received");
-    in.setVersion(QDataStream::Qt_6_7);
-
-    static quint32 blockSize = 0;
-
-    if(in.status() == QDataStream::Ok)
-    {
-        if (blockSize == 0) {
-            if (socket->bytesAvailable() < sizeof(quint32))
-            {
-                return;
+        if(activeUserId != 0){
+            logger->log(Logger::INFO,"networkmanager.cpp::attemptReconnect","activeUserId != 0");
+            if(messageNetwork->getSocketState() == QAbstractSocket::UnconnectedState) {
+                logger->log(Logger::INFO,"networkmanager.cpp::attemptReconnect","socket UnconnectedState");
+                messageNetwork->connectToServer();
             }
-            in >> blockSize;
-        }
-
-        if (socket->bytesAvailable() < blockSize)
-        {
-            return;
-        }
-
-        QByteArray jsonData;
-        jsonData.resize(blockSize);
-        in.readRawData(jsonData.data(), blockSize);
-
-        QJsonDocument doc = QJsonDocument::fromJson(jsonData);
-
-        if (doc.isNull()) {
-            logger->log(Logger::ERROR,"networkmanager.cpp::onDataReceived","Received JSON doc is null");
-            blockSize = 0;
-            return;
-        }
-
-        QJsonObject receivedFromServerJson = doc.object();
-
-        QString flag = receivedFromServerJson["flag"].toString();
-        logger->log(Logger::INFO,"networkmanager.cpp::onDataReceived","Readings JSON for " + flag);
-
-        if(flag == "login") emit loginResultsReceived(receivedFromServerJson);
-        else if(flag == "reg") emit registrationResultsReceived(receivedFromServerJson);
-        else if(flag == "personal_message") emit messageReceived(receivedFromServerJson);
-        else if(flag == "group_message") emit groupMessageReceived(receivedFromServerJson);
-        else if(flag == "delete_member") emit deleteGroupMemberReceived(receivedFromServerJson);
-        else if(flag == "add_group_members") emit addGroupMemberReceived(receivedFromServerJson);
-        else if(flag == "chats_info") {
-            if(receivedFromServerJson.contains("dialogs_info") && receivedFromServerJson.contains("groups_info")){
-                emit dialogsInfoReceived(receivedFromServerJson["dialogs_info"].toObject());
-                emit groupInfoReceived(receivedFromServerJson["groups_info"].toObject());
-            } else {
-                emit removeAccountFromConfigManager();
-                QCoreApplication::quit();
+            if(fileNetwork->getSocketState() == QAbstractSocket::UnconnectedState) {
+                logger->log(Logger::INFO,"networkmanager.cpp::attemptReconnect","fileSocket UnconnectedState");
+                fileNetwork->connectToFileServer();
             }
+        } else {
+            logger->log(Logger::INFO,"networkmanager.cpp::attemptReconnect","activeUserId == 0");
+            messageNetwork->connectToServer();
         }
-        else if(flag == "search")  emit searchDataReceived(receivedFromServerJson);
-        else if(flag == "updating_chats") emit chatsUpdateDataReceived(receivedFromServerJson);
-        else if(flag == "load_messages") emit loadMeassgesReceived(receivedFromServerJson);
-        else if(flag == "edit") emit editResultsReceived(receivedFromServerJson);
-        else if(flag == "avatars_update") emit avatarsUpdateReceived(receivedFromServerJson);
-        else if(flag == "avatarUrl") emit sendAvatarUrl(receivedFromServerJson["avatar_url"].toString(),receivedFromServerJson["id"].toInt(),receivedFromServerJson["type"].toString());
-
-        blockSize = 0;
-        logger->log(Logger::INFO,"networkmanager.cpp::onDataReceived","Leave onDataReceived");
+    } else if(messageNetwork->getSocketState() == QAbstractSocket::ConnectedState && (activeUserId != 0 ? fileNetwork->getSocketState() == QAbstractSocket::ConnectedState : true)) {
+        logger->log(Logger::INFO,"networkmanager.cpp::attemptReconnect","Connected");
+        emit connectionSuccess();
+        reconnectTimer.stop();
     }
-    else
-    {
-        logger->log(Logger::WARN,"networkmanager.cpp::onDataReceived","QDataStream status error");
-    }
-}
-
-void NetworkManager::onFileServerReceived()
-{
-    QDataStream in(fileSocket);
-    logger->log(Logger::INFO,"networkmanager.cpp::onFileServerReceived","Data from FileServer received");
-    in.setVersion(QDataStream::Qt_6_7);
-
-    static quint32 blockSize = 0;
-
-    if(in.status() == QDataStream::Ok)
-    {
-        if (blockSize == 0) {
-            if (fileSocket->bytesAvailable() < sizeof(quint32))
-            {
-                return;
-            }
-            in >> blockSize;
-        }
-
-        if (fileSocket->bytesAvailable() < blockSize)
-        {
-            return;
-        }
-
-        QByteArray jsonData;
-        jsonData.resize(blockSize);
-        in.readRawData(jsonData.data(), blockSize);
-
-        QJsonDocument doc = QJsonDocument::fromJson(jsonData);
-
-        if (doc.isNull()) {
-            logger->log(Logger::ERROR,"networkmanager.cpp::onFileServerReceived","Received JSON doc is null");
-            blockSize = 0;
-            return;
-        }
-
-        QJsonObject receivedFromServerJson = doc.object();
-        if(receivedFromServerJson["flag"].toString() == "personal_file_url") {
-            QString fileUrl = receivedFromServerJson["fileUrl"].toString();
-            emit sendMessageWithFile(fileUrl,"personal");
-        } else if(receivedFromServerJson["flag"].toString() == "group_file_url") {
-            QString fileUrl = receivedFromServerJson["fileUrl"].toString();
-            emit sendMessageWithFile(fileUrl,"group");
-        } else if (receivedFromServerJson["flag"].toString() == "fileData") {
-            emit uploadFiles(receivedFromServerJson);
-        } else if (receivedFromServerJson["flag"].toString() == "avatarData") {
-            emit uploadAvatar(receivedFromServerJson);
-        } else if (receivedFromServerJson["flag"].toString() == "avatarUrl") {
-            emit sendAvatarUrl(receivedFromServerJson["avatar_url"].toString(),receivedFromServerJson["id"].toInt(),receivedFromServerJson["type"].toString());
-        } else if (receivedFromServerJson["flag"].toString() == "voiceFileData") {
-            emit uploadVoiceFile(receivedFromServerJson);
-        }
-
-    } else {
-        logger->log(Logger::ERROR, "networkmanager.cpp::onFileServerReceived", "Error reading data from socket: " + QString::number(in.status()));
-    }
-    blockSize = 0;
 }
