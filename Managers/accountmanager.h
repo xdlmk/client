@@ -67,7 +67,6 @@ signals:
     void editUniqueError();
     void unknownError();
 
-    void clientLogout();
     void sendAvatarUrl(const QString &avatar_url,const int& user_id, const QString& type);
 
     void newSearchUser(QString &userlogin,int &id);

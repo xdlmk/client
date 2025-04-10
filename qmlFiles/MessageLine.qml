@@ -241,22 +241,12 @@ Rectangle{
     function wordProcessing() {
         if(upLine.user_id !== 0 && upLine.currentState !== "default") {
             if (edtText.text.trim() !== "") {
-                if (upLine.currentState == "personal") {
-                    if(fileLoad) {
-                        client.sendMessageWithFile(edtText.text.trim(), upLine.user_id, filePath, "personal")
-                        fileLoad = false;
-                        filePath = "";
-                    } else {
-                        client.sendMessage(edtText.text.trim(), upLine.user_id, "personal");
-                    }
-                } else if (upLine.currentState == "group") {
-                    if(fileLoad) {
-                        client.sendMessageWithFile(edtText.text.trim(), upLine.user_id, filePath, "group")
-                        fileLoad = false;
-                        filePath = "";
-                    } else {
-                        client.sendMessage(edtText.text.trim(), upLine.user_id, "group");
-                    }
+                if(fileLoad) {
+                    client.sendMessageWithFile(edtText.text.trim(), upLine.user_id, filePath, upLine.currentState)
+                    fileLoad = false;
+                    filePath = "";
+                } else {
+                    client.sendMessage(edtText.text.trim(), upLine.user_id, upLine.currentState);
                 }
                 edtText.clear();
             }

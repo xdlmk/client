@@ -50,7 +50,6 @@ void Client::setupAccountConnections() {
     connect(accountManager, &AccountManager::registrationSuccess, this, &Client::registrationSuccess);
     connect(accountManager, &AccountManager::registrationFail, this, &Client::registrationFail);
 
-    connect(accountManager, &AccountManager::clientLogout, this, &Client::clientLogout);
     connect(this, &Client::clientLogout, accountManager, &AccountManager::logout);
     connect(this, &Client::checkAndSendAvatarUpdate, accountManager, &AccountManager::checkAndSendAvatarUpdate);
 

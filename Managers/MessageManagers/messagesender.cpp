@@ -17,21 +17,21 @@ void MessageSender::setLogger(Logger *logger)
 
 void MessageSender::sendMessage(const QString &message, const int &receiver_id, const QString &flag)
 {
-    QJsonObject personalMessageJson;
+    QJsonObject messageJson;
 
-    personalMessageJson["flag"] = flag + "_message";
-    personalMessageJson["message"] = message;
+    messageJson["flag"] = flag + "_message";
+    messageJson["message"] = message;
 
-    personalMessageJson["sender_login"] = activeUserLogin;
-    personalMessageJson["sender_id"] = activeUserId;
+    messageJson["sender_login"] = activeUserLogin;
+    messageJson["sender_id"] = activeUserId;
 
     if(flag == "personal") {
-        personalMessageJson["receiver_id"] = receiver_id;
+        messageJson["receiver_id"] = receiver_id;
     } else if(flag == "group") {
-        personalMessageJson["group_id"] = receiver_id;
+        messageJson["group_id"] = receiver_id;
     }
 
-    emit sendMessageJson(personalMessageJson);
+    emit sendMessageJson(messageJson);
 }
 
 void MessageSender::saveMessageAndSendFile(const QString &message, const int &receiver_id, const QString &filePath, const QString &flag)
@@ -93,6 +93,41 @@ void MessageSender::sendMessageWithFile(const QString &fileUrl, const QString &f
     }
 
     emit sendMessageJson(messageJson);
+}
+
+void MessageSender::sendMessageWithFile(const QString &message, const QString &receiver_login, const int &receiver_id, const QString &filePath, const QString &flag)
+{
+    logger->log(Logger::DEBUG,"messagesender.cpp::sendMessageWithFile", "sendMessageWithFile starts");
+
+    QJsonObject fileMessageJson;
+    fileMessageJson["flag"] = flag + "_file_message";
+    QFile file(filePath);
+    QFileInfo fileInfo(filePath);
+    if (!file.open(QIODevice::ReadOnly)) {
+        logger->log(Logger::WARN,"messagesender.cpp::sendMessageWithFile","Failed open file");
+    }
+    QByteArray fileData = file.readAll();
+    file.close();
+
+    fileMessageJson["fileName"] = fileInfo.baseName();
+    fileMessageJson["fileExtension"] = fileInfo.suffix();
+    fileMessageJson["fileData"] = QString(fileData.toBase64());
+
+    fileMessageJson["sender_login"] = activeUserLogin;
+    fileMessageJson["sender_id"] = activeUserId;
+    fileMessageJson["message"] = message;
+
+    if(flag == "personal") {
+        fileMessageJson["receiver_login"] = receiver_login;
+        fileMessageJson["receiver_id"] = receiver_id;
+    } else if(flag == "group") {
+        fileMessageJson["group_name"] = receiver_login;
+        fileMessageJson["group_id"] = receiver_id;
+    }
+
+    QJsonDocument doc(fileMessageJson);
+
+    emit sendToFileServer(doc);
 }
 
 void MessageSender::sendVoiceMessage(const QString &receiver_login, const int &receiver_id, const QString &flag)
