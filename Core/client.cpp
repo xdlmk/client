@@ -82,10 +82,9 @@ void Client::setupMessageConnections() {
     connect(this, &Client::loadingChat, messageHandler, &MessageHandler::loadingChat);
     connect(this, &Client::sendMessage, messageHandler, &MessageHandler::sendMessage);
     connect(this, &Client::requestMessageDownload, messageHandler, &MessageHandler::sendRequestMessagesLoading);
-    connect(this, &Client::sendMessageWithFile, messageHandler, &MessageHandler::saveMessageAndSendFile);
+    connect(this, &Client::sendMessageWithFile, messageHandler, &MessageHandler::sendMessageWithFile);
 
     connect(messageHandler, &MessageHandler::sendMessageJson, networkManager->getMessageNetwork(), &MessageNetworkManager::sendData);
-    connect(messageHandler, &MessageHandler::sendFile, networkManager->getFileNetwork(), &FileNetworkManager::sendFile);
     connect(messageHandler,&MessageHandler::checkAndSendAvatarUpdate,accountManager,&AccountManager::checkAndSendAvatarUpdate);
     connect(messageHandler,&MessageHandler::getContactList,accountManager,&AccountManager::getContactList);
     connect(messageHandler,&MessageHandler::getChatsInfo,accountManager,&AccountManager::getChatsInfo);
@@ -112,7 +111,6 @@ void Client::setupMessageConnections() {
 }
 
 void Client::setupFileConnections() {
-    connect(networkManager->getFileNetwork(), &FileNetworkManager::sendMessageWithFile, messageHandler, &MessageHandler::sendMessageWithFile);
     connect(networkManager->getFileNetwork(), &FileNetworkManager::uploadFiles, fileManager, &FileManager::uploadFiles);
     connect(networkManager->getFileNetwork(), &FileNetworkManager::uploadVoiceFile, fileManager, &FileManager::uploadVoiceFile);
     connect(networkManager->getFileNetwork(), &FileNetworkManager::uploadAvatar, fileManager, &FileManager::uploadAvatar);

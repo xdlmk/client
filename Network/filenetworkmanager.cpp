@@ -73,29 +73,6 @@ void FileNetworkManager::sendToFileServer(const QJsonDocument &doc)
     }
 }
 
-void FileNetworkManager::sendFile(const QString &filePath,const QString &flag)
-{
-    logger->log(Logger::INFO,"filenetworkmanager.cpp::sendFile","Sending file");
-    logger->log(Logger::INFO,"filenetworkmanager.cpp::sendFile","filePath = " + filePath);
-    QFile file(filePath);
-    QFileInfo fileInfo(filePath);
-    if (!file.open(QIODevice::ReadOnly)) {
-        logger->log(Logger::WARN,"filenetworkmanager.cpp::sendFile","Failed open file");
-    }
-
-    QByteArray fileData = file.readAll();
-    file.close();
-
-    QJsonObject fileDataJson;
-    fileDataJson["flag"] = flag;
-    fileDataJson["fileName"] = fileInfo.baseName();
-    fileDataJson["fileExtension"] = fileInfo.suffix();
-    fileDataJson["fileData"] = QString(fileData.toBase64());
-
-    QJsonDocument doc(fileDataJson);
-    sendToFileServer(doc);
-}
-
 void FileNetworkManager::sendAvatar(const QString &avatarPath, const QString &type, const int& id)
 {
     logger->log(Logger::INFO,"filenetworkmanager.cpp::sendAvatar","Sending avatar");
@@ -174,23 +151,13 @@ void FileNetworkManager::onFileServerReceived()
         uint flagId = (it != flagMap.end()) ? it->second : 0;
 
         switch (flagId) {
-        case 1: {
-            QString fileUrl = receivedFromServerJson["fileUrl"].toString();
-            emit sendMessageWithFile(fileUrl, "personal");
-            break;
-        }
-        case 2: {
-            QString fileUrl = receivedFromServerJson["fileUrl"].toString();
-            emit sendMessageWithFile(fileUrl, "group");
-            break;
-        }
-        case 3:
+        case 1:
             emit uploadFiles(receivedFromServerJson);
             break;
-        case 4:
+        case 2:
             emit uploadAvatar(receivedFromServerJson);
             break;
-        case 5: {
+        case 3: {
             emit sendAvatarUrl(
                 receivedFromServerJson["avatar_url"].toString(),
                 receivedFromServerJson["id"].toInt(),
@@ -198,7 +165,7 @@ void FileNetworkManager::onFileServerReceived()
                 );
             break;
         }
-        case 6:
+        case 4:
             emit uploadVoiceFile(receivedFromServerJson);
             break;
         default:
@@ -256,7 +223,6 @@ void FileNetworkManager::processSendFileQueue()
 }
 
 const std::unordered_map<std::string_view, uint> FileNetworkManager::flagMap = {
-    {"personal_file_url", 1}, {"group_file_url", 2},
-    {"fileData", 3}, {"avatarData", 4},
-    {"avatarUrl", 5}, {"voiceFileData", 6}
+    {"fileData", 1}, {"avatarData", 2},
+    {"avatarUrl", 3}, {"voiceFileData", 4}
 };

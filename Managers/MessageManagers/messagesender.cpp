@@ -34,67 +34,6 @@ void MessageSender::sendMessage(const QString &message, const int &receiver_id, 
     emit sendMessageJson(messageJson);
 }
 
-void MessageSender::saveMessageAndSendFile(const QString &message, const int &receiver_id, const QString &filePath, const QString &flag)
-{
-    QJsonObject jsonMessage;
-    jsonMessage["message"] = message;
-    if(flag == "personal") {
-        jsonMessage["receiver_id"] = receiver_id;
-    } else if(flag == "group") {
-        jsonMessage["group_id"] = receiver_id;
-    }
-
-    QJsonDocument jsonDocument(jsonMessage);
-    QByteArray jsonData = jsonDocument.toJson(QJsonDocument::Compact);
-
-
-    QDir dir(QCoreApplication::applicationDirPath() + "/.tempData/" + QString::number(activeUserId) + "/" + flag + "_messages");
-    if (!dir.exists()) {
-        dir.mkpath(".");
-    }
-
-    QFile file(QCoreApplication::applicationDirPath() + "/.tempData/" + QString::number(activeUserId) + "/" + flag + "_messages/" +"data.json");
-    if (file.open(QIODevice::WriteOnly | QIODevice::Text)) {
-        file.write(jsonData);
-        file.close();
-        emit sendFile(filePath,flag + "_file");
-    } else {
-        logger->log(Logger::ERROR,"messagesender.cpp::saveMessageAndSendFile", "File with message do not save");
-    }
-}
-
-void MessageSender::sendMessageWithFile(const QString &fileUrl, const QString &flag)
-{
-    QDir dir(QCoreApplication::applicationDirPath() + "/.tempData/" + QString::number(activeUserId) + "/" + flag + "_messages");
-    if (!dir.exists()) {
-        dir.mkpath(".");
-    }
-
-    QFile file(QCoreApplication::applicationDirPath() + "/.tempData/" + QString::number(activeUserId) + "/" + flag + "_messages/" +"data.json");
-    QByteArray jsonData;
-    if (file.open(QIODevice::ReadOnly | QIODevice::Text)) {
-        jsonData = file.readAll();
-        file.close();
-    }
-    QJsonObject jsonObject = QJsonDocument::fromJson(jsonData).object();
-
-    QJsonObject messageJson;
-
-    logger->log(Logger::DEBUG,"messagesender.cpp::sendMessageWithFile","FileUrl = " + fileUrl);
-    messageJson["flag"] = flag + "_message";
-    messageJson["message"] = jsonObject["message"].toString();
-    messageJson["fileUrl"] = fileUrl;
-    messageJson["sender_id"] = activeUserId;
-
-    if(flag == "personal") {
-        messageJson["receiver_id"] = jsonObject["receiver_id"].toInt();
-    } else if(flag == "group") {
-        messageJson["group_id"] = jsonObject["group_id"].toInt();
-    }
-
-    emit sendMessageJson(messageJson);
-}
-
 void MessageSender::sendMessageWithFile(const QString &message, const QString &receiver_login, const int &receiver_id, const QString &filePath, const QString &flag)
 {
     logger->log(Logger::DEBUG,"messagesender.cpp::sendMessageWithFile", "sendMessageWithFile starts");

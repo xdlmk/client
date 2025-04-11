@@ -28,7 +28,6 @@ public slots:
 
     void connectToFileServer();
     void sendToFileServer(const QJsonDocument &doc);
-    void sendFile(const QString &filePath, const QString &flag);
     void sendAvatar(const QString &avatarPath, const QString &type, const int& id);
 
     void setActiveUser(const QString &userName, const int &userId);
@@ -39,8 +38,6 @@ signals:
     void uploadVoiceFile(const QJsonObject &fileDataJson);
     void uploadAvatar(const QJsonObject &avatarDataJson);
     void sendAvatarUrl(const QString &avatar_url, const int& user_id, const QString& type);
-
-    void sendMessageWithFile(const QString& fileUrl,const QString &flag);
 
     void onDisconnected();
 

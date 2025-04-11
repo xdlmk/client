@@ -242,7 +242,7 @@ Rectangle{
         if(upLine.user_id !== 0 && upLine.currentState !== "default") {
             if (edtText.text.trim() !== "") {
                 if(fileLoad) {
-                    client.sendMessageWithFile(edtText.text.trim(), upLine.user_id, filePath, upLine.currentState)
+                    client.sendMessageWithFile(edtText.text.trim(), nameText.text, upLine.user_id, filePath, upLine.currentState)
                     fileLoad = false;
                     filePath = "";
                 } else {

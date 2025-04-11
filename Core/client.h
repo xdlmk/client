@@ -61,7 +61,7 @@ signals:
     void addAccount();
 
     void sendMessage(const QString &message, const int &receiver_id, const QString &flag);
-    void sendMessageWithFile(const QString &message, const int &receiver_id, const QString& filePath, const QString &flag);
+    void sendMessageWithFile(const QString &message, const QString &receiver_login, const int &receiver_id,const QString& filePath, const QString &flag);
     void sendVoiceMessage(const QString &receiver_login, const int &receiver_id, const QString &flag);
     void sendSearchToServer(const QString &searchable);
     void sendLoginRequest(QString userlogin,QString password);

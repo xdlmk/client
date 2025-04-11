@@ -15,13 +15,11 @@ MessageHandler::MessageHandler(QObject *parent)
     connect(messageStorage,&MessageStorage::removeAccountFromConfigManager,this,&MessageHandler::removeAccountFromConfigManager);
 
     connect(this,&MessageHandler::sendMessage,messageSender,&MessageSender::sendMessage);
-    connect(this,&MessageHandler::saveMessageAndSendFile,messageSender,&MessageSender::saveMessageAndSendFile);
     connect(this,&MessageHandler::sendMessageWithFile,messageSender,&MessageSender::sendMessageWithFile);
     connect(this,&MessageHandler::sendVoiceMessage,messageSender,&MessageSender::sendVoiceMessage);
     connect(this,&MessageHandler::sendRequestMessagesLoading,messageSender,&MessageSender::sendRequestMessagesLoading);
 
     connect(messageSender,&MessageSender::sendMessageJson,this,&MessageHandler::sendMessageJson);
-    connect(messageSender,&MessageSender::sendFile,this,&MessageHandler::sendFile);
     connect(messageSender,&MessageSender::sendToFileServer,this,&MessageHandler::sendToFileServer);
 }
 

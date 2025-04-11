@@ -126,7 +126,7 @@ void MessageStorage::updatingLatestMessagesFromServer(QJsonObject &latestMessage
     logger->log(Logger::INFO,"messagestorage.cpp::saveMessageFromDatabase","saveMessageFromDatabase starts");
     if(latestMessages["status"].toString() == "error") {
         logger->log(Logger::FATAL,"messagestorage.cpp::updatingLatestMessagesFromServer", "Userlogin was processed incorrectly when starting the program");
-        //emit removeAccountFromConfigManager();
+        emit removeAccountFromConfigManager();
         QCoreApplication::quit();
         return;
     }
