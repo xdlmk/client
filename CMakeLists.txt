@@ -5,13 +5,22 @@ project(clientDes VERSION 0.1 LANGUAGES CXX)
 set(CMAKE_CXX_STANDARD_REQUIRED ON)
 
 find_package(Qt6 6.4 REQUIRED COMPONENTS
-    Quick Core Network Gui
+    Quick Core Network Protobuf Gui
     QuickControls2 Widgets Multimedia
     ShaderTools
 )
 
 qt_standard_project_setup()
 
+qt_add_protobuf(protosource
+    PROTO_FILES
+    ${CMAKE_SOURCE_DIR}/proto/envelope.proto
+    ${CMAKE_SOURCE_DIR}/proto/login.proto
+    ${CMAKE_SOURCE_DIR}/proto/register.proto
+    ${CMAKE_SOURCE_DIR}/proto/search.proto
+)
+
+include_directories(${CMAKE_CURRENT_BINARY_DIR})
 
 qt_add_executable(regagram
     main.cpp
@@ -83,15 +92,18 @@ set_target_properties(regagram PROPERTIES
     MACOSX_BUNDLE TRUE
     WIN32_EXECUTABLE TRUE
 )
+add_dependencies(regagram protosource)
 
 target_link_libraries(regagram
     PRIVATE Qt6::Quick
     Qt${QT_VERSION_MAJOR}::Core
     Qt${QT_VERSION_MAJOR}::Network
+    Qt${QT_VERSION_MAJOR}::Protobuf
     Qt${QT_VERSION_MAJOR}::Gui
     Qt${QT_VERSION_MAJOR}::QuickControls2
     Qt${QT_VERSION_MAJOR}::Widgets
     Qt${QT_VERSION_MAJOR}::Multimedia
+    protosource
 )
 
 include(GNUInstallDirs)
