@@ -80,6 +80,50 @@ void MessageNetworkManager::sendData(const QJsonObject &jsonToSend)
     }
 }
 
+void MessageNetworkManager::sendData(const QString &flag, const QByteArray &data)
+{
+    messages::Envelope envelope;
+    envelope.setFlag(flag);
+    envelope.setPayload(data);
+    QProtobufSerializer serializer;
+    QByteArray envelopeData = envelope.serialize(&serializer);
+
+    logger->log(
+        Logger::INFO,
+        "messagenetworkmanager.cpp::sendData",
+        "Sending envelope for flag: " + flag
+        );
+
+    bool shouldStartProcessing = false;
+    {
+        QMutexLocker lock(&messageMutex);
+        if (sendMessageQueue.size() >= MAX_QUEUE_SIZE) {
+            logger->log(
+                Logger::DEBUG,
+                "messagenetworkmanager.cpp::sendData",
+                "Send queue overflow! Dropping message."
+                );
+            return;
+        }
+        sendMessageQueue.enqueue(envelopeData);
+        logger->log(
+            Logger::INFO,
+            "messagenetworkmanager.cpp::sendData",
+            "Message added to queue. Queue size: " + QString::number(sendMessageQueue.size())
+            );
+        shouldStartProcessing = sendMessageQueue.size() == 1;
+    }
+
+    if (shouldStartProcessing) {
+        logger->log(
+            Logger::INFO,
+            "messagenetworkmanager.cpp::sendData",
+            "Starting to process the send queue."
+            );
+        processSendMessageQueue();
+    }
+}
+
 void MessageNetworkManager::setActiveUser(const QString &userName, const int &userId)
 {
     activeUserId = userId;

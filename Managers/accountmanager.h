@@ -15,6 +15,10 @@
 #include "Managers/responsehandler.h"
 #include "Utils/logger.h"
 
+#include "login.qpb.h"
+#include "register.qpb.h"
+#include <QtProtobuf/qprotobufserializer.h>
+
 class AccountManager : public QObject
 {
     Q_OBJECT

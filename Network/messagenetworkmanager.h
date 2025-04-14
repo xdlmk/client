@@ -14,6 +14,9 @@
 
 #include "Utils/logger.h"
 
+#include "envelope.qpb.h"
+#include <QtProtobuf/qprotobufserializer.h>
+
 class MessageNetworkManager : public QObject
 {
     Q_OBJECT
@@ -27,6 +30,7 @@ public slots:
 
     void connectToServer();
     void sendData(const QJsonObject &jsonToSend);
+    void sendData(const QString &flag,const QByteArray &data);
 
     void setActiveUser(const QString &userName, const int &userId);
     void setLogger(Logger *logger);

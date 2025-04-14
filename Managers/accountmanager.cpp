@@ -15,7 +15,7 @@ void AccountManager::login(const QString login, const QString password)
 
 void AccountManager::registerAccount(const QString login, const QString password)
 {
-    sendAuthRequest("login",login,password);
+    sendAuthRequest("reg",login,password);
 }
 
 void AccountManager::logout()
@@ -293,11 +293,23 @@ bool AccountManager::isAvatarUpToDate(QString avatar_url, int user_id,const QStr
 
 void AccountManager::sendAuthRequest(const QString &flag, const QString &login, const QString &password)
 {
-    QJsonObject data;
+    QProtobufSerializer serializer;
+    if(flag == "login"){
+        messages::LoginRequest loginRequest;
+        loginRequest.setLogin(login);
+        loginRequest.setPassword(password);
+        QByteArray data = loginRequest.serialize(&serializer);
+    } else if(flag == "reg"){
+        messages::RegisterRequest regRequest;
+        regRequest.setLogin(login);
+        regRequest.setPassword(password);
+        QByteArray data = regRequest.serialize(&serializer);
+    }
+    /*QJsonObject data;
     data["flag"] = flag;
     data["login"] = login;
     data["password"] = password;
-    networkManager->getMessageNetwork()->sendData(data);
+    networkManager->getMessageNetwork()->sendData(data);*/
 }
 
 QJsonArray AccountManager::convertContactsToArray(const QVariantList &contacts)
