@@ -16,7 +16,7 @@ MessageNetworkManager::MessageNetworkManager(QObject *parent)
             QJsonObject setIdentifiers;
             setIdentifiers["flag"] = "identifiers";
             setIdentifiers["user_id"] = activeUserId;
-            sendData(setIdentifiers);
+            sendDataJson(setIdentifiers);
         }
         {
             QMutexLocker lock(&messageMutex);
@@ -56,7 +56,7 @@ void MessageNetworkManager::connectToServer()
     socket->connectToHost(ip,2020);
 }
 
-void MessageNetworkManager::sendData(const QJsonObject &jsonToSend)
+void MessageNetworkManager::sendDataJson(const QJsonObject &jsonToSend)
 {
     QJsonDocument doc(jsonToSend);
     logger->log(Logger::INFO,"messagenetworkmanager.cpp::sendData","Sending json for " + jsonToSend["flag"].toString());
@@ -158,7 +158,22 @@ void MessageNetworkManager::onDataReceived()
 
         if (socket->bytesAvailable() < blockSize) return;
 
-        QByteArray jsonData;
+        QByteArray envelopeData;
+        envelopeData.resize(blockSize);
+        in.readRawData(envelopeData.data(), blockSize);
+
+        QProtobufSerializer serializer;
+        messages::Envelope envelope;
+        if (!envelope.deserialize(&serializer, envelopeData)) {
+            logger->log(Logger::WARN, "clienthandler.cpp::readClient", "Failed to deserialize protobuf");
+            blockSize = 0;
+            return;
+        }
+
+        QString flag = envelope.flag();
+        QByteArray payload = envelope.payload();
+
+        /*QByteArray jsonData;
         jsonData.resize(blockSize);
         in.readRawData(jsonData.data(), blockSize);
 
@@ -172,14 +187,14 @@ void MessageNetworkManager::onDataReceived()
 
         QJsonObject receivedFromServerJson = doc.object();
 
-        QString flag = receivedFromServerJson["flag"].toString();
+        QString flag = receivedFromServerJson["flag"].toString();*/
         logger->log(Logger::INFO,"messagenetworkmanager.cpp::onDataReceived","Readings JSON for " + flag);
 
         auto it = flagMap.find(flag.toStdString());
         uint flagId = (it != flagMap.end()) ? it->second : 0;
         switch (flagId) {
         case 1:
-            emit loginResultsReceived(receivedFromServerJson);
+            emit loginResultsReceived(payload);
             break;
         case 2:
             emit registrationResultsReceived(receivedFromServerJson);

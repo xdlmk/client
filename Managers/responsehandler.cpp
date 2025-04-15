@@ -15,61 +15,78 @@ void ResponseHandler::setActiveUser(const QString &userLogin, const int &userId)
     activeUserId = userId;
 }
 
-void ResponseHandler::processingLoginResults(const QJsonObject &loginResultsJson)
+void ResponseHandler::processingLoginResults(const QByteArray &loginResultsData)
 {
-    logger->log(Logger::INFO,"responsehandler.cpp::processingLoginResults","processingLoginResults has begun");
-    QString success = loginResultsJson["success"].toString();
-    QString userlogin = loginResultsJson["userlogin"].toString();
-    QString password = loginResultsJson["password"].toString();
-    int userId = loginResultsJson["user_id"].toInt();
+    logger->log(Logger::INFO, "responsehandler.cpp::processingLoginResults", "processingLoginResults has begun");
 
-    QString avatar_url = loginResultsJson["avatar_url"].toString();
+    QProtobufSerializer serializer;
+    messages::LoginResponse response;
 
-    if(success == "ok")
-    {
-        QJsonObject setIdentifiers;
-        setIdentifiers["flag"] = "identifiers";
-        setIdentifiers["user_id"] = userId;
-        emit sendData(setIdentifiers);
-        emit transferUserNameAndIdAfterLogin(userlogin,userId);
+    if (!response.deserialize(&serializer, loginResultsData)) {
+        logger->log(Logger::ERROR, "responsehandler.cpp::processingLoginResults", "Failed to parse login response");
+        emit loginFail();
+        return;
+    }
+
+    QString success = response.success();
+    QString userlogin = response.userlogin();
+    QString password = response.password();
+    int userId = response.userId();
+    QString avatar_url = response.avatarUrl();
+
+    if (success == "ok") {
+        messages::Identifiers identifiers;
+        identifiers.setUserId(userId);
+        emit sendData("identifiers", identifiers.serialize(&serializer));
+        emit transferUserNameAndIdAfterLogin(userlogin, userId);
         emit loginSuccess(userlogin, userId);
         emit checkAndSendAvatarUpdate(avatar_url, userId, "personal");
-        emit addAccount(userlogin,password,userId);
+        emit addAccount(userlogin, password, userId);
         emit updatingChats();
-    }
-    else if(success == "poor")
-    {
+    } else if (success == "poor") {
         emit loginFail();
     }
 }
 
-void ResponseHandler::processingRegistrationResults(const QJsonObject &regResultsJson)
+void ResponseHandler::processingRegistrationResults(const QByteArray &regResultsData)
 {
-    logger->log(Logger::INFO,"responsehandler.cpp::processingRegistrationResults","processingRegistrationResultsFromServer has begun");
-    QString success = regResultsJson["success"].toString();
-    if(success == "ok")
-    {
-        emit registrationSuccess() ;
+    QProtobufSerializer serializer;
+    messages::RegisterResponse response;
+
+    if (!response.deserialize(&serializer, regResultsData)) {
+        logger->log(Logger::ERROR, "responsehandler.cpp::processingRegistrationResults", "Failed to parse registration response");
+        emit registrationFail("Failed to parse response");
+        return;
     }
-    else if (success == "poor")
-    {
-        QString error = regResultsJson["errorMes"].toString();
-        emit registrationFail(error);
+    QString success = response.success();
+    QString errorMes = response.errorMes();
+
+    if (success == "ok") {
+        emit registrationSuccess();
+    } else if (success == "poor") {
+        emit registrationFail(errorMes);
     }
 }
 
-void ResponseHandler::processingSearchData(const QJsonObject &searchDataJson)
+void ResponseHandler::processingSearchData(const QByteArray &searchData)
 {
-    logger->log(Logger::INFO,"responsehandler.cpp::processingSearchData","processingSearchDataFromServer has begun");
-    QJsonArray resultsArray = searchDataJson.value("results").toArray();
-    for (const QJsonValue &value : resultsArray) {
-        QJsonObject userObj = value.toObject();
-        int id = userObj.value("id").toInt();
-        QString userlogin = userObj.value("userlogin").toString();
-        QString avatar_url = userObj.value("avatar_url").toString();
-        emit checkAndSendAvatarUpdate(avatar_url,id,"personal");
+    logger->log(Logger::INFO, "responsehandler.cpp::processingSearchData", "processingSearchDataFromServer has begun");
 
-        emit newSearchUser(userlogin,id);
+    QProtobufSerializer serializer;
+    messages::SearchResponse response;
+
+    if (!response.deserialize(&serializer, searchData)) {
+        logger->log(Logger::ERROR, "responsehandler.cpp::processingSearchData", "Failed to parse search response");
+        return;
+    }
+
+    for (const auto &result : response.results()) {
+        int id = result.id_proto();
+        QString userlogin = result.userlogin();
+        QString avatar_url = result.avatarUrl();
+
+        emit checkAndSendAvatarUpdate(avatar_url, id, "personal");
+        emit newSearchUser(userlogin, id);
     }
 }
 

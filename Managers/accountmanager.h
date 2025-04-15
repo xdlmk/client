@@ -17,6 +17,9 @@
 
 #include "login.qpb.h"
 #include "register.qpb.h"
+#include "search.qpb.h"
+#include "editProfile.qpb.h"
+#include "avatarsUpdate.qpb.h"
 #include <QtProtobuf/qprotobufserializer.h>
 
 class AccountManager : public QObject
@@ -79,11 +82,15 @@ signals:
     void loadGroupMembers(QVariantList membersList, const int& group_id);
     void clearMessagesAfterDelete(const int& group_id);
 
-    void processingLoginResultsFromServer(const QJsonObject &loginResultsJson);
-    void processingRegistrationResultsFromServer(const QJsonObject &regResultsJson);
-    void processingSearchDataFromServer(const QJsonObject &searchDataJson);
-    void processingEditProfileFromServer(const QJsonObject &editResultsJson);
-    void processingAvatarsUpdateFromServer(const QJsonObject &avatarsUpdateJson);
+    void processingLoginResultsFromServer(const QByteArray &loginResultsData);
+    void processingRegistrationResultsFromServer(const QByteArray &regResultsData);
+
+    void processingSearchDataFromServer(const QByteArray &searchData);
+
+    void processingEditProfileFromServer(const QByteArray &editResultsData);
+
+    void processingAvatarsUpdateFromServer(const QByteArray &avatarsUpdateData);
+
     void processingGroupInfoSave(const QJsonObject &receivedGroupInfoJson);
     void processingDialogsInfoSave(const QJsonObject &receivedDialogInfoJson);
     void processingDeleteGroupMember(const QJsonObject &receivedDeleteMemberFromGroup);

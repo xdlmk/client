@@ -13,6 +13,14 @@
 
 #include "Utils/logger.h"
 
+#include "login.qpb.h"
+#include "register.qpb.h"
+#include "search.qpb.h"
+#include "editProfile.qpb.h"
+#include "avatarsUpdate.qpb.h"
+#include "identifiers.qpb.h"
+#include <QtProtobuf/qprotobufserializer.h>
+
 class ResponseHandler : public QObject
 {
     Q_OBJECT
@@ -21,11 +29,14 @@ public:
     void setLogger(Logger *logger);
     void setActiveUser(const QString &userLogin,const int &userId);
 public slots:
-    void processingLoginResults(const QJsonObject &loginResultsJson);
-    void processingRegistrationResults(const QJsonObject &regResultsJson);
-    void processingSearchData(const QJsonObject &searchDataJson);
-    void processingEditProfile(const QJsonObject &editResultsJson);
-    void processingAvatarsUpdate(const QJsonObject &avatarsUpdateJson);
+    void processingLoginResults(const QByteArray &loginResultsData);
+    void processingRegistrationResults(const QByteArray &regResultsData);
+
+    void processingSearchData(const QByteArray &searchData);
+
+    void processingEditProfile(const QByteArray &editResultsData);
+
+    void processingAvatarsUpdate(const QByteArray &avatarsUpdateData);
     void processingGroupInfoSave(const QJsonObject &receivedGroupInfoJson);
     void processingDialogsInfoSave(const QJsonObject &receivedDialogInfoJson);
     void processingDeleteGroupMember(const QJsonObject &receivedDeleteMemberFromGroup);
@@ -39,7 +50,7 @@ signals:
     void addAccount(const QString &login, const QString &password, int userId);
     void updatingChats();
 
-    void sendData(const QJsonObject& json);
+    void sendData(const QString& flag, const QByteArray& data);
 
     void registrationSuccess();
     void registrationFail(QString error);

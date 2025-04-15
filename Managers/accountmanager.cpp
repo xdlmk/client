@@ -22,34 +22,46 @@ void AccountManager::logout()
 {
     QJsonObject json;
     json["flag"]= "logout";
-    networkManager->getMessageNetwork()->sendData(json);
+    networkManager->getMessageNetwork()->sendDataJson(json);
     logger->log(Logger::INFO,"accountmanager.cpp::logout","Client logout process has begun");
     configManager.removeAccount(configManager.getActiveAccount());
 }
 
 void AccountManager::sendSearchToServer(const QString &searchable)
 {
-    QJsonObject dataForSearchUsers;
+    /*QJsonObject dataForSearchUsers;
     dataForSearchUsers["flag"] = "search";
     dataForSearchUsers["searchable"] = searchable;
-    networkManager->getMessageNetwork()->sendData(dataForSearchUsers);
+    networkManager->getMessageNetwork()->sendData(dataForSearchUsers);*/
+
+    messages::SearchRequest request;
+    request.setSearchable(searchable);
+    QProtobufSerializer serializer;
+    networkManager->getMessageNetwork()->sendData("search", request.serialize(&serializer));
 }
 
 void AccountManager::sendEditProfileRequest(const QString editable, const QString editInformation)
 {
-    QJsonObject dataEditProfile;
+    messages::EditProfileRequest request;
+    request.setUserId(activeUserId);
+    request.setEditable(editable);
+    request.setEditInformation(editInformation);
+    QProtobufSerializer serializer;
+    networkManager->getMessageNetwork()->sendData("edit", request.serialize(&serializer));
+
+    /*QJsonObject dataEditProfile;
     dataEditProfile["flag"] = "edit";
     dataEditProfile["user_id"] = activeUserId;
     dataEditProfile["editable"] = editable;
     dataEditProfile["editInformation"] = editInformation;
-    networkManager->getMessageNetwork()->sendData(dataEditProfile);
+    networkManager->getMessageNetwork()->sendDataJson(dataEditProfile);*/
 }
 
 void AccountManager::clientChangeAccount()
 {
     QJsonObject json;
     json["flag"]= "logout";
-    networkManager->getMessageNetwork()->sendData(json);
+    networkManager->getMessageNetwork()->sendDataJson(json);
 }
 
 void AccountManager::checkAndSendAvatarUpdate(const QString &avatar_url, const int &user_id,const QString& type)
@@ -63,12 +75,15 @@ void AccountManager::checkAndSendAvatarUpdate(const QString &avatar_url, const i
 void AccountManager::sendAvatarsUpdate()
 {
     logger->log(Logger::INFO,"accountmanager.cpp::sendAvatarsUpdate","sendAvatarsUpdate starts");
-    QString appDir = QCoreApplication::applicationDirPath();
+    messages::AvatarsUpdateRequest request;
+    request.setUserId(activeUserId);
+    QProtobufSerializer serializer;
+    networkManager->getMessageNetwork()->sendData("avatars_update", request.serialize(&serializer));
 
-    QJsonObject avatarsUpdateJson;
+    /*QJsonObject avatarsUpdateJson;
     avatarsUpdateJson["flag"] = "avatars_update";
     avatarsUpdateJson["user_id"] = activeUserId;
-    networkManager->getMessageNetwork()->sendData(avatarsUpdateJson);
+    networkManager->getMessageNetwork()->sendDataJson(avatarsUpdateJson);*/
 }
 
 void AccountManager::setActiveUser(const QString &user_login, const int &user_id)
@@ -95,7 +110,7 @@ void AccountManager::createGroup(const QString &groupName, const QString& avatar
 
     if(avatarPath == ""){
         createGroupJson["avatar_url"] = "";
-        networkManager->getMessageNetwork()->sendData(createGroupJson);
+        networkManager->getMessageNetwork()->sendDataJson(createGroupJson);
     } else {
         QFile file(avatarPath);
         QFileInfo fileInfo(avatarPath);
@@ -119,7 +134,7 @@ void AccountManager::addGroupMembers(const int &group_id, const QVariantList &se
     addMembersJson["group_id"] = group_id;
     addMembersJson["admin_id"] = this->activeUserId;
     addMembersJson["members"] = convertContactsToArray(selectedContacts);
-    networkManager->getMessageNetwork()->sendData(addMembersJson);
+    networkManager->getMessageNetwork()->sendDataJson(addMembersJson);
 }
 
 void AccountManager::getGroupMembers(const int &group_id)
@@ -154,7 +169,7 @@ void AccountManager::deleteMemberFromGroup(const int &user_id, const int &group_
     deleteMemberObject["creator_id"] = this->activeUserId;
 
     if(user_id != this->activeUserId){
-        networkManager->getMessageNetwork()->sendData(deleteMemberObject);
+        networkManager->getMessageNetwork()->sendDataJson(deleteMemberObject);
     }
 }
 
@@ -250,7 +265,7 @@ void AccountManager::getChatsInfo()
     QJsonObject infoObject;
     infoObject["flag"] = "chats_info";
     infoObject["user_id"] = activeUserId;
-    networkManager->getMessageNetwork()->sendData(infoObject);
+    networkManager->getMessageNetwork()->sendDataJson(infoObject);
 }
 
 bool AccountManager::isAvatarUpToDate(QString avatar_url, int user_id,const QString& type)
@@ -294,17 +309,19 @@ bool AccountManager::isAvatarUpToDate(QString avatar_url, int user_id,const QStr
 void AccountManager::sendAuthRequest(const QString &flag, const QString &login, const QString &password)
 {
     QProtobufSerializer serializer;
+    QByteArray data;
     if(flag == "login"){
         messages::LoginRequest loginRequest;
         loginRequest.setLogin(login);
         loginRequest.setPassword(password);
-        QByteArray data = loginRequest.serialize(&serializer);
+        data = loginRequest.serialize(&serializer);
     } else if(flag == "reg"){
         messages::RegisterRequest regRequest;
         regRequest.setLogin(login);
         regRequest.setPassword(password);
-        QByteArray data = regRequest.serialize(&serializer);
+        data = regRequest.serialize(&serializer);
     }
+    networkManager->getMessageNetwork()->sendData(flag, data);
     /*QJsonObject data;
     data["flag"] = flag;
     data["login"] = login;
@@ -345,7 +362,6 @@ void AccountManager::setupResponseHandler()
 {
     connect(this,&AccountManager::processingLoginResultsFromServer,&responseHandler,&ResponseHandler::processingLoginResults);
     connect(this,&AccountManager::processingRegistrationResultsFromServer,&responseHandler,&ResponseHandler::processingRegistrationResults);
-    connect(this,&AccountManager::processingRegistrationResultsFromServer,&responseHandler,&ResponseHandler::processingRegistrationResults);
     connect(this,&AccountManager::processingSearchDataFromServer,&responseHandler,&ResponseHandler::processingSearchData);
     connect(this,&AccountManager::processingEditProfileFromServer,&responseHandler,&ResponseHandler::processingEditProfile);
     connect(this,&AccountManager::processingAvatarsUpdateFromServer,&responseHandler,&ResponseHandler::processingAvatarsUpdate);
@@ -354,8 +370,8 @@ void AccountManager::setupResponseHandler()
     connect(this,&AccountManager::processingDeleteGroupMember,&responseHandler,&ResponseHandler::processingDeleteGroupMember);
     connect(this,&AccountManager::processingAddGroupMember,&responseHandler,&ResponseHandler::processingAddGroupMember);
 
-    connect(&responseHandler,&ResponseHandler::sendData, [this](const QJsonObject& json) {
-        networkManager->getMessageNetwork()->sendData(json);
+    connect(&responseHandler,&ResponseHandler::sendData, [this](const QString &flag, const QByteArray& data) {
+        networkManager->getMessageNetwork()->sendData(flag,data);
     });
 
     connect(&responseHandler,&ResponseHandler::transferUserNameAndIdAfterLogin,this,&AccountManager::transferUserNameAndIdAfterLogin);
@@ -387,5 +403,5 @@ void AccountManager::updatingChats()
     QJsonObject mainObject;
     mainObject["flag"] = "updating_chats";
     mainObject["user_id"] = activeUserId;
-    networkManager->getMessageNetwork()->sendData(mainObject);
+    networkManager->getMessageNetwork()->sendDataJson(mainObject);
 }
