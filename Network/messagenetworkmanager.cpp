@@ -197,43 +197,43 @@ void MessageNetworkManager::onDataReceived()
             emit loginResultsReceived(payload);
             break;
         case 2:
-            emit registrationResultsReceived(receivedFromServerJson);
+            emit registrationResultsReceived(payload);
             break;
         case 3:
-            emit messageReceived(receivedFromServerJson);
+            //emit messageReceived(receivedFromServerJson);
             break;
         case 4:
-            emit groupMessageReceived(receivedFromServerJson);
+            //emit groupMessageReceived(receivedFromServerJson);
             break;
         case 5:
-            emit deleteGroupMemberReceived(receivedFromServerJson);
+            //emit deleteGroupMemberReceived(receivedFromServerJson);
             break;
         case 6:
-            emit addGroupMemberReceived(receivedFromServerJson);
+            //mit addGroupMemberReceived(receivedFromServerJson);
             break;
-        case 7:
-            if (receivedFromServerJson.contains("dialogs_info") && receivedFromServerJson.contains("groups_info")) {
-                emit dialogsInfoReceived(receivedFromServerJson["dialogs_info"].toObject());
-                emit groupInfoReceived(receivedFromServerJson["groups_info"].toObject());
-            } else {
-                emit removeAccountFromConfigManager();
-                QCoreApplication::quit();
-            }
+        case 7:{
+            messages::ChatsInfoResponse response;
+            QProtobufSerializer serializer;
+            response.deserialize(&serializer,payload);
+
+            emit dialogsInfoReceived(response.dialogsInfo());
+            emit groupInfoReceived(response.groupsInfo());
             break;
+        }
         case 8:
-            emit searchDataReceived(receivedFromServerJson);
+            emit searchDataReceived(payload);
             break;
         case 9:
-            emit chatsUpdateDataReceived(receivedFromServerJson);
+            //emit chatsUpdateDataReceived(receivedFromServerJson);
             break;
         case 10:
-            emit loadMeassgesReceived(receivedFromServerJson);
+            //emit loadMeassgesReceived(receivedFromServerJson);
             break;
         case 11:
-            emit editResultsReceived(receivedFromServerJson);
+            emit editResultsReceived(payload);
             break;
         case 12:
-            emit avatarsUpdateReceived(receivedFromServerJson);
+            emit avatarsUpdateReceived(payload);
             break;
         default:
             logger->log(Logger::WARN, "messagenetworkmanager.cpp::onDataReceived", "Unknown flag received: " + flag);

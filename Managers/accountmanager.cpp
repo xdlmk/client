@@ -262,10 +262,15 @@ void AccountManager::showContacts()
 
 void AccountManager::getChatsInfo()
 {
-    QJsonObject infoObject;
+    messages::ChatsInfoRequest request;
+    request.setUserId(activeUserId);
+    QProtobufSerializer serializer;
+    networkManager->getMessageNetwork()->sendData("chats_info",request.serialize(&serializer));
+
+    /*QJsonObject infoObject;
     infoObject["flag"] = "chats_info";
     infoObject["user_id"] = activeUserId;
-    networkManager->getMessageNetwork()->sendDataJson(infoObject);
+    networkManager->getMessageNetwork()->sendDataJson(infoObject);*/
 }
 
 bool AccountManager::isAvatarUpToDate(QString avatar_url, int user_id,const QString& type)

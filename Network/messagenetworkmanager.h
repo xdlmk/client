@@ -15,6 +15,7 @@
 #include "Utils/logger.h"
 
 #include "envelope.qpb.h"
+#include "chatsInfo.qpb.h"
 #include <QtProtobuf/qprotobufserializer.h>
 
 class MessageNetworkManager : public QObject
@@ -39,6 +40,9 @@ signals:
     void loginResultsReceived(const QByteArray &loginResultsData);
     void registrationResultsReceived(const QByteArray &registrationResultsData);
 
+    void dialogsInfoReceived(const QList<messages::DialogInfoItem> &receivedDialogInfo);
+    void groupMessageReceived(const QList<messages::GroupInfoItem> &receivedGroupInfo);
+
     void searchDataReceived(const QByteArray &searchData);
 
     void editResultsReceived(const QByteArray &editResultsData);
@@ -46,11 +50,9 @@ signals:
     void avatarsUpdateReceived(const QByteArray &avatarsUpdateData);
 
     void messageReceived(const QJsonObject &receivedMessageJson);
-    void groupMessageReceived(const QJsonObject &receivedMessageJson);
     void groupInfoReceived(const QJsonObject &receivedGroupInfoJson);
     void deleteGroupMemberReceived(const QJsonObject &receivedDeleteMemberFromGroup);
     void addGroupMemberReceived(const QJsonObject &receivedAddMemberFromGroup);
-    void dialogsInfoReceived(const QJsonObject &receivedDialogInfoJson);
     void chatsUpdateDataReceived(QJsonObject &chatsUpdateDataJson);
     void loadMeassgesReceived(QJsonObject &messagesJson);
 

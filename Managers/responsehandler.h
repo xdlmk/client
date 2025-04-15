@@ -18,6 +18,7 @@
 #include "search.qpb.h"
 #include "editProfile.qpb.h"
 #include "avatarsUpdate.qpb.h"
+#include "chatsInfo.qpb.h"
 #include "identifiers.qpb.h"
 #include <QtProtobuf/qprotobufserializer.h>
 
@@ -32,13 +33,15 @@ public slots:
     void processingLoginResults(const QByteArray &loginResultsData);
     void processingRegistrationResults(const QByteArray &regResultsData);
 
+    void processingGroupInfoSave(const QList<messages::GroupInfoItem> &receivedGroupInfoJson);
+    void processingDialogsInfoSave(const QList<messages::GroupInfoItem> &receivedDialogInfoJson);
+
     void processingSearchData(const QByteArray &searchData);
 
     void processingEditProfile(const QByteArray &editResultsData);
 
     void processingAvatarsUpdate(const QByteArray &avatarsUpdateData);
-    void processingGroupInfoSave(const QJsonObject &receivedGroupInfoJson);
-    void processingDialogsInfoSave(const QJsonObject &receivedDialogInfoJson);
+
     void processingDeleteGroupMember(const QJsonObject &receivedDeleteMemberFromGroup);
     void processingAddGroupMember(const QJsonObject &receivedAddMemberFromGroup);
 

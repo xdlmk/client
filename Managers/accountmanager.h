@@ -20,6 +20,7 @@
 #include "search.qpb.h"
 #include "editProfile.qpb.h"
 #include "avatarsUpdate.qpb.h"
+#include "chatsInfo.qpb.h"
 #include <QtProtobuf/qprotobufserializer.h>
 
 class AccountManager : public QObject
@@ -85,14 +86,16 @@ signals:
     void processingLoginResultsFromServer(const QByteArray &loginResultsData);
     void processingRegistrationResultsFromServer(const QByteArray &regResultsData);
 
+    void processingGroupInfoSave(const QList<messages::GroupInfoItem> &receivedGroupInfo);
+    void processingDialogsInfoSave(const QList<messages::DialogInfoItem> &receivedDialogInfo);
+
     void processingSearchDataFromServer(const QByteArray &searchData);
 
     void processingEditProfileFromServer(const QByteArray &editResultsData);
 
     void processingAvatarsUpdateFromServer(const QByteArray &avatarsUpdateData);
 
-    void processingGroupInfoSave(const QJsonObject &receivedGroupInfoJson);
-    void processingDialogsInfoSave(const QJsonObject &receivedDialogInfoJson);
+
     void processingDeleteGroupMember(const QJsonObject &receivedDeleteMemberFromGroup);
     void processingAddGroupMember(const QJsonObject &receivedAddMemberFromGroup);
 private:
