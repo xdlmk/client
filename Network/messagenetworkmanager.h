@@ -40,8 +40,10 @@ signals:
     void loginResultsReceived(const QByteArray &loginResultsData);
     void registrationResultsReceived(const QByteArray &registrationResultsData);
 
+    void deleteGroupMemberReceived(const QByteArray &receivedDeleteMemberFromGroupData);
+    void addGroupMemberReceived(const QByteArray &receivedAddMemberFromGroupData);
     void dialogsInfoReceived(const QList<messages::DialogInfoItem> &receivedDialogInfo);
-    void groupMessageReceived(const QList<messages::GroupInfoItem> &receivedGroupInfo);
+    void groupInfoReceived(const QList<messages::GroupInfoItem> &receivedGroupInfo);
 
     void searchDataReceived(const QByteArray &searchData);
 
@@ -50,9 +52,7 @@ signals:
     void avatarsUpdateReceived(const QByteArray &avatarsUpdateData);
 
     void messageReceived(const QJsonObject &receivedMessageJson);
-    void groupInfoReceived(const QJsonObject &receivedGroupInfoJson);
-    void deleteGroupMemberReceived(const QJsonObject &receivedDeleteMemberFromGroup);
-    void addGroupMemberReceived(const QJsonObject &receivedAddMemberFromGroup);
+    void groupMessageReceived(const QJsonObject &receivedMessageJson);
     void chatsUpdateDataReceived(QJsonObject &chatsUpdateDataJson);
     void loadMeassgesReceived(QJsonObject &messagesJson);
 

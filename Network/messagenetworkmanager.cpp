@@ -206,10 +206,10 @@ void MessageNetworkManager::onDataReceived()
             //emit groupMessageReceived(receivedFromServerJson);
             break;
         case 5:
-            //emit deleteGroupMemberReceived(receivedFromServerJson);
+            emit deleteGroupMemberReceived(payload);
             break;
         case 6:
-            //mit addGroupMemberReceived(receivedFromServerJson);
+            emit addGroupMemberReceived(payload);
             break;
         case 7:{
             messages::ChatsInfoResponse response;

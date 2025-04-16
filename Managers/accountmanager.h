@@ -20,6 +20,8 @@
 #include "search.qpb.h"
 #include "editProfile.qpb.h"
 #include "avatarsUpdate.qpb.h"
+#include "deleteMember.qpb.h"
+#include "addMembers.qpb.h"
 #include "chatsInfo.qpb.h"
 #include <QtProtobuf/qprotobufserializer.h>
 
@@ -86,24 +88,26 @@ signals:
     void processingLoginResultsFromServer(const QByteArray &loginResultsData);
     void processingRegistrationResultsFromServer(const QByteArray &regResultsData);
 
-    void processingGroupInfoSave(const QList<messages::GroupInfoItem> &receivedGroupInfo);
+    void processingDeleteGroupMember(const QByteArray &receivedDeleteMemberFromGroupData);
+    void processingAddGroupMember(const QByteArray &receivedAddMemberFromGroupData);
     void processingDialogsInfoSave(const QList<messages::DialogInfoItem> &receivedDialogInfo);
+    void processingGroupInfoSave(const QList<messages::GroupInfoItem> &receivedGroupInfo);
 
     void processingSearchDataFromServer(const QByteArray &searchData);
 
     void processingEditProfileFromServer(const QByteArray &editResultsData);
 
     void processingAvatarsUpdateFromServer(const QByteArray &avatarsUpdateData);
-
-
-    void processingDeleteGroupMember(const QJsonObject &receivedDeleteMemberFromGroup);
-    void processingAddGroupMember(const QJsonObject &receivedAddMemberFromGroup);
 private:
     bool isAvatarUpToDate(QString avatar_url,int user_id,const QString& type);
 
     void sendAuthRequest(const QString& flag, const QString& login, const QString& password);
+
+    QList<groups::GroupMemberContact> convertContactsToProto(const QVariantList &contacts);
     QJsonArray convertContactsToArray(const QVariantList &contacts);
+
     QVariantList convertArrayToVariantList(const QJsonArray &array);
+    QVariantList convertProtoListToVariantList(const QList<messages::GroupMember> &members);
 
     int activeUserId;
     QString activeUserLogin;

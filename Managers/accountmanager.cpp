@@ -129,47 +129,64 @@ void AccountManager::createGroup(const QString &groupName, const QString& avatar
 
 void AccountManager::addGroupMembers(const int &group_id, const QVariantList &selectedContacts)
 {
-    QJsonObject addMembersJson;
+    groups::AddGroupMembersRequest request;
+    request.setGroupId(group_id);
+    request.setAdminId(this->activeUserId);
+    request.setMembers(convertContactsToProto(selectedContacts));
+
+    QProtobufSerializer serializer;
+    networkManager->getMessageNetwork()->sendData("add_group_members", request.serialize(&serializer));
+
+    /*QJsonObject addMembersJson;
     addMembersJson["flag"] = "add_group_members";
     addMembersJson["group_id"] = group_id;
     addMembersJson["admin_id"] = this->activeUserId;
     addMembersJson["members"] = convertContactsToArray(selectedContacts);
-    networkManager->getMessageNetwork()->sendDataJson(addMembersJson);
+    networkManager->getMessageNetwork()->sendDataJson(addMembersJson);*/
 }
 
 void AccountManager::getGroupMembers(const int &group_id)
 {
-    QString filePath = QCoreApplication::applicationDirPath() + "/.data/" + QString::number(activeUserId) + "/groupsInfo/" + QString::number(group_id) + ".json";
-    QFile groupInfoFile(filePath);
-    if(!groupInfoFile.exists()){
-        logger->log(Logger::WARN,"accountmanager.cpp::getGroupMembers", "Group info file not exists: " + filePath);
+    QString filePath = QCoreApplication::applicationDirPath() + "/.data/" +
+                       QString::number(activeUserId) + "/groupsInfo/" +
+                       QString::number(group_id) + ".pb";
+
+    if (!QFile::exists(filePath)) {
+        logger->log(Logger::WARN, "accountmanager.cpp::getGroupMembers", "Group info file not exists: " + filePath);
         return;
     }
-    if (!groupInfoFile.open(QIODevice::ReadOnly)) {
-        logger->log(Logger::DEBUG,"accountmanager.cpp::getGroupMembers", "Open file failed: " + filePath);
+
+    QByteArray protoData;
+    QFile file(filePath);
+    if(file.open(QIODevice::ReadOnly)) {
+        protoData = file.readAll();
+        file.close();
+    } else {
+        logger->log(Logger::DEBUG, "accountmanager.cpp::getGroupMembers", "Failed to read proto object from file: " + filePath);
         return;
     }
 
-    QByteArray infoData = groupInfoFile.readAll();
-    groupInfoFile.close();
-    QJsonDocument doc = QJsonDocument::fromJson(infoData);
-    QJsonObject groupInfoJson = doc.object();
+    QProtobufSerializer serializer;
+    messages::GroupInfoItem groupInfo;
+    if (!groupInfo.deserialize(&serializer, protoData)) {
+        logger->log(Logger::WARN, "accountmanager.cpp::getGroupMembers", "Failed to deserialize GroupInfoItem from file: " + filePath);
+        return;
+    }
 
-    QJsonArray membersArray = groupInfoJson["members"].toArray();
-
-    emit loadGroupMembers(convertArrayToVariantList(membersArray),group_id);
+    QVariantList membersList = convertProtoListToVariantList(groupInfo.members());
+    emit loadGroupMembers(membersList, group_id);
 }
 
 void AccountManager::deleteMemberFromGroup(const int &user_id, const int &group_id)
 {
-    QJsonObject deleteMemberObject;
-    deleteMemberObject["flag"] = "delete_member";
-    deleteMemberObject["user_id"] = user_id;
-    deleteMemberObject["group_id"] = group_id;
-    deleteMemberObject["creator_id"] = this->activeUserId;
+    groups::DeleteMemberRequest request;
+    request.setUserId(user_id);
+    request.setGroupId(group_id);
+    request.setCreatorId(this->activeUserId);
 
     if(user_id != this->activeUserId){
-        networkManager->getMessageNetwork()->sendDataJson(deleteMemberObject);
+        QProtobufSerializer serializer;
+        networkManager->getMessageNetwork()->sendData("delete_member",request.serialize(&serializer));
     }
 }
 
@@ -275,39 +292,63 @@ void AccountManager::getChatsInfo()
 
 bool AccountManager::isAvatarUpToDate(QString avatar_url, int user_id,const QString& type)
 {
-    logger->log(Logger::INFO,"accountmanager.cpp::isAvatarUpToDate", "isAvatarUpToDate starts");
+    logger->log(Logger::INFO, "accountmanager.cpp::isAvatarUpToDate", "isAvatarUpToDate starts");
+
     QString pathToAvatar;
     QString avatarCheckerPath;
-    if(type == "personal") {
-        pathToAvatar = QCoreApplication::applicationDirPath() + "/.data/" + QString::number(activeUserId) + "/avatars/" + type + "/" + QString::number(user_id) + ".png";
-        avatarCheckerPath = QCoreApplication::applicationDirPath() + "/.data/" + QString::number(activeUserId) + "/dialogsInfo/" + QString::number(user_id) + ".json";
-    } else if(type == "group") {
-        pathToAvatar = QCoreApplication::applicationDirPath() + "/.data/" + QString::number(activeUserId) + "/avatars/" + type + "/" + QString::number(user_id) + ".png";
-        avatarCheckerPath = QCoreApplication::applicationDirPath() + "/.data/" + QString::number(activeUserId) + "/groupsInfo/" + QString::number(user_id) + ".json";
+
+    if (type == "personal") {
+        pathToAvatar = QCoreApplication::applicationDirPath() + "/.data/" +
+                       QString::number(activeUserId) + "/avatars/" + type + "/" +
+                       QString::number(user_id) + ".png";
+        avatarCheckerPath = QCoreApplication::applicationDirPath() + "/.data/" +
+                            QString::number(activeUserId) + "/dialogsInfo/" +
+                            QString::number(user_id) + ".pb";
+    } else if (type == "group") {
+        pathToAvatar = QCoreApplication::applicationDirPath() + "/.data/" +
+                       QString::number(activeUserId) + "/avatars/" + type + "/" +
+                       QString::number(user_id) + ".png";
+        avatarCheckerPath = QCoreApplication::applicationDirPath() + "/.data/" +
+                            QString::number(activeUserId) + "/groupsInfo/" +
+                            QString::number(user_id) + ".pb";
     }
+
     QFile avatar(pathToAvatar);
-    if(!avatar.exists() || avatar.size() == 0) {
-        logger->log(Logger::WARN,"accountmanager.cpp::isAvatarUpToDate", "Avatar not downloaded");
+    if (!avatar.exists() || avatar.size() == 0) {
+        logger->log(Logger::WARN, "accountmanager.cpp::isAvatarUpToDate", "Avatar not downloaded");
         return false;
     }
+
     QFile avatarChecker(avatarCheckerPath);
-    if(!avatarChecker.open(QIODevice::ReadOnly)) {
-        logger->log(Logger::WARN,"accountmanager.cpp::isAvatarUpToDate", "Failed to open avatarChecker");
+    if (!avatarChecker.open(QIODevice::ReadOnly)) {
+        logger->log(Logger::WARN, "accountmanager.cpp::isAvatarUpToDate", "Failed to open avatarChecker");
         return false;
     }
     QByteArray avatarCheckerData = avatarChecker.readAll();
     avatarChecker.close();
-    QJsonDocument avatarCheckerDoc = QJsonDocument::fromJson(avatarCheckerData);
 
-    if(type == "personal") {
-        QJsonObject dialogInfo = avatarCheckerDoc.object();
-        if(dialogInfo["avatar_url"].toString() == avatar_url) return true;
-        logger->log(Logger::DEBUG,"accountmanager.cpp::isAvatarUpToDate", "isAvatarUpToDate return false (personal)");
-    } else if(type == "group") {
-        QJsonObject groupInfo = avatarCheckerDoc.object();
-        if(groupInfo["avatar_url"].toString() == avatar_url) return true;
-        logger->log(Logger::DEBUG,"accountmanager.cpp::isAvatarUpToDate", "isAvatarUpToDate return false (group)");
+    QProtobufSerializer serializer;
+
+    if (type == "personal") {
+        messages::DialogInfoItem dialogInfo;
+        if (!dialogInfo.deserialize(&serializer, avatarCheckerData)) {
+            logger->log(Logger::WARN, "accountmanager.cpp::isAvatarUpToDate", "Failed to deserialize DialogInfoItem");
+            return false;
+        }
+        if (dialogInfo.avatarUrl() == avatar_url)
+            return true;
+        logger->log(Logger::DEBUG, "accountmanager.cpp::isAvatarUpToDate", "isAvatarUpToDate return false (personal)");
+    } else if (type == "group") {
+        messages::GroupInfoItem groupInfo;
+        if (!groupInfo.deserialize(&serializer, avatarCheckerData)) {
+            logger->log(Logger::WARN, "accountmanager.cpp::isAvatarUpToDate", "Failed to deserialize GroupInfoItem");
+            return false;
+        }
+        if (groupInfo.avatarUrl() == avatar_url)
+            return true;
+        logger->log(Logger::DEBUG, "accountmanager.cpp::isAvatarUpToDate", "isAvatarUpToDate return false (group)");
     }
+
     return false;
 }
 
@@ -327,11 +368,18 @@ void AccountManager::sendAuthRequest(const QString &flag, const QString &login, 
         data = regRequest.serialize(&serializer);
     }
     networkManager->getMessageNetwork()->sendData(flag, data);
-    /*QJsonObject data;
-    data["flag"] = flag;
-    data["login"] = login;
-    data["password"] = password;
-    networkManager->getMessageNetwork()->sendData(data);*/
+}
+
+QList<groups::GroupMemberContact> AccountManager::convertContactsToProto(const QVariantList &contacts)
+{
+    QList<groups::GroupMemberContact> protoList;
+    for (const QVariant &contact : contacts) {
+        QVariantMap contactMap = contact.toMap();
+        groups::GroupMemberContact member;
+        member.setUserId(contactMap["id"].toULongLong());
+        protoList.append(member);
+    }
+    return protoList;
 }
 
 QJsonArray AccountManager::convertContactsToArray(const QVariantList &contacts)
@@ -350,6 +398,21 @@ QVariantList AccountManager::convertArrayToVariantList(const QJsonArray &array)
     QVariantList list;
     for (const QJsonValue &value : array) {
         list.append(value.toObject().toVariantMap());
+    }
+    return list;
+}
+
+QVariantList AccountManager::convertProtoListToVariantList(const QList<messages::GroupMember> &members)
+{
+    QVariantList list;
+    for (const auto &member : members) {
+        QVariantMap memberMap;
+        memberMap.insert("id", static_cast<int>(member.id_proto()));
+        memberMap.insert("username", member.username());
+        memberMap.insert("status", member.status());
+        memberMap.insert("avatar_url", member.avatarUrl());
+
+        list.append(memberMap);
     }
     return list;
 }

@@ -18,6 +18,8 @@
 #include "search.qpb.h"
 #include "editProfile.qpb.h"
 #include "avatarsUpdate.qpb.h"
+#include "deleteMember.qpb.h"
+#include "addMembers.qpb.h"
 #include "chatsInfo.qpb.h"
 #include "identifiers.qpb.h"
 #include <QtProtobuf/qprotobufserializer.h>
@@ -33,17 +35,16 @@ public slots:
     void processingLoginResults(const QByteArray &loginResultsData);
     void processingRegistrationResults(const QByteArray &regResultsData);
 
-    void processingGroupInfoSave(const QList<messages::GroupInfoItem> &receivedGroupInfoJson);
-    void processingDialogsInfoSave(const QList<messages::GroupInfoItem> &receivedDialogInfoJson);
+    void processingDeleteGroupMember(const QByteArray &receivedDeleteMemberFromGroupData);
+    void processingAddGroupMember(const QByteArray &receivedAddMemberFromGroupData);
+    void processingDialogsInfoSave(const QList<messages::DialogInfoItem> &receivedDialogInfo);
+    void processingGroupInfoSave(const QList<messages::GroupInfoItem> &receivedGroupInfo);
 
     void processingSearchData(const QByteArray &searchData);
 
     void processingEditProfile(const QByteArray &editResultsData);
 
     void processingAvatarsUpdate(const QByteArray &avatarsUpdateData);
-
-    void processingDeleteGroupMember(const QJsonObject &receivedDeleteMemberFromGroup);
-    void processingAddGroupMember(const QJsonObject &receivedAddMemberFromGroup);
 
 signals:
     void transferUserNameAndIdAfterLogin(const QString &activeUserName,const int &activeUserId);
@@ -73,7 +74,10 @@ signals:
 private:
     int deleteUserFromInfoFile(const int& group_id, const int& user_id);
     bool writeJsonToFile(const QString& path, const QJsonObject& json);
+    bool saveProtoObjectToFile(const QString& path, const QByteArray& data);
+
     bool readJsonFromFile(const QString &path, QJsonObject &jsonForWriting);
+    bool readProtoObjectFromFile(const QString &path, QByteArray &data);
 
 
     Logger *logger;
