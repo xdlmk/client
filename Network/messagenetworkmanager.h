@@ -14,8 +14,8 @@
 
 #include "Utils/logger.h"
 
-#include "envelope.qpb.h"
-#include "chatsInfo.qpb.h"
+#include "generated_protobuf/envelope.qpb.h"
+#include "generated_protobuf/chatsInfo.qpb.h"
 #include <QtProtobuf/qprotobufserializer.h>
 
 class MessageNetworkManager : public QObject
@@ -46,6 +46,7 @@ signals:
     void groupInfoReceived(const QList<messages::GroupInfoItem> &receivedGroupInfo);
 
     void searchDataReceived(const QByteArray &searchData);
+    void chatsUpdateDataReceived(const QByteArray &chatsUpdateData);
 
     void editResultsReceived(const QByteArray &editResultsData);
 
@@ -53,7 +54,6 @@ signals:
 
     void messageReceived(const QJsonObject &receivedMessageJson);
     void groupMessageReceived(const QJsonObject &receivedMessageJson);
-    void chatsUpdateDataReceived(QJsonObject &chatsUpdateDataJson);
     void loadMeassgesReceived(QJsonObject &messagesJson);
 
     void removeAccountFromConfigManager();

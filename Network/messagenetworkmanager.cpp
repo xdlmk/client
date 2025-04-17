@@ -224,7 +224,7 @@ void MessageNetworkManager::onDataReceived()
             emit searchDataReceived(payload);
             break;
         case 9:
-            //emit chatsUpdateDataReceived(receivedFromServerJson);
+            emit chatsUpdateDataReceived(payload);
             break;
         case 10:
             //emit loadMeassgesReceived(receivedFromServerJson);

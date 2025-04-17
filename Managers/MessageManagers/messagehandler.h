@@ -54,7 +54,7 @@ signals:
     void insertMessage(QVariant message, bool isOutgoing);
     void returnChatToPosition();
 
-    void updatingLatestMessagesFromServer(QJsonObject &latestMessages);
+    void updatingLatestMessagesFromServer(const QByteArray &latestMessages);
 
     void sendMessage(const QString &message, const int &receiver_id, const QString &flag);
     void sendMessageWithFile(const QString &message, const QString &receiver_login, const int &receiver_id,const QString& filePath, const QString &flag);

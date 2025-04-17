@@ -68,6 +68,57 @@ void MessageStorage::saveMessageToJson(const QJsonObject &messageToSave)
     emit showPersonalChat(messageToSave["login"].toString(), messageObject["str"].toString(), messageObject["id"].toInt(), messageObject["Out"].toString(), "personal");
 }
 
+bool MessageStorage::savePersonalMessageToFile(const quint64 &receiver_id, const chats::ChatMessage &newMessage)
+{
+    QString basePath = QCoreApplication::applicationDirPath() + "/.data/" +
+                       QString::number(activeUserId) + "/messages/personal";
+    QDir dir(basePath);
+    if (!dir.exists()) {
+        dir.mkpath(".");
+    }
+    QString filePath = basePath + "/message_" + QString::number(receiver_id) + ".pb";
+
+    if (!QFile::exists(filePath)) {
+        QFile file(filePath);
+        if (file.open(QIODevice::WriteOnly)) {
+            chats::MessageHistory emptyHistory;
+            QProtobufSerializer serializer;
+            QByteArray emptyData = emptyHistory.serialize(&serializer);
+            file.write(emptyData);
+            file.close();
+        } else {
+            logger->log(Logger::ERROR, "messagestorage.cpp::savePersonalMessageToFile",
+                        "Failed to create file: " + filePath);
+            return false;
+        }
+    }
+
+    QFile file(filePath);
+    if (!file.open(QIODevice::ReadWrite)) {
+        logger->log(Logger::ERROR, "messagestorage.cpp::savePersonalMessageToFile",
+                    "Failed to open file: " + file.errorString());
+        return false;
+    }
+
+    QByteArray fileData = file.readAll();
+    chats::MessageHistory history;
+    QProtobufSerializer serializer;
+    if (!fileData.isEmpty()) {
+        history.deserialize(&serializer, fileData);
+    }
+
+    QList<chats::ChatMessage> messages = history.messages();
+    messages.append(newMessage);
+    history.setMessages(messages);
+
+    file.resize(0);
+    QByteArray outData = history.serialize(&serializer);
+    file.write(outData);
+    file.close();
+
+    return true;
+}
+
 void MessageStorage::saveGroupMessageToJson(const QJsonObject &messageToSave)
 {
     QDir dir(QCoreApplication::applicationDirPath() + "/.data/" + QString::number(activeUserId) + "/messages/group");
@@ -121,49 +172,88 @@ void MessageStorage::saveGroupMessageToJson(const QJsonObject &messageToSave)
     emit showPersonalChat(messageObject["group_name"].toString(), messageObject["str"].toString(), messageObject["group_id"].toInt(), messageObject["Out"].toString(), "group");
 }
 
-void MessageStorage::updatingLatestMessagesFromServer(QJsonObject &latestMessages)
+bool MessageStorage::saveGroupMessageToFile(const quint64 &group_id, const chats::ChatMessage &newMessage)
+{
+    QString basePath = QCoreApplication::applicationDirPath() + "/.data/" +
+                       QString::number(activeUserId) + "/messages/group";
+    QDir dir(basePath);
+    if (!dir.exists()) {
+        dir.mkpath(".");
+    }
+    QString filePath = basePath + "/group_" + QString::number(group_id) + ".pb";
+
+    if (!QFile::exists(filePath)) {
+        QFile file(filePath);
+        if (file.open(QIODevice::WriteOnly)) {
+            chats::MessageHistory emptyHistory;
+            QProtobufSerializer serializer;
+            QByteArray emptyData = emptyHistory.serialize(&serializer);
+            file.write(emptyData);
+            file.close();
+        } else {
+            logger->log(Logger::ERROR, "messagestorage.cpp::saveGroupMessageToFile",
+                        "Failed to create file: " + filePath);
+            return false;
+        }
+    }
+
+    QFile file(filePath);
+    if (!file.open(QIODevice::ReadWrite)) {
+        logger->log(Logger::ERROR, "messagestorage.cpp::saveGroupMessageToFile",
+                    "Failed to open file: " + file.errorString());
+        return false;
+    }
+
+    QByteArray fileData = file.readAll();
+    chats::MessageHistory history;
+    QProtobufSerializer serializer;
+    if (!fileData.isEmpty()) {
+        history.deserialize(&serializer, fileData);
+    }
+
+    QList<chats::ChatMessage> messages = history.messages();
+    messages.append(newMessage);
+    history.setMessages(messages);
+
+    file.resize(0);
+    QByteArray outData = history.serialize(&serializer);
+    file.write(outData);
+    file.close();
+
+    return true;
+}
+
+void MessageStorage::updatingLatestMessagesFromServer(const QByteArray &latestMessagesData)
 {
     logger->log(Logger::INFO,"messagestorage.cpp::saveMessageFromDatabase","saveMessageFromDatabase starts");
-    if(latestMessages["status"].toString() == "error") {
-        logger->log(Logger::FATAL,"messagestorage.cpp::updatingLatestMessagesFromServer", "Userlogin was processed incorrectly when starting the program");
-        emit removeAccountFromConfigManager();
-        QCoreApplication::quit();
+    QProtobufSerializer serializer;
+    chats::UpdatingChatsResponse latestMessages;
+
+    if (!latestMessages.deserialize(&serializer, latestMessagesData)) {
+        logger->log(Logger::WARN, "messagestorage.cpp::updatingLatestMessagesFromServer", "Error deserialize response from server");
         return;
     }
-    QJsonArray messagesArray = latestMessages["messages"].toArray();
+
+    if (latestMessages.status() == "error") {
+        logger->log(Logger::WARN, "messagestorage.cpp::updatingLatestMessagesFromServer", "Error processing login");
+        return;
+    }
+
+    QList<chats::ChatMessage> messagesList = latestMessages.messages();
 
     QDir mesDir(QCoreApplication::applicationDirPath() + "/.data/" + QString::number(activeUserId) + "/messages");
     mesDir.removeRecursively();
 
-    for (const QJsonValue &value : messagesArray) {
-        QJsonObject json = value.toObject();
-        QJsonObject messageToSave;
-        messageToSave["login"] = json["sender_login"].toString();
-        messageToSave["id"] = json["sender_id"].toInt();
-        messageToSave["message_id"] = json["message_id"].toInt();
-        messageToSave["message"] = json["str"].toString();
-        messageToSave["time"] = json["time"].toString();
-        messageToSave["FullDate"] = json["FullDate"].toString();
-        messageToSave["fileUrl"] = json["fileUrl"].toString();
-        messageToSave["Out"] = "";
+    chats::UpdatingChatsResponse messageStorage;
 
-        if(json.contains("group_id")){
-            messageToSave["group_id"] = json["group_id"].toInt();
-            messageToSave["group_name"] = json["group_name"].toString();
-            if( messageToSave["id"].toInt() == activeUserId) messageToSave["Out"] = "out";
-            saveGroupMessageToJson(messageToSave);
-            continue;
+    for (const auto &msg : messagesList) {
+        if (msg.groupId() != 0) {
+            saveGroupMessageToFile(msg.groupId(), msg);
+        } else if(msg.receiverId() != 0){
+            savePersonalMessageToFile(msg.receiverId(), msg);
         }
-
-        messageToSave["dialog_id"] = json["dialog_id"].toInt();
-
-        if(messageToSave["login"].toString() == activeUserLogin) {
-            messageToSave["login"] = json["receiver_login"].toString();
-            messageToSave["id"] = json["receiver_id"].toInt();
-            messageToSave["Out"] = "out";
-            saveMessageToJson(messageToSave);
-        } else saveMessageToJson(messageToSave);
     }
+
     emit sendAvatarsUpdate();
     emit getContactList();
 }

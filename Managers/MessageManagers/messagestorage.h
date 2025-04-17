@@ -15,6 +15,9 @@
 
 #include "Utils/logger.h"
 
+#include "generated_protobuf/updatingChats.qpb.h"
+#include "QProtobufSerializer"
+
 class MessageStorage : public QObject
 {
     Q_OBJECT
@@ -24,9 +27,11 @@ public:
     void setLogger(Logger* logger);
 
     void saveMessageToJson(const QJsonObject& messageToSave);
+    bool savePersonalMessageToFile(const quint64 &receiver_id, const chats::ChatMessage &newMessage);
     void saveGroupMessageToJson(const QJsonObject& messageToSave);
+    bool saveGroupMessageToFile(const quint64 &group_id, const chats::ChatMessage &newMessage);
 public slots:
-    void updatingLatestMessagesFromServer(QJsonObject &latestMessages);
+    void updatingLatestMessagesFromServer(const QByteArray &latestMessagesData);
 signals:
     void showPersonalChat(const QString& login, const QString& message, const int& id, const QString& out, const QString& type);
 

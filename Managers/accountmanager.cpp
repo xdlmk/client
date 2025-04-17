@@ -468,8 +468,14 @@ void AccountManager::setupResponseHandler()
 
 void AccountManager::updatingChats()
 {
+    chats::UpdatingChatsRequest request;
+    request.setUserId(activeUserId);
+    QProtobufSerializer serializer;
+
+    networkManager->getMessageNetwork()->sendData("updating_chats", request.serialize(&serializer));
+    /*
     QJsonObject mainObject;
     mainObject["flag"] = "updating_chats";
     mainObject["user_id"] = activeUserId;
-    networkManager->getMessageNetwork()->sendDataJson(mainObject);
+    networkManager->getMessageNetwork()->sendDataJson(mainObject);*/
 }

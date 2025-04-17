@@ -15,14 +15,15 @@
 #include "Managers/responsehandler.h"
 #include "Utils/logger.h"
 
-#include "login.qpb.h"
-#include "register.qpb.h"
-#include "search.qpb.h"
-#include "editProfile.qpb.h"
-#include "avatarsUpdate.qpb.h"
-#include "deleteMember.qpb.h"
-#include "addMembers.qpb.h"
-#include "chatsInfo.qpb.h"
+#include "generated_protobuf/login.qpb.h"
+#include "generated_protobuf/register.qpb.h"
+#include "generated_protobuf/search.qpb.h"
+#include "generated_protobuf/editProfile.qpb.h"
+#include "generated_protobuf/avatarsUpdate.qpb.h"
+#include "generated_protobuf/deleteMember.qpb.h"
+#include "generated_protobuf/addMembers.qpb.h"
+#include "generated_protobuf/chatsInfo.qpb.h"
+#include "generated_protobuf/updatingChats.qpb.h"
 #include <QtProtobuf/qprotobufserializer.h>
 
 class AccountManager : public QObject
