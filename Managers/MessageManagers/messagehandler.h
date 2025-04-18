@@ -35,7 +35,7 @@ public slots:
 
     void loadingChat(const QString userlogin, const QString &flag);
 
-    void loadingNextMessages(QJsonObject &messagesJson);
+    void loadingNextMessages(const QByteArray &messagesData);
 signals:
     void newMessage(QVariant message);
     void clearMainListView();
@@ -49,6 +49,7 @@ signals:
     void getChatsInfo();
 
     void sendMessageJson(const QJsonObject &messageJson);
+    void sendMessageData(const QString &flag, const QByteArray &data);;
     void sendToFileServer(const QJsonDocument &doc);
 
     void insertMessage(QVariant message, bool isOutgoing);

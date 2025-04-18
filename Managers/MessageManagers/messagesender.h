@@ -12,6 +12,9 @@
 #include <QCoreApplication>
 
 #include "Utils/logger.h"
+
+#include "generated_protobuf/loadMessages.qpb.h"
+#include <QProtobufSerializer>
 class MessageSender : public QObject
 {
     Q_OBJECT
@@ -27,7 +30,8 @@ public slots:
 
     void sendRequestMessagesLoading(const int &chat_id, const QString &chat_name, const QString& flag, const int& offset);
 signals:
-    void sendMessageJson(const QJsonObject &messageJson);
+    void sendMessageData(const QString &flag, const QByteArray &data);
+    void sendMessageJson(const QJsonObject &messageJson); // remove
     void sendToFileServer(const QJsonDocument &doc);
 private:
     QString activeUserLogin;

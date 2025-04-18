@@ -106,6 +106,18 @@ void MessageSender::sendVoiceMessage(const QString &receiver_login, const int &r
 
 void MessageSender::sendRequestMessagesLoading(const int &chat_id, const QString &chat_name, const QString &flag, const int &offset)
 {
+    chats::LoadMessagesRequest request;
+    request.setChatId(chat_id);
+    request.setUserId(activeUserId);
+    request.setOffset(offset);
+    if(flag == "personal") {
+        request.setType(chats::ChatTypeGadget::ChatType::PERSONAL);
+    } else if(flag == "group") {
+        request.setType(chats::ChatTypeGadget::ChatType::GROUP);
+    }
+    QProtobufSerializer serializer;
+    emit sendMessageData("load_messages", request.serialize(&serializer));
+    /*
     QJsonObject request;
     request["flag"] = "load_messages";
     request["chat_id"] = chat_id;
@@ -113,6 +125,6 @@ void MessageSender::sendRequestMessagesLoading(const int &chat_id, const QString
     request["chat_name"] = chat_name;
     request["offset"] = offset;
     request["type"] = flag;
+    emit sendMessageJson(request);*/
 
-    emit sendMessageJson(request);
 }

@@ -84,7 +84,8 @@ void Client::setupMessageConnections() {
     connect(this, &Client::requestMessageDownload, messageHandler, &MessageHandler::sendRequestMessagesLoading);
     connect(this, &Client::sendMessageWithFile, messageHandler, &MessageHandler::sendMessageWithFile);
 
-    connect(messageHandler, &MessageHandler::sendMessageJson, networkManager->getMessageNetwork(), &MessageNetworkManager::sendDataJson);
+    connect(messageHandler, &MessageHandler::sendMessageJson, networkManager->getMessageNetwork(), &MessageNetworkManager::sendDataJson); // remove
+    connect(messageHandler,&MessageHandler::sendMessageData, networkManager->getMessageNetwork(), &MessageNetworkManager::sendData);
     connect(messageHandler,&MessageHandler::checkAndSendAvatarUpdate,accountManager,&AccountManager::checkAndSendAvatarUpdate);
     connect(messageHandler,&MessageHandler::getContactList,accountManager,&AccountManager::getContactList);
     connect(messageHandler,&MessageHandler::getChatsInfo,accountManager,&AccountManager::getChatsInfo);

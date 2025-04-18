@@ -116,6 +116,14 @@ bool MessageStorage::savePersonalMessageToFile(const quint64 &receiver_id, const
     file.write(outData);
     file.close();
 
+    QString out = "";
+    if (newMessage.senderId() == activeUserId) {
+        out = "out";
+        emit showPersonalChat(newMessage.receiverLogin(), newMessage.content(), newMessage.receiverId(), out, "personal");
+    } else {
+        emit showPersonalChat(newMessage.senderLogin(), newMessage.content(), newMessage.senderId(), out, "personal");
+    }
+
     return true;
 }
 
@@ -219,6 +227,10 @@ bool MessageStorage::saveGroupMessageToFile(const quint64 &group_id, const chats
     QByteArray outData = history.serialize(&serializer);
     file.write(outData);
     file.close();
+
+    QString out = "";
+    if (newMessage.senderId() == activeUserId) out = "out";
+    emit showPersonalChat(newMessage.groupName(), newMessage.content(), newMessage.groupId(), out, "group");
 
     return true;
 }

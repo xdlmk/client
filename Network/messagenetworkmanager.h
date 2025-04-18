@@ -47,14 +47,13 @@ signals:
 
     void searchDataReceived(const QByteArray &searchData);
     void chatsUpdateDataReceived(const QByteArray &chatsUpdateData);
-
+    void loadMeassgesReceived(const QByteArray &messagesData);
     void editResultsReceived(const QByteArray &editResultsData);
 
     void avatarsUpdateReceived(const QByteArray &avatarsUpdateData);
 
     void messageReceived(const QJsonObject &receivedMessageJson);
     void groupMessageReceived(const QJsonObject &receivedMessageJson);
-    void loadMeassgesReceived(QJsonObject &messagesJson);
 
     void removeAccountFromConfigManager();
 

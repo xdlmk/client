@@ -19,7 +19,9 @@ MessageHandler::MessageHandler(QObject *parent)
     connect(this,&MessageHandler::sendVoiceMessage,messageSender,&MessageSender::sendVoiceMessage);
     connect(this,&MessageHandler::sendRequestMessagesLoading,messageSender,&MessageSender::sendRequestMessagesLoading);
 
-    connect(messageSender,&MessageSender::sendMessageJson,this,&MessageHandler::sendMessageJson);
+    connect(messageSender,&MessageSender::sendMessageJson,this,&MessageHandler::sendMessageJson);// remove
+    connect(messageSender,&MessageSender::sendMessageData,this,&MessageHandler::sendMessageData);
+
     connect(messageSender,&MessageSender::sendToFileServer,this,&MessageHandler::sendToFileServer);
 }
 
@@ -235,30 +237,40 @@ void MessageHandler::loadingChat(const QString userlogin, const QString &flag)
     file.close();
 }
 
-void MessageHandler::loadingNextMessages(QJsonObject &messagesJson)
+void MessageHandler::loadingNextMessages(const QByteArray &messagesData)
 {
-    QString type = messagesJson["type"].toString();
-    QString chatName = messagesJson["chat_name"].toString();
-    QJsonArray newMessages = messagesJson["messages"].toArray();
+    QProtobufSerializer serializer;
+    chats::LoadMessagesResponse response;
+    if (!response.deserialize(&serializer, messagesData)) {
+        logger->log(Logger::ERROR, "messagehandler.cpp::loadingNextMessages", "Failed deserialize response");
+        return;
+    }
 
+    QString chatName = response.chatName();
+    int type = static_cast<int>(response.type());
     logger->log(Logger::INFO, "messagehandler.cpp::loadingNextMessages", "Start processing messages");
 
-    QJsonArray messagesArray = messagesJson["messages"].toArray();
+    int count = response.messages().size();
 
-    for (int i = messagesArray.size() - 1; i >= 0; --i) {
-        QJsonObject json = messagesArray[i].toObject();
+    for (int i = response.messages().size() - 1; i >= 0; --i) {
+        const chats::ChatMessage &protoMsg = response.messages().at(i);
+        QVariantMap messageToLoad;
 
-        QJsonObject messageToLoad;
-        messageToLoad["message"] = json["str"].toString();
-        messageToLoad["time"] = json["time"].toString();
-        messageToLoad["FullDate"] = json["FullDate"].toString();
-        messageToLoad["message_id"] = json["message_id"].toInt();
-        messageToLoad["login"] = json["sender_login"].toString();
-        messageToLoad["id"] = json["sender_id"].toInt();
-        messageToLoad["fileUrl"] = json["fileUrl"].toString();
+        messageToLoad["message"] = protoMsg.content();
+
+        QString fullDate = protoMsg.timestamp();
+        QDateTime dt = QDateTime::fromString(fullDate, Qt::ISODate);
+        QString time = dt.isValid() ? dt.toString("hh:mm") : "";
+        messageToLoad["time"] = time;
+        messageToLoad["FullDate"] = fullDate;
+
+        messageToLoad["message_id"] = protoMsg.messageId();
+        messageToLoad["login"] = protoMsg.senderLogin();
+        messageToLoad["id"] = protoMsg.senderId();
+        messageToLoad["fileUrl"] = protoMsg.mediaUrl();
+
         QString fileUrl = messageToLoad["fileUrl"].toString();
-
-        QString fileName = "";
+        QString fileName;
         if(fileUrl != "") {
             int underscoreIndex = fileUrl.indexOf('_');
             if (underscoreIndex != -1 && underscoreIndex + 1 < fileUrl.length()) {
@@ -267,26 +279,23 @@ void MessageHandler::loadingNextMessages(QJsonObject &messagesJson)
         }
         messageToLoad["fileName"] = fileName;
 
-        if (json.contains("group_id")) {
-            messageToLoad["group_id"] = json["group_id"].toInt();
-            messageToLoad["group_name"] = json["group_name"].toString();
-            QVariant message = messageToLoad.toVariantMap();
-            if (messageToLoad["id"].toInt() == activeUserId) emit insertMessage(message, true);
-            else emit insertMessage(message, false);
-
+        if (protoMsg.groupId() != 0) {
+            messageToLoad["group_id"] = protoMsg.groupId();
+            messageToLoad["group_name"] = protoMsg.groupName();
+            QVariant messageVariant(messageToLoad);
+            bool out = (messageToLoad["id"].toInt() == activeUserId);
+            emit insertMessage(messageVariant, out);
             continue;
         }
 
-        messageToLoad["dialog_id"] = json["dialog_id"].toInt();
-
         if (messageToLoad["id"].toInt() == activeUserId) {
-            messageToLoad["login"] = json["receiver_login"].toString();
-            messageToLoad["id"] = json["receiver_id"].toInt();
-            QVariant message = messageToLoad.toVariantMap();
-            emit insertMessage(message, true);
+            messageToLoad["login"] = protoMsg.receiverLogin();
+            messageToLoad["id"] = protoMsg.receiverId();
+            QVariant messageVariant(messageToLoad);
+            emit insertMessage(messageVariant, true);
         } else {
-            QVariant message = messageToLoad.toVariantMap();
-            emit insertMessage(message, false);
+            QVariant messageVariant(messageToLoad);
+            emit insertMessage(messageVariant, false);
         }
     }
     emit returnChatToPosition();

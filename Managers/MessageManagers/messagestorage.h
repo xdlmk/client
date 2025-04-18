@@ -16,6 +16,7 @@
 #include "Utils/logger.h"
 
 #include "generated_protobuf/updatingChats.qpb.h"
+#include "generated_protobuf/chatMessage.qpb.h"
 #include "QProtobufSerializer"
 
 class MessageStorage : public QObject
