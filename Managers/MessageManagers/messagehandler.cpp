@@ -137,53 +137,63 @@ void MessageHandler::processingPersonalMessage(const QByteArray &receivedMessage
     emit getContactList();
 }
 
-void MessageHandler::processingGroupMessage(const QJsonObject &groupMessageJson)
+void MessageHandler::processingGroupMessage(const QByteArray &receivedMessageData)
 {
-    QJsonObject messageToSave;
-    messageToSave["message"] = groupMessageJson["message"].toString();
-    messageToSave["time"] = groupMessageJson["time"].toString();
-    messageToSave["message_id"] = groupMessageJson["message_id"].toInt();
-    if(groupMessageJson.contains("fileUrl"))   messageToSave["fileUrl"] = groupMessageJson["fileUrl"].toString();
-    else messageToSave["fileUrl"] = "";
-    if(groupMessageJson["special_type"].toString() == "create") {
-        emit getChatsInfo();
+    QProtobufSerializer serializer;
+    chats::ChatMessage protoMsg;
+    if (!protoMsg.deserialize(&serializer, receivedMessageData)) {
+        logger->log(Logger::ERROR, "messagehandler.cpp::processingGroupMessage", "Failed to deserialize group message");
+        return;
     }
 
-    QString fileUrl = messageToSave["fileUrl"].toString();
-    messageToSave["group_name"] = groupMessageJson["group_name"].toString();
-    messageToSave["group_id"] = groupMessageJson["group_id"].toInt();
-    QString out = "";
-    messageToSave["FullDate"] = "not:done(messagemanager::saveGroupMessage)";
-    if(groupMessageJson.contains("group_avatar_url")){
-        if(groupMessageJson["group_avatar_url"].toString() == ""){
-            avatarGenerator->generateAvatarImage(groupMessageJson["group_name"].toString(),groupMessageJson["group_id"].toInt(),"group");
-        } else {
-            emit checkAndSendAvatarUpdate(groupMessageJson["group_avatar_url"].toString(),groupMessageJson["group_id"].toInt(),"group");
-        }
-    }
+    QVariantMap messageToLoad;
+    messageToLoad["message"] = protoMsg.content();
 
-    if(groupMessageJson["sender_id"].toInt() != activeUserId) {
-        messageToSave["Out"] = "";
-        emit checkAndSendAvatarUpdate(groupMessageJson["sender_avatar_url"].toString(),groupMessageJson["sender_id"].toInt(), "personal");
-    } else {
-        messageToSave["Out"] = "out";
-    }
-    messageToSave["login"] = groupMessageJson["sender_login"].toString();
-    messageToSave["id"] = groupMessageJson["sender_id"].toInt();
+    QString timestamp = protoMsg.timestamp();
+    QDateTime dt = QDateTime::fromString(timestamp, Qt::ISODate);
+    QString timeStr = dt.isValid() ? dt.toString("hh:mm") : "";
+    messageToLoad["time"] = timeStr;
 
-    messageStorage->saveGroupMessageToJson(messageToSave);
+    messageToLoad["message_id"] = protoMsg.messageId();
+    messageToLoad["fileUrl"] = protoMsg.mediaUrl();
+    QString fileUrl = messageToLoad["fileUrl"].toString();
 
-    QString fileName = "";
-    if(fileUrl != "") {
+    QString fileName;
+    if (!fileUrl.isEmpty()) {
         int underscoreIndex = fileUrl.indexOf('_');
         if (underscoreIndex != -1 && underscoreIndex + 1 < fileUrl.length()) {
             fileName = fileUrl.mid(underscoreIndex + 1);
         }
     }
-    messageToSave["fileName"] = fileName;
+    messageToLoad["fileName"] = fileName;
 
-    QVariant message = messageToSave.toVariantMap();
-    emit checkActiveDialog(message,"group");
+    messageToLoad["FullDate"] = timestamp;
+
+    //special type check need
+
+    messageToLoad["group_name"] = protoMsg.groupName();
+    messageToLoad["group_id"] = protoMsg.groupId();
+
+    /*if(groupMessageJson.contains("group_avatar_url")){
+        if(groupMessageJson["group_avatar_url"].toString() == ""){
+            avatarGenerator->generateAvatarImage(groupMessageJson["group_name"].toString(),groupMessageJson["group_id"].toInt(),"group");
+        } else {
+            emit checkAndSendAvatarUpdate(groupMessageJson["group_avatar_url"].toString(),groupMessageJson["group_id"].toInt(),"group");
+        }
+    }*/ //add checker avatar request to server
+
+    if(protoMsg.senderId() == activeUserId) {
+        messageToLoad["Out"] = "out";
+    } else {
+        messageToLoad["Out"] = "";
+            //emit checkAndSendAvatarUpdate(groupMessageJson["sender_avatar_url"].toString(),groupMessageJson["sender_id"].toInt(), "personal"); // made request to check avatar
+    }
+    messageToLoad["login"] = protoMsg.senderLogin();
+    messageToLoad["id"] = protoMsg.senderId();
+
+    messageStorage->saveGroupMessageToFile(protoMsg);
+
+    emit checkActiveDialog(messageToLoad, "group");
 }
 
 void MessageHandler::loadingChat(const QString userlogin, const QString &flag)

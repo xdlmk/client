@@ -203,7 +203,7 @@ void MessageNetworkManager::onDataReceived()
             emit messageReceived(payload);
             break;
         case 4:
-            //emit groupMessageReceived(receivedFromServerJson);
+            emit groupMessageReceived(payload);
             break;
         case 5:
             emit deleteGroupMemberReceived(payload);

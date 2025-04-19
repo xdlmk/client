@@ -34,7 +34,7 @@ public slots:
     void checkingChatAvailability(QString &login, const QString &flag);
 
     void processingPersonalMessage(const QByteArray &receivedMessageData);
-    void processingGroupMessage(const QJsonObject &groupMessageJson);
+    void processingGroupMessage(const QByteArray &receivedMessageData);
 
     void loadingChat(const QString userlogin, const QString &flag);
 

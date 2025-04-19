@@ -40,7 +40,7 @@ signals:
     void loginResultsReceived(const QByteArray &loginResultsData);
     void registrationResultsReceived(const QByteArray &registrationResultsData);
     void messageReceived(const QByteArray &receivedMessageData);
-
+    void groupMessageReceived(const QByteArray &receivedMessageData);
     void deleteGroupMemberReceived(const QByteArray &receivedDeleteMemberFromGroupData);
     void addGroupMemberReceived(const QByteArray &receivedAddMemberFromGroupData);
     void dialogsInfoReceived(const QList<messages::DialogInfoItem> &receivedDialogInfo);
@@ -53,7 +53,6 @@ signals:
 
     void avatarsUpdateReceived(const QByteArray &avatarsUpdateData);
 
-    void groupMessageReceived(const QJsonObject &receivedMessageJson);
 
     void removeAccountFromConfigManager();
 

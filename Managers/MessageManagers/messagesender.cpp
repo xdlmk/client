@@ -27,7 +27,7 @@ void MessageSender::sendMessage(const QString &message, const int &receiver_id, 
         msg.setGroupId(receiver_id);
     }
     QProtobufSerializer serializer;
-    emit sendMessageData(flag + "_message",msg.serialize(&serializer));
+    emit sendMessageData(flag + "_message",msg.serialize(&serializer)); // personal_message group_message
 }
 
 void MessageSender::sendMessageWithFile(const QString &message, const QString &receiver_login, const int &receiver_id, const QString &filePath, const QString &flag)
