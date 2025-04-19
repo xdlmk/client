@@ -39,6 +39,7 @@ public slots:
 signals:
     void loginResultsReceived(const QByteArray &loginResultsData);
     void registrationResultsReceived(const QByteArray &registrationResultsData);
+    void messageReceived(const QByteArray &receivedMessageData);
 
     void deleteGroupMemberReceived(const QByteArray &receivedDeleteMemberFromGroupData);
     void addGroupMemberReceived(const QByteArray &receivedAddMemberFromGroupData);
@@ -52,7 +53,6 @@ signals:
 
     void avatarsUpdateReceived(const QByteArray &avatarsUpdateData);
 
-    void messageReceived(const QJsonObject &receivedMessageJson);
     void groupMessageReceived(const QJsonObject &receivedMessageJson);
 
     void removeAccountFromConfigManager();

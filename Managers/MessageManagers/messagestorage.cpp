@@ -68,7 +68,7 @@ void MessageStorage::saveMessageToJson(const QJsonObject &messageToSave)
     emit showPersonalChat(messageToSave["login"].toString(), messageObject["str"].toString(), messageObject["id"].toInt(), messageObject["Out"].toString(), "personal");
 }
 
-bool MessageStorage::savePersonalMessageToFile(const quint64 &receiver_id, const chats::ChatMessage &newMessage)
+bool MessageStorage::savePersonalMessageToFile(const chats::ChatMessage &newMessage)
 {
     QString basePath = QCoreApplication::applicationDirPath() + "/.data/" +
                        QString::number(activeUserId) + "/messages/personal";
@@ -76,7 +76,12 @@ bool MessageStorage::savePersonalMessageToFile(const quint64 &receiver_id, const
     if (!dir.exists()) {
         dir.mkpath(".");
     }
-    QString filePath = basePath + "/message_" + QString::number(receiver_id) + ".pb";
+    QString filePath;
+    if(newMessage.senderId() == activeUserId) {
+        filePath = basePath + "/message_" + QString::number(newMessage.receiverId()) + ".pb";
+    } else if (newMessage.receiverId() == activeUserId) {
+        filePath = basePath + "/message_" + QString::number(newMessage.senderId()) + ".pb";
+    }
 
     if (!QFile::exists(filePath)) {
         QFile file(filePath);
@@ -120,7 +125,7 @@ bool MessageStorage::savePersonalMessageToFile(const quint64 &receiver_id, const
     if (newMessage.senderId() == activeUserId) {
         out = "out";
         emit showPersonalChat(newMessage.receiverLogin(), newMessage.content(), newMessage.receiverId(), out, "personal");
-    } else {
+    } else if (newMessage.receiverId() == activeUserId) {
         emit showPersonalChat(newMessage.senderLogin(), newMessage.content(), newMessage.senderId(), out, "personal");
     }
 
@@ -180,7 +185,7 @@ void MessageStorage::saveGroupMessageToJson(const QJsonObject &messageToSave)
     emit showPersonalChat(messageObject["group_name"].toString(), messageObject["str"].toString(), messageObject["group_id"].toInt(), messageObject["Out"].toString(), "group");
 }
 
-bool MessageStorage::saveGroupMessageToFile(const quint64 &group_id, const chats::ChatMessage &newMessage)
+bool MessageStorage::saveGroupMessageToFile(const chats::ChatMessage &newMessage)
 {
     QString basePath = QCoreApplication::applicationDirPath() + "/.data/" +
                        QString::number(activeUserId) + "/messages/group";
@@ -188,7 +193,7 @@ bool MessageStorage::saveGroupMessageToFile(const quint64 &group_id, const chats
     if (!dir.exists()) {
         dir.mkpath(".");
     }
-    QString filePath = basePath + "/group_" + QString::number(group_id) + ".pb";
+    QString filePath = basePath + "/group_" + QString::number(newMessage.groupId()) + ".pb";
 
     if (!QFile::exists(filePath)) {
         QFile file(filePath);
@@ -260,9 +265,9 @@ void MessageStorage::updatingLatestMessagesFromServer(const QByteArray &latestMe
 
     for (const auto &msg : messagesList) {
         if (msg.groupId() != 0) {
-            saveGroupMessageToFile(msg.groupId(), msg);
+            saveGroupMessageToFile(msg);
         } else if(msg.receiverId() != 0){
-            savePersonalMessageToFile(msg.receiverId(), msg);
+            savePersonalMessageToFile(msg);
         }
     }
 

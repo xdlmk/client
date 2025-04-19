@@ -200,7 +200,7 @@ void MessageNetworkManager::onDataReceived()
             emit registrationResultsReceived(payload);
             break;
         case 3:
-            //emit messageReceived(receivedFromServerJson);
+            emit messageReceived(payload);
             break;
         case 4:
             //emit groupMessageReceived(receivedFromServerJson);
@@ -227,7 +227,7 @@ void MessageNetworkManager::onDataReceived()
             emit chatsUpdateDataReceived(payload);
             break;
         case 10:
-            //emit loadMeassgesReceived(receivedFromServerJson);
+            emit loadMeassgesReceived(payload);
             break;
         case 11:
             emit editResultsReceived(payload);

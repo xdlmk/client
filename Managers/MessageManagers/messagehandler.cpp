@@ -86,52 +86,54 @@ void MessageHandler::loadMessageToQml(QJsonObject& messageToDisplay)
     emit newMessage(message);
 }
 
-void MessageHandler::processingPersonalMessage(const QJsonObject &personalMessageJson)
+void MessageHandler::processingPersonalMessage(const QByteArray &receivedMessageData)
 {
-    QJsonObject messageToSave;
-    messageToSave["message"] = personalMessageJson["message"].toString();
-    messageToSave["time"] = personalMessageJson["time"].toString();
-    messageToSave["message_id"] = personalMessageJson["message_id"].toInt();
-    messageToSave["dialog_id"] = personalMessageJson["dialog_id"].toInt();
-    if(personalMessageJson.contains("fileUrl"))  messageToSave["fileUrl"] = personalMessageJson["fileUrl"].toString();
-    else messageToSave["fileUrl"] = "";
-    QString fileUrl = messageToSave["fileUrl"].toString();
-    QString avatar_url;
-    int id;
-    messageToSave["FullDate"] = "not:done(messagehandler::processingPersonalMessage)";
-
-    logger->log(Logger::INFO,"messagehandler.cpp::processingPersonalMessage","Personal message received");
-
-    if(personalMessageJson.contains("receiver_login")) {
-        messageToSave["login"] = personalMessageJson["receiver_login"].toString();
-        id = personalMessageJson["receiver_id"].toInt();
-        messageToSave["id"] = id;
-        avatar_url = personalMessageJson["receiver_avatar_url"].toString();
-        messageToSave["Out"] = "out";
-        messageStorage->saveMessageToJson(messageToSave);
-    } else {
-        messageToSave["login"] = personalMessageJson["sender_login"].toString();
-        id = personalMessageJson["sender_id"].toInt();
-        messageToSave["id"] = id;
-        avatar_url = personalMessageJson["sender_avatar_url"].toString();
-        messageToSave["Out"] = "";
-        messageStorage->saveMessageToJson(messageToSave);
+    QProtobufSerializer serializer;
+    chats::ChatMessage protoMsg;
+    if (!protoMsg.deserialize(&serializer, receivedMessageData)) {
+        logger->log(Logger::ERROR, "messagehandler.cpp::processingPersonalMessage", "Failed to deserialize personal message");
+        return;
     }
+    QVariantMap messageToLoad;
 
-    logger->log(Logger::INFO,"messagehandler.cpp::processingPersonalMessage","Message: " + messageToSave["message"].toString() +" from: " + messageToSave["login"].toString());
-    emit checkAndSendAvatarUpdate(avatar_url,id,"personal");
+    messageToLoad["message"] = protoMsg.content();
 
-    QString fileName = "";
-    if(fileUrl != "") {
+    QString timestamp = protoMsg.timestamp();
+    QDateTime dt = QDateTime::fromString(timestamp, Qt::ISODate);
+    QString timeStr = dt.isValid() ? dt.toString("hh:mm") : "";
+    messageToLoad["time"] = timeStr;
+
+    messageToLoad["message_id"] = protoMsg.messageId();
+    messageToLoad["fileUrl"] = protoMsg.mediaUrl();
+    QString fileUrl = messageToLoad["fileUrl"].toString();
+    QString fileName;
+    if (!fileUrl.isEmpty()) {
         int underscoreIndex = fileUrl.indexOf('_');
         if (underscoreIndex != -1 && underscoreIndex + 1 < fileUrl.length()) {
             fileName = fileUrl.mid(underscoreIndex + 1);
         }
     }
-    messageToSave["fileName"] = fileName;
+    messageToLoad["fileName"] = fileName;
 
-    QVariantMap message = messageToSave.toVariantMap();
-    emit checkActiveDialog(message,"personal");
+    messageToLoad["FullDate"] = timestamp;
+
+    logger->log(Logger::INFO,"messagehandler.cpp::processingPersonalMessage","Personal message received");
+
+    int conversationId = 0;
+
+    if(protoMsg.senderId() == activeUserId) {
+        messageToLoad["login"] = protoMsg.receiverLogin();
+        messageToLoad["id"] = protoMsg.receiverId();
+        messageToLoad["Out"] = "out";
+    } else if (protoMsg.receiverId() == activeUserId) {
+        messageToLoad["login"] = protoMsg.senderLogin();
+        messageToLoad["id"] = protoMsg.senderId();
+        messageToLoad["Out"] = "";
+    }
+    messageStorage->savePersonalMessageToFile(protoMsg);
+    logger->log(Logger::INFO,"messagehandler.cpp::processingPersonalMessage","Message: " + messageToLoad["message"].toString() +" from: " + messageToLoad["login"].toString());
+
+    emit checkActiveDialog(messageToLoad,"personal");
     emit getContactList();
 }
 

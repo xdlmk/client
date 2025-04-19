@@ -18,6 +18,9 @@
 #include "Managers/MessageManagers/messagestorage.h"
 #include "Managers/MessageManagers/messagesender.h"
 
+#include "generated_protobuf/chatMessage.qpb.h"
+#include "QProtobufSerializer"
+
 class MessageHandler : public QObject
 {
     Q_OBJECT
@@ -30,7 +33,7 @@ public slots:
 
     void checkingChatAvailability(QString &login, const QString &flag);
 
-    void processingPersonalMessage(const QJsonObject &personalMessageJson);
+    void processingPersonalMessage(const QByteArray &receivedMessageData);
     void processingGroupMessage(const QJsonObject &groupMessageJson);
 
     void loadingChat(const QString userlogin, const QString &flag);

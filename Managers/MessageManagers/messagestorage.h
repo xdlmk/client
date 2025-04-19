@@ -28,9 +28,9 @@ public:
     void setLogger(Logger* logger);
 
     void saveMessageToJson(const QJsonObject& messageToSave);
-    bool savePersonalMessageToFile(const quint64 &receiver_id, const chats::ChatMessage &newMessage);
+    bool savePersonalMessageToFile(const chats::ChatMessage &newMessage);
     void saveGroupMessageToJson(const QJsonObject& messageToSave);
-    bool saveGroupMessageToFile(const quint64 &group_id, const chats::ChatMessage &newMessage);
+    bool saveGroupMessageToFile(const chats::ChatMessage &newMessage);
 public slots:
     void updatingLatestMessagesFromServer(const QByteArray &latestMessagesData);
 signals:

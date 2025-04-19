@@ -17,21 +17,17 @@ void MessageSender::setLogger(Logger *logger)
 
 void MessageSender::sendMessage(const QString &message, const int &receiver_id, const QString &flag)
 {
-    QJsonObject messageJson;
-
-    messageJson["flag"] = flag + "_message";
-    messageJson["message"] = message;
-
-    messageJson["sender_login"] = activeUserLogin;
-    messageJson["sender_id"] = activeUserId;
+    chats::ChatMessage msg;
+    msg.setContent(message);
+    msg.setSenderId(activeUserId);
 
     if(flag == "personal") {
-        messageJson["receiver_id"] = receiver_id;
-    } else if(flag == "group") {
-        messageJson["group_id"] = receiver_id;
+        msg.setReceiverId(receiver_id);
+    } else if(flag == "group"){
+        msg.setGroupId(receiver_id);
     }
-
-    emit sendMessageJson(messageJson);
+    QProtobufSerializer serializer;
+    emit sendMessageData(flag + "_message",msg.serialize(&serializer));
 }
 
 void MessageSender::sendMessageWithFile(const QString &message, const QString &receiver_login, const int &receiver_id, const QString &filePath, const QString &flag)
