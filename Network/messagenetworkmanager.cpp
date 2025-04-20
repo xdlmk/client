@@ -13,10 +13,10 @@ MessageNetworkManager::MessageNetworkManager(QObject *parent)
         emit connectionSuccess();
 
         if(activeUserId != 0) {
-            QJsonObject setIdentifiers;
+            /*QJsonObject setIdentifiers;
             setIdentifiers["flag"] = "identifiers";
             setIdentifiers["user_id"] = activeUserId;
-            sendDataJson(setIdentifiers);
+            sendDataJson(setIdentifiers);*/
         }
         {
             QMutexLocker lock(&messageMutex);
@@ -212,7 +212,7 @@ void MessageNetworkManager::onDataReceived()
             emit addGroupMemberReceived(payload);
             break;
         case 7:{
-            messages::ChatsInfoResponse response;
+            chats::ChatsInfoResponse response;
             QProtobufSerializer serializer;
             response.deserialize(&serializer,payload);
 

@@ -21,7 +21,7 @@ void ResponseHandler::processingLoginResults(const QByteArray &loginResultsData)
     logger->log(Logger::INFO, "responsehandler.cpp::processingLoginResults", "processingLoginResults has begun");
 
     QProtobufSerializer serializer;
-    messages::LoginResponse response;
+    auth::LoginResponse response;
 
     if (!response.deserialize(&serializer, loginResultsData)) {
         logger->log(Logger::ERROR, "responsehandler.cpp::processingLoginResults", "Failed to parse login response");
@@ -36,7 +36,7 @@ void ResponseHandler::processingLoginResults(const QByteArray &loginResultsData)
     QString avatar_url = response.avatarUrl();
 
     if (success == "ok") {
-        messages::Identifiers identifiers;
+        common::Identifiers identifiers;
         identifiers.setUserId(userId);
         emit sendData("identifiers", identifiers.serialize(&serializer));
         emit transferUserNameAndIdAfterLogin(userlogin, userId);
@@ -52,7 +52,7 @@ void ResponseHandler::processingLoginResults(const QByteArray &loginResultsData)
 void ResponseHandler::processingRegistrationResults(const QByteArray &regResultsData)
 {
     QProtobufSerializer serializer;
-    messages::RegisterResponse response;
+    auth::RegisterResponse response;
 
     if (!response.deserialize(&serializer, regResultsData)) {
         logger->log(Logger::ERROR, "responsehandler.cpp::processingRegistrationResults", "Failed to parse registration response");
@@ -74,7 +74,7 @@ void ResponseHandler::processingSearchData(const QByteArray &searchData)
     logger->log(Logger::INFO, "responsehandler.cpp::processingSearchData", "processingSearchDataFromServer has begun");
 
     QProtobufSerializer serializer;
-    messages::SearchResponse response;
+    search::SearchResponse response;
 
     if (!response.deserialize(&serializer, searchData)) {
         logger->log(Logger::ERROR, "responsehandler.cpp::processingSearchData", "Failed to parse search response");
@@ -96,7 +96,7 @@ void ResponseHandler::processingEditProfile(const QByteArray &editResultsData)
     logger->log(Logger::INFO, "responsehandler.cpp::processingEditProfile", "processingEditProfileFromServer has begun");
 
     QProtobufSerializer serializer;
-    messages::EditProfileResponse response;
+    profile::EditProfileResponse response;
 
     if (!response.deserialize(&serializer, editResultsData)) {
         logger->log(Logger::ERROR, "responsehandler.cpp::processingEditProfile", "Failed to parse edit profile response");
@@ -134,7 +134,7 @@ void ResponseHandler::processingAvatarsUpdate(const QByteArray &avatarsUpdateDat
     logger->log(Logger::INFO, "responsehandler.cpp::processingAvatarsUpdate", "processingAvatarsUpdate has begun");
 
     QProtobufSerializer serializer;
-    messages::AvatarsUpdateResponse response;
+    avatars::AvatarsUpdateResponse response;
 
     if (!response.deserialize(&serializer, avatarsUpdateData)) {
         logger->log(Logger::ERROR, "responsehandler.cpp::processingAvatarsUpdate", "Failed to parse avatars update response");
@@ -163,7 +163,7 @@ void ResponseHandler::processingAvatarsUpdate(const QByteArray &avatarsUpdateDat
     emit getChatsInfo();
 }
 
-void ResponseHandler::processingGroupInfoSave(const QList<messages::GroupInfoItem> &receivedGroupInfo)
+void ResponseHandler::processingGroupInfoSave(const QList<chats::GroupInfoItem> &receivedGroupInfo)
 {
     logger->log(Logger::INFO, "responsehandler.cpp::processingGroupInfoSave", "processingGroupInfoSave has begun");
 
@@ -190,7 +190,7 @@ void ResponseHandler::processingGroupInfoSave(const QList<messages::GroupInfoIte
     }
 }
 
-void ResponseHandler::processingDialogsInfoSave(const QList<messages::DialogInfoItem> &receivedDialogInfo)
+void ResponseHandler::processingDialogsInfoSave(const QList<chats::DialogInfoItem> &receivedDialogInfo)
 {
     logger->log(Logger::INFO, "responsehandler.cpp::processingDialogsInfoSave", "processingDialogsInfoSave has begun");
 
@@ -281,15 +281,15 @@ void ResponseHandler::processingAddGroupMember(const QByteArray &receivedAddMemb
         return;
     }
 
-    messages::GroupInfoItem groupInfo;
+    chats::GroupInfoItem groupInfo;
     if (!groupInfo.deserialize(&serializer, protoData)) {
         logger->log(Logger::WARN, "responsehandler.cpp::processingAddGroupMember",
                     "Failed to deserialize GroupInfoItem from file data");
         return;
     }
-    QList<messages::GroupMember> members = groupInfo.members();
+    QList<chats::GroupMember> members = groupInfo.members();
     for (const auto &addedMember : response.addedMembers()) {
-        messages::GroupMember newMember;
+        chats::GroupMember newMember;
         newMember.setId_proto(addedMember.userId());
         newMember.setUsername(addedMember.username());
         newMember.setStatus(addedMember.status());
@@ -329,14 +329,14 @@ int ResponseHandler::deleteUserFromInfoFile(const int &group_id, const int &user
     }
 
     QProtobufSerializer serializer;
-    messages::GroupInfoItem groupInfo;
+    chats::GroupInfoItem groupInfo;
     if (!groupInfo.deserialize(&serializer, protoData)) {
         logger->log(Logger::WARN, "responsehandler.cpp::deleteUserFromInfoFile", "Failed to deserialize proto object");
         return 1;
     }
 
-    QList<messages::GroupMember> newMembers;
-    const QList<messages::GroupMember> &members = groupInfo.members();
+    QList<chats::GroupMember> newMembers;
+    const QList<chats::GroupMember> &members = groupInfo.members();
     for (const auto &member : members) {
         if (static_cast<int>(member.id_proto()) == user_id) {
             logger->log(Logger::DEBUG, "responsehandler.cpp::deleteUserFromInfoFile",

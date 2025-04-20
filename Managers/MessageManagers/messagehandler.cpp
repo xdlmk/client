@@ -117,6 +117,10 @@ void MessageHandler::processingPersonalMessage(const QByteArray &receivedMessage
 
     messageToLoad["FullDate"] = timestamp;
 
+    if(!protoMsg.specialType().isEmpty()){
+        messageToLoad["special_type"] = protoMsg.specialType();
+    }
+
     logger->log(Logger::INFO,"messagehandler.cpp::processingPersonalMessage","Personal message received");
 
     int conversationId = 0;
@@ -125,10 +129,12 @@ void MessageHandler::processingPersonalMessage(const QByteArray &receivedMessage
         messageToLoad["login"] = protoMsg.receiverLogin();
         messageToLoad["id"] = protoMsg.receiverId();
         messageToLoad["Out"] = "out";
+        emit checkAndSendAvatarUpdate(protoMsg.receiverAvatarUrl(), protoMsg.receiverId(), "personal");
     } else if (protoMsg.receiverId() == activeUserId) {
         messageToLoad["login"] = protoMsg.senderLogin();
         messageToLoad["id"] = protoMsg.senderId();
         messageToLoad["Out"] = "";
+        emit checkAndSendAvatarUpdate(protoMsg.senderAvatarUrl(), protoMsg.senderId(), "personal");
     }
     messageStorage->savePersonalMessageToFile(protoMsg);
     logger->log(Logger::INFO,"messagehandler.cpp::processingPersonalMessage","Message: " + messageToLoad["message"].toString() +" from: " + messageToLoad["login"].toString());
@@ -169,24 +175,24 @@ void MessageHandler::processingGroupMessage(const QByteArray &receivedMessageDat
 
     messageToLoad["FullDate"] = timestamp;
 
-    //special type check need
+    if(!protoMsg.specialType().isEmpty()){
+        messageToLoad["special_type"] = protoMsg.specialType();
+    }
 
     messageToLoad["group_name"] = protoMsg.groupName();
     messageToLoad["group_id"] = protoMsg.groupId();
 
-    /*if(groupMessageJson.contains("group_avatar_url")){
-        if(groupMessageJson["group_avatar_url"].toString() == ""){
-            avatarGenerator->generateAvatarImage(groupMessageJson["group_name"].toString(),groupMessageJson["group_id"].toInt(),"group");
-        } else {
-            emit checkAndSendAvatarUpdate(groupMessageJson["group_avatar_url"].toString(),groupMessageJson["group_id"].toInt(),"group");
-        }
-    }*/ //add checker avatar request to server
+    if(protoMsg.groupAvatarUrl() == "basic"){
+        avatarGenerator->generateAvatarImage(protoMsg.groupName(), protoMsg.groupId(), "group");
+    } else {
+        emit checkAndSendAvatarUpdate(protoMsg.groupAvatarUrl(), protoMsg.groupId(), "group");
+    }
 
     if(protoMsg.senderId() == activeUserId) {
         messageToLoad["Out"] = "out";
     } else {
         messageToLoad["Out"] = "";
-            //emit checkAndSendAvatarUpdate(groupMessageJson["sender_avatar_url"].toString(),groupMessageJson["sender_id"].toInt(), "personal"); // made request to check avatar
+        emit checkAndSendAvatarUpdate(protoMsg.senderAvatarUrl(), protoMsg.senderId(), "personal");
     }
     messageToLoad["login"] = protoMsg.senderLogin();
     messageToLoad["id"] = protoMsg.senderId();

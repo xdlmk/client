@@ -34,7 +34,7 @@ void AccountManager::sendSearchToServer(const QString &searchable)
     dataForSearchUsers["searchable"] = searchable;
     networkManager->getMessageNetwork()->sendData(dataForSearchUsers);*/
 
-    messages::SearchRequest request;
+    search::SearchRequest request;
     request.setSearchable(searchable);
     QProtobufSerializer serializer;
     networkManager->getMessageNetwork()->sendData("search", request.serialize(&serializer));
@@ -42,7 +42,7 @@ void AccountManager::sendSearchToServer(const QString &searchable)
 
 void AccountManager::sendEditProfileRequest(const QString editable, const QString editInformation)
 {
-    messages::EditProfileRequest request;
+    profile::EditProfileRequest request;
     request.setUserId(activeUserId);
     request.setEditable(editable);
     request.setEditInformation(editInformation);
@@ -75,7 +75,7 @@ void AccountManager::checkAndSendAvatarUpdate(const QString &avatar_url, const i
 void AccountManager::sendAvatarsUpdate()
 {
     logger->log(Logger::INFO,"accountmanager.cpp::sendAvatarsUpdate","sendAvatarsUpdate starts");
-    messages::AvatarsUpdateRequest request;
+    avatars::AvatarsUpdateRequest request;
     request.setUserId(activeUserId);
     QProtobufSerializer serializer;
     networkManager->getMessageNetwork()->sendData("avatars_update", request.serialize(&serializer));
@@ -102,15 +102,16 @@ void AccountManager::setLogger(Logger *logger)
 
 void AccountManager::createGroup(const QString &groupName, const QString& avatarPath, const QVariantList &selectedContacts)
 {
-    QJsonObject createGroupJson;
-    createGroupJson["flag"] = "create_group";
-    createGroupJson["groupName"] = groupName;
-    createGroupJson["creator_id"] = activeUserId;
-    createGroupJson["members"] = convertContactsToArray(selectedContacts);
+    groups::CreateGroupRequest request;
+    request.setGroupName(groupName);
+    request.setCreatorId(activeUserId);
+    request.setMembers(convertContactToList(selectedContacts));
+
+    QProtobufSerializer serializer;
 
     if(avatarPath == ""){
-        createGroupJson["avatar_url"] = "";
-        networkManager->getMessageNetwork()->sendDataJson(createGroupJson);
+        request.setAvatarUrl("basic");
+        networkManager->getMessageNetwork()->sendData("create_group", request.serialize(&serializer));
     } else {
         QFile file(avatarPath);
         QFileInfo fileInfo(avatarPath);
@@ -119,11 +120,10 @@ void AccountManager::createGroup(const QString &groupName, const QString& avatar
         }
         QByteArray fileData = file.readAll();
         file.close();
-        createGroupJson["fileName"] = fileInfo.baseName();
-        createGroupJson["fileExtension"] = fileInfo.suffix();
-        createGroupJson["fileData"] = QString(fileData.toBase64());
-        QJsonDocument doc(createGroupJson);
-        networkManager->getFileNetwork()->sendToFileServer(doc);
+        request.setFileName(fileInfo.baseName());
+        request.setFileExtension(fileInfo.suffix());
+        request.setFileData(QString(fileData.toBase64()));
+        //networkManager->getFileNetwork()->sendToFileServer("create_group", data); // change before change file JSON's
     }
 }
 
@@ -167,7 +167,7 @@ void AccountManager::getGroupMembers(const int &group_id)
     }
 
     QProtobufSerializer serializer;
-    messages::GroupInfoItem groupInfo;
+    chats::GroupInfoItem groupInfo;
     if (!groupInfo.deserialize(&serializer, protoData)) {
         logger->log(Logger::WARN, "accountmanager.cpp::getGroupMembers", "Failed to deserialize GroupInfoItem from file: " + filePath);
         return;
@@ -279,7 +279,7 @@ void AccountManager::showContacts()
 
 void AccountManager::getChatsInfo()
 {
-    messages::ChatsInfoRequest request;
+    chats::ChatsInfoRequest request;
     request.setUserId(activeUserId);
     QProtobufSerializer serializer;
     networkManager->getMessageNetwork()->sendData("chats_info",request.serialize(&serializer));
@@ -330,7 +330,7 @@ bool AccountManager::isAvatarUpToDate(QString avatar_url, int user_id,const QStr
     QProtobufSerializer serializer;
 
     if (type == "personal") {
-        messages::DialogInfoItem dialogInfo;
+        chats::DialogInfoItem dialogInfo;
         if (!dialogInfo.deserialize(&serializer, avatarCheckerData)) {
             logger->log(Logger::WARN, "accountmanager.cpp::isAvatarUpToDate", "Failed to deserialize DialogInfoItem");
             return false;
@@ -339,7 +339,7 @@ bool AccountManager::isAvatarUpToDate(QString avatar_url, int user_id,const QStr
             return true;
         logger->log(Logger::DEBUG, "accountmanager.cpp::isAvatarUpToDate", "isAvatarUpToDate return false (personal)");
     } else if (type == "group") {
-        messages::GroupInfoItem groupInfo;
+        chats::GroupInfoItem groupInfo;
         if (!groupInfo.deserialize(&serializer, avatarCheckerData)) {
             logger->log(Logger::WARN, "accountmanager.cpp::isAvatarUpToDate", "Failed to deserialize GroupInfoItem");
             return false;
@@ -357,12 +357,12 @@ void AccountManager::sendAuthRequest(const QString &flag, const QString &login, 
     QProtobufSerializer serializer;
     QByteArray data;
     if(flag == "login"){
-        messages::LoginRequest loginRequest;
+        auth::LoginRequest loginRequest;
         loginRequest.setLogin(login);
         loginRequest.setPassword(password);
         data = loginRequest.serialize(&serializer);
     } else if(flag == "reg"){
-        messages::RegisterRequest regRequest;
+        auth::RegisterRequest regRequest;
         regRequest.setLogin(login);
         regRequest.setPassword(password);
         data = regRequest.serialize(&serializer);
@@ -393,6 +393,16 @@ QJsonArray AccountManager::convertContactsToArray(const QVariantList &contacts)
     return membersArray;
 }
 
+QList<quint64> AccountManager::convertContactToList(const QVariantList &contacts)
+{
+    QList<quint64> ids;
+    for(const QVariant &contact : contacts) {
+        QVariantMap contactMap = contact.toMap();
+        ids.append(contactMap.value("id").toULongLong());
+    }
+    return ids;
+}
+
 QVariantList AccountManager::convertArrayToVariantList(const QJsonArray &array)
 {
     QVariantList list;
@@ -402,7 +412,7 @@ QVariantList AccountManager::convertArrayToVariantList(const QJsonArray &array)
     return list;
 }
 
-QVariantList AccountManager::convertProtoListToVariantList(const QList<messages::GroupMember> &members)
+QVariantList AccountManager::convertProtoListToVariantList(const QList<chats::GroupMember> &members)
 {
     QVariantList list;
     for (const auto &member : members) {

@@ -43,8 +43,8 @@ signals:
     void groupMessageReceived(const QByteArray &receivedMessageData);
     void deleteGroupMemberReceived(const QByteArray &receivedDeleteMemberFromGroupData);
     void addGroupMemberReceived(const QByteArray &receivedAddMemberFromGroupData);
-    void dialogsInfoReceived(const QList<messages::DialogInfoItem> &receivedDialogInfo);
-    void groupInfoReceived(const QList<messages::GroupInfoItem> &receivedGroupInfo);
+    void dialogsInfoReceived(const QList<chats::DialogInfoItem> &receivedDialogInfo);
+    void groupInfoReceived(const QList<chats::GroupInfoItem> &receivedGroupInfo);
 
     void searchDataReceived(const QByteArray &searchData);
     void chatsUpdateDataReceived(const QByteArray &chatsUpdateData);

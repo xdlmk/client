@@ -37,8 +37,8 @@ public slots:
 
     void processingDeleteGroupMember(const QByteArray &receivedDeleteMemberFromGroupData);
     void processingAddGroupMember(const QByteArray &receivedAddMemberFromGroupData);
-    void processingDialogsInfoSave(const QList<messages::DialogInfoItem> &receivedDialogInfo);
-    void processingGroupInfoSave(const QList<messages::GroupInfoItem> &receivedGroupInfo);
+    void processingDialogsInfoSave(const QList<chats::DialogInfoItem> &receivedDialogInfo);
+    void processingGroupInfoSave(const QList<chats::GroupInfoItem> &receivedGroupInfo);
 
     void processingSearchData(const QByteArray &searchData);
 

@@ -20,6 +20,7 @@
 #include "generated_protobuf/search.qpb.h"
 #include "generated_protobuf/editProfile.qpb.h"
 #include "generated_protobuf/avatarsUpdate.qpb.h"
+#include "generated_protobuf/createGroup.qpb.h"
 #include "generated_protobuf/deleteMember.qpb.h"
 #include "generated_protobuf/addMembers.qpb.h"
 #include "generated_protobuf/chatsInfo.qpb.h"
@@ -91,8 +92,8 @@ signals:
 
     void processingDeleteGroupMember(const QByteArray &receivedDeleteMemberFromGroupData);
     void processingAddGroupMember(const QByteArray &receivedAddMemberFromGroupData);
-    void processingDialogsInfoSave(const QList<messages::DialogInfoItem> &receivedDialogInfo);
-    void processingGroupInfoSave(const QList<messages::GroupInfoItem> &receivedGroupInfo);
+    void processingDialogsInfoSave(const QList<chats::DialogInfoItem> &receivedDialogInfo);
+    void processingGroupInfoSave(const QList<chats::GroupInfoItem> &receivedGroupInfo);
 
     void processingSearchDataFromServer(const QByteArray &searchData);
 
@@ -106,9 +107,10 @@ private:
 
     QList<groups::GroupMemberContact> convertContactsToProto(const QVariantList &contacts);
     QJsonArray convertContactsToArray(const QVariantList &contacts);
+    QList<quint64> convertContactToList(const QVariantList &contacts);
 
     QVariantList convertArrayToVariantList(const QJsonArray &array);
-    QVariantList convertProtoListToVariantList(const QList<messages::GroupMember> &members);
+    QVariantList convertProtoListToVariantList(const QList<chats::GroupMember> &members);
 
     int activeUserId;
     QString activeUserLogin;
