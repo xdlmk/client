@@ -34,13 +34,23 @@ QString FileManager::openFile(QString type)
 
 void FileManager::sendAvatarUrl(const QString &avatar_url,const int& user_id, const QString& type)
 {
-    QJsonObject avatarUrlJson;
+    avatars::AvatarRequest request;
+    request.setType(type);
+    request.setAvatarUrl(avatar_url);
+    request.setUserId(user_id);
+
+    QProtobufSerializer serializer;
+    QByteArray data = request.serialize(&serializer);
+
+    emit sendDataFile("avatarUrl", data);
+
+    /*QJsonObject avatarUrlJson;
     avatarUrlJson["flag"] = "avatarUrl";
     avatarUrlJson["type"] = type;
     avatarUrlJson["avatar_url"] = avatar_url;
     avatarUrlJson["user_id"] = user_id;
     QJsonDocument doc(avatarUrlJson);
-    emit sendToFileServer(doc);
+    emit sendToFileServer(doc);*/
 }
 
 void FileManager::setLogger(Logger *logger)
@@ -125,36 +135,75 @@ void FileManager::uploadVoiceFile(const QJsonObject &fileDataJson)
     file.close();
 }
 
-void FileManager::uploadAvatar(const QJsonObject &avatarDataJson)
+void FileManager::uploadAvatar(const QByteArray &data)
 {
     logger->log(Logger::INFO,"filemanager.cpp::uploadAvatar", "uploadAvatar start");
-    QString avatarDataString = avatarDataJson["avatarData"].toString();
-    QString type = avatarDataJson["type"].toString();
-    QByteArray avatarData = QByteArray::fromBase64(avatarDataString.toUtf8());
 
-    QString chattype = type == "personal" ? "/dialogsInfo/" : "/groupsInfo/";
-    QString pathToInfo = QCoreApplication::applicationDirPath() + "/.data/" + QString::number(activeUserId) + chattype + QString::number(avatarDataJson["user_id"].toInt()) + ".json";
+    QProtobufSerializer serializer;
+    avatars::AvatarData avatarProto;
+    if (!avatarProto.deserialize(&serializer, data)) {
+        logger->log(Logger::WARN, "filemanager.cpp::uploadAvatar", "Failed to deserialize AvatarData");
+        return;
+    }
+    QString type = avatarProto.type();
+    quint64 userId = avatarProto.userId();
+    QByteArray avatarData = avatarProto.avatarData();
+    QString avatarUrl = avatarProto.avatarUrl();
+
+    QString chatType = (type == "personal") ? "/dialogsInfo/" : "/groupsInfo/";
+    QString pathToInfo = QCoreApplication::applicationDirPath() + "/.data/" +
+                         QString::number(activeUserId) + chatType +
+                         QString::number(userId) + ".pb";
+
     QFileInfo fileInfo(pathToInfo);
-    QDir dir(fileInfo.path());
-    if (!dir.exists()) {
-        dir.mkpath(".");
+    QDir infoDir(fileInfo.path());
+    if (!infoDir.exists()) {
+        infoDir.mkpath(".");
     }
 
-    QFile avatarChecker(pathToInfo);
+    QFile infoFile(pathToInfo);
 
-    if (!avatarChecker.open(QIODevice::ReadOnly)) {
+    if (!infoFile.open(QIODevice::ReadOnly)) {
         logger->log(Logger::WARN,"filemanager.cpp::uploadAvatar", "Failed to read info file: " + pathToInfo);
     } else {
-        QJsonDocument doc = QJsonDocument::fromJson(avatarChecker.readAll());
-        avatarChecker.close();
-        QJsonObject json = doc.object();
-        json["avatar_url"] = avatarDataJson["avatar_url"];
-        QJsonDocument updatedDoc(json);
-        if (!avatarChecker.open(QIODevice::WriteOnly | QIODevice::Truncate)) {
-            logger->log(Logger::WARN,"filemanager.cpp::uploadAvatar", "Failed to write into info file: " + pathToInfo);
+        QByteArray fileData = infoFile.readAll();
+        infoFile.close();
+
+        if (type == "personal") {
+            chats::DialogInfoItem dialogItem;
+            if (!dialogItem.deserialize(&serializer, fileData)) {
+                logger->log(Logger::WARN, "filemanager.cpp::uploadAvatar",
+                            "Failed to deserialize DialogInfoItem from: " + pathToInfo);
+            } else {
+                dialogItem.setAvatarUrl(avatarUrl);
+                QByteArray updatedData = dialogItem.serialize(&serializer);
+
+                if (!infoFile.open(QIODevice::WriteOnly | QIODevice::Truncate)) {
+                    logger->log(Logger::WARN, "filemanager.cpp::uploadAvatar",
+                                "Failed to open info pb file for writing: " + pathToInfo);
+                } else {
+                    infoFile.write(updatedData);
+                    infoFile.close();
+                }
+            }
+        } else if (type == "group"){
+            chats::GroupInfoItem groupItem;
+            if (!groupItem.deserialize(&serializer, fileData)) {
+                logger->log(Logger::WARN, "filemanager.cpp::uploadAvatar",
+                            "Failed to deserialize GroupInfoItem from: " + pathToInfo);
+            } else {
+                groupItem.setAvatarUrl(avatarUrl);
+                QByteArray updatedData = groupItem.serialize(&serializer);
+
+                if (!infoFile.open(QIODevice::WriteOnly | QIODevice::Truncate)) {
+                    logger->log(Logger::WARN, "filemanager.cpp::uploadAvatar",
+                                "Failed to open info pb file for writing: " + pathToInfo);
+                } else {
+                    infoFile.write(updatedData);
+                    infoFile.close();
+                }
+            }
         }
-        avatarChecker.write(updatedDoc.toJson());
-        avatarChecker.close();
     }
 
 
@@ -163,7 +212,7 @@ void FileManager::uploadAvatar(const QJsonObject &avatarDataJson)
     if (!avatarDir.exists()) {
         avatarDir.mkpath(".");
     }
-    QFile avatar(pathToSave + "/" + QString::number(avatarDataJson["user_id"].toInt()) + ".png");
+    QFile avatar(pathToSave + "/" + QString::number(userId) + ".png");
 
     if (!avatar.open(QIODevice::WriteOnly)) {
         logger->log(Logger::WARN,"filemanager.cpp::uploadAvatar", "Failed to save avatar");

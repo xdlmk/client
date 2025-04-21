@@ -118,6 +118,7 @@ void Client::setupFileConnections() {
 
     connect(this, &Client::getFile, fileManager, &FileManager::getFile);
     connect(fileManager, &FileManager::sendToFileServer, networkManager->getFileNetwork(), &FileNetworkManager::sendToFileServer);
+    connect(fileManager, &FileManager::sendDataFile, networkManager->getFileNetwork(), &FileNetworkManager::sendData);
     connect(messageHandler, &MessageHandler::sendToFileServer, networkManager->getFileNetwork(), &FileNetworkManager::sendToFileServer);
 
     connect(messageHandler, &MessageHandler::sendAvatarsUpdate, accountManager, &AccountManager::sendAvatarsUpdate);

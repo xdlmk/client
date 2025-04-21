@@ -21,6 +21,10 @@
 
 #include "Utils/logger.h"
 
+#include "generated_protobuf/getAvatar.qpb.h"
+#include "generated_protobuf/chatsInfo.qpb.h"
+#include "QProtobufSerializer"
+
 class FileManager : public QObject
 {
     Q_OBJECT
@@ -31,6 +35,7 @@ public:
     Q_INVOKABLE QString openFile(QString type);
 signals:
     void sendToFileServer(const QJsonDocument& avatarUrlDoc);
+    void sendDataFile(const QString &flag, const QByteArray &data);
     void voiceExists();
 
 public slots:
@@ -38,7 +43,7 @@ public slots:
     void setLogger(Logger* logger);
     void uploadFiles(const QJsonObject &fileDataJson);
     void uploadVoiceFile(const QJsonObject &fileDataJson);
-    void uploadAvatar(const QJsonObject &avatarDataJson);
+    void uploadAvatar(const QByteArray &data);
 
     void getFile(const QString &fileUrl,const QString &flag);
 

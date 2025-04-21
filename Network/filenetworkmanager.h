@@ -15,6 +15,11 @@
 
 #include "Utils/logger.h"
 
+#include "generated_protobuf/envelope.qpb.h"
+#include "generated_protobuf/identifiers.qpb.h"
+#include "generated_protobuf/getAvatar.qpb.h"
+#include "QProtobufSerializer"
+
 class FileNetworkManager : public QObject
 {
     Q_OBJECT
@@ -28,6 +33,7 @@ public slots:
 
     void connectToFileServer();
     void sendToFileServer(const QJsonDocument &doc);
+    void sendData(const QString &flag, const QByteArray &data);
     void sendAvatar(const QString &avatarPath, const QString &type, const int& id);
 
     void setActiveUser(const QString &userName, const int &userId);
@@ -36,7 +42,7 @@ public slots:
 signals:
     void uploadFiles(const QJsonObject &fileDataJson);
     void uploadVoiceFile(const QJsonObject &fileDataJson);
-    void uploadAvatar(const QJsonObject &avatarDataJson);
+    void uploadAvatar(const QByteArray &data);
     void sendAvatarUrl(const QString &avatar_url, const int& user_id, const QString& type);
 
     void onDisconnected();

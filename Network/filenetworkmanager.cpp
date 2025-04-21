@@ -10,10 +10,11 @@ FileNetworkManager::FileNetworkManager(QObject *parent)
 
     QObject::connect(fileSocket, &QTcpSocket::connected, [this]() {
         logger->log(Logger::INFO,"filenetworkmanager.cpp::constructor","Connection to the FileServer established");
-        QJsonObject setIdentifiers;
-        setIdentifiers["flag"] = "identifiers";
-        setIdentifiers["user_id"] = activeUserId;
-        sendToFileServer(QJsonDocument(setIdentifiers));
+
+        common::Identifiers identifiers;
+        QProtobufSerializer serializer;
+        identifiers.setUserId(activeUserId);
+        sendData("identifiers",identifiers.serialize(&serializer));
 
         {
             QMutexLocker lock(&fileMutex);
@@ -73,6 +74,50 @@ void FileNetworkManager::sendToFileServer(const QJsonDocument &doc)
     }
 }
 
+void FileNetworkManager::sendData(const QString &flag, const QByteArray &data)
+{
+    messages::Envelope envelope;
+    envelope.setFlag(flag);
+    envelope.setPayload(data);
+    QProtobufSerializer serializer;
+    QByteArray envelopeData = envelope.serialize(&serializer);
+
+    logger->log(
+        Logger::INFO,
+        "filenetworkmanager.cpp::sendData",
+        "Sending envelope for flag: " + flag
+        );
+
+    bool shouldStartProcessing = false;
+    {
+        QMutexLocker lock(&fileMutex);
+        if (sendFileQueue.size() >= MAX_QUEUE_SIZE) {
+            logger->log(
+                Logger::DEBUG,
+                "filenetworkmanager.cpp::sendData",
+                "Send queue overflow! Dropping message."
+                );
+            return;
+        }
+        sendFileQueue.enqueue(envelopeData);
+        logger->log(
+            Logger::INFO,
+            "filenetworkmanager.cpp::sendData",
+            "Message added to queue. Queue size: " + QString::number(sendFileQueue  .size())
+            );
+        shouldStartProcessing = sendFileQueue.size() == 1;
+    }
+
+    if (shouldStartProcessing) {
+        logger->log(
+            Logger::INFO,
+            "filenetworkmanager.cpp::sendData",
+            "Starting to process the send queue."
+            );
+        processSendFileQueue();
+    }
+}
+
 void FileNetworkManager::sendAvatar(const QString &avatarPath, const QString &type, const int& id)
 {
     logger->log(Logger::INFO,"filenetworkmanager.cpp::sendAvatar","Sending avatar");
@@ -85,7 +130,18 @@ void FileNetworkManager::sendAvatar(const QString &avatarPath, const QString &ty
     QByteArray fileData = file.readAll();
     file.close();
 
-    QJsonObject fileDataJson;
+    avatars::AvatarFileData msg;
+    msg.setType(type);
+    msg.setId_proto(id);
+    msg.setFileName(fileInfo.baseName());
+    msg.setFileExtension(fileInfo.suffix());
+    msg.setFileData(fileData);
+
+    QProtobufSerializer serializer;
+
+    sendData("newAvatarData", msg.serialize(&serializer));
+
+    /*QJsonObject fileDataJson;
     fileDataJson["flag"] = "newAvatarData";
     fileDataJson["type"] = type;
     fileDataJson["id"] = id;
@@ -94,7 +150,7 @@ void FileNetworkManager::sendAvatar(const QString &avatarPath, const QString &ty
     fileDataJson["fileData"] = QString(fileData.toBase64());
 
     QJsonDocument doc(fileDataJson);
-    sendToFileServer(doc);
+    sendToFileServer(doc);*/
 }
 
 void FileNetworkManager::setActiveUser(const QString &userName, const int &userId)
@@ -131,7 +187,22 @@ void FileNetworkManager::onFileServerReceived()
         if (fileSocket->bytesAvailable() < blockSize)
             return;
 
-        QByteArray jsonData;
+        QByteArray envelopeData;
+        envelopeData.resize(blockSize);
+        in.readRawData(envelopeData.data(), blockSize);
+
+        QProtobufSerializer serializer;
+        messages::Envelope envelope;
+        if (!envelope.deserialize(&serializer, envelopeData)) {
+            logger->log(Logger::WARN, "filenetworkmanager.cpp::onFileServerReceived", "Failed to deserialize protobuf");
+            blockSize = 0;
+            return;
+        }
+
+        QString flag = envelope.flag();
+        QByteArray payload = envelope.payload();
+
+        /*QByteArray jsonData;
         jsonData.resize(blockSize);
         in.readRawData(jsonData.data(), blockSize);
 
@@ -144,7 +215,7 @@ void FileNetworkManager::onFileServerReceived()
         }
 
         QJsonObject receivedFromServerJson = doc.object();
-        QString flag = receivedFromServerJson["flag"].toString();
+        QString flag = receivedFromServerJson["flag"].toString();*/
         logger->log(Logger::INFO, "filenetworkmanager.cpp::onFileServerReceived", "Readings JSON for " + flag);
 
         auto it = flagMap.find(flag.toStdString());
@@ -152,21 +223,16 @@ void FileNetworkManager::onFileServerReceived()
 
         switch (flagId) {
         case 1:
-            emit uploadFiles(receivedFromServerJson);
+            //emit uploadFiles(receivedFromServerJson);
             break;
         case 2:
-            emit uploadAvatar(receivedFromServerJson);
+            emit uploadAvatar(payload);
             break;
-        case 3: {
-            emit sendAvatarUrl(
-                receivedFromServerJson["avatar_url"].toString(),
-                receivedFromServerJson["id"].toInt(),
-                receivedFromServerJson["type"].toString()
-                );
+        case 3:
+            sendData("avatarUrl", payload);
             break;
-        }
         case 4:
-            emit uploadVoiceFile(receivedFromServerJson);
+            //emit uploadVoiceFile(receivedFromServerJson);
             break;
         default:
             logger->log(Logger::WARN, "filenetworkmanager.cpp::onFileServerReceived", "Unknown file flag received: " + flag);
