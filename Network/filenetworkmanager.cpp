@@ -223,7 +223,7 @@ void FileNetworkManager::onFileServerReceived()
 
         switch (flagId) {
         case 1:
-            //emit uploadFiles(receivedFromServerJson);
+            emit uploadFiles(payload);
             break;
         case 2:
             emit uploadAvatar(payload);
@@ -232,7 +232,7 @@ void FileNetworkManager::onFileServerReceived()
             sendData("avatarUrl", payload);
             break;
         case 4:
-            //emit uploadVoiceFile(receivedFromServerJson);
+            emit uploadVoiceFile(payload);
             break;
         default:
             logger->log(Logger::WARN, "filenetworkmanager.cpp::onFileServerReceived", "Unknown file flag received: " + flag);

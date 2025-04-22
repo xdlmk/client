@@ -40,8 +40,8 @@ public slots:
     void setLogger(Logger *logger);
 
 signals:
-    void uploadFiles(const QJsonObject &fileDataJson);
-    void uploadVoiceFile(const QJsonObject &fileDataJson);
+    void uploadFiles(const QByteArray &fileData);
+    void uploadVoiceFile(const QByteArray &fileData);
     void uploadAvatar(const QByteArray &data);
     void sendAvatarUrl(const QString &avatar_url, const int& user_id, const QString& type);
 

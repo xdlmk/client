@@ -35,7 +35,7 @@ void MessageSender::sendMessageWithFile(const QString &message, const QString &r
     logger->log(Logger::DEBUG,"messagesender.cpp::sendMessageWithFile", "sendMessageWithFile starts");
 
     QJsonObject fileMessageJson;
-    fileMessageJson["flag"] = flag + "_file_message";
+    fileMessageJson["flag"] = flag + "_file_message"; // personal_file_message group_file_message
     QFile file(filePath);
     QFileInfo fileInfo(filePath);
     if (!file.open(QIODevice::ReadOnly)) {
@@ -70,7 +70,7 @@ void MessageSender::sendVoiceMessage(const QString &receiver_login, const int &r
     logger->log(Logger::DEBUG,"messagesender.cpp::sendVoiceMessage", "sendVoiceMessage starts");
 
     QJsonObject voiceMessageJson;
-    voiceMessageJson["flag"] = flag + "_voice_message";
+    voiceMessageJson["flag"] = flag + "_voice_message"; //personal_voice_message group_voice_message
     QString voicePath = QCoreApplication::applicationDirPath() + "/.tempData/" + QString::number(activeUserId) + "/voice_messages" + "/voiceMessage.wav";
     QFile file(voicePath);
     QFileInfo fileInfo(voicePath);

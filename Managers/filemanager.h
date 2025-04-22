@@ -23,6 +23,7 @@
 
 #include "generated_protobuf/getAvatar.qpb.h"
 #include "generated_protobuf/chatsInfo.qpb.h"
+#include "generated_protobuf/files.qpb.h"
 #include "QProtobufSerializer"
 
 class FileManager : public QObject
@@ -41,8 +42,8 @@ signals:
 public slots:
     void sendAvatarUrl(const QString& avatar_url,const int& user_id, const QString& type);
     void setLogger(Logger* logger);
-    void uploadFiles(const QJsonObject &fileDataJson);
-    void uploadVoiceFile(const QJsonObject &fileDataJson);
+    void uploadFiles(const QByteArray &fileData);
+    void uploadVoiceFile(const QByteArray &fileData);
     void uploadAvatar(const QByteArray &data);
 
     void getFile(const QString &fileUrl,const QString &flag);

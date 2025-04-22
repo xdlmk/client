@@ -122,8 +122,8 @@ void AccountManager::createGroup(const QString &groupName, const QString& avatar
         file.close();
         request.setFileName(fileInfo.baseName());
         request.setFileExtension(fileInfo.suffix());
-        request.setFileData(QString(fileData.toBase64()));
-        //networkManager->getFileNetwork()->sendToFileServer("create_group", data); // change before change file JSON's
+        request.setFileData(fileData);
+        networkManager->getFileNetwork()->sendData("create_group", request.serialize(&serializer));
     }
 }
 

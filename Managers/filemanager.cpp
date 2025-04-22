@@ -58,18 +58,24 @@ void FileManager::setLogger(Logger *logger)
     this->logger = logger;
 }
 
-void FileManager::uploadFiles(const QJsonObject &fileDataJson)
+void FileManager::uploadFiles(const QByteArray &fileData)
 {
     logger->log(Logger::INFO,"filemanager.cpp::uploadFiles", "uploadFiles start");
-    QString fileDataString = fileDataJson["fileData"].toString();
-    QByteArray fileData = QByteArray::fromBase64(fileDataString.toUtf8());
-    QString fileUrl = fileDataJson["fileName"].toString();
+
+    files::FileData response;
+    QProtobufSerializer serializer;
+    if(!response.deserialize(&serializer, fileData)) {
+        logger->log(Logger::WARN,"filemanager.cpp::uploadFiles", "Failed to deserialize FileRequest");
+        return;
+    }
+    QByteArray newFileData = response.fileData();
+    QString fileUrl = response.fileName();
 
     checkingForFileChecker();
     QFile fileChecker(QCoreApplication::applicationDirPath() + "/.data/" + QString::number(activeUserId) + "/.fileChecker/checker.json");
     QJsonArray checkerArray = loadJsonArrayFromFile(fileChecker);
 
-    if(!checkJsonForMatches(checkerArray,fileData,fileUrl)) {
+    if(!checkJsonForMatches(checkerArray,newFileData,fileUrl)) {
         QDir dir(QCoreApplication::applicationDirPath() + "/.data/" + QString::number(activeUserId) + "/uploads/" );
         if (!dir.exists()) {
             dir.mkpath(".");
@@ -88,7 +94,7 @@ void FileManager::uploadFiles(const QJsonObject &fileDataJson)
         fileChecker.write(jsonDoc.toJson());
         fileChecker.close();
 
-        file.write(fileData);
+        file.write(newFileData);
         file.close();
     } else {
         if (!QDesktopServices::openUrl(QUrl::fromLocalFile(QCoreApplication::applicationDirPath() + "/.data/" + QString::number(activeUserId) + "/uploads/" + fileUrl))) {
@@ -97,12 +103,17 @@ void FileManager::uploadFiles(const QJsonObject &fileDataJson)
     }
 }
 
-void FileManager::uploadVoiceFile(const QJsonObject &fileDataJson)
+void FileManager::uploadVoiceFile(const QByteArray &fileData)
 {
     logger->log(Logger::INFO,"filemanager.cpp::uploadVoiceFile", "uploadVoiceFile start");
-    QString fileDataString = fileDataJson["fileData"].toString();
-    QByteArray fileData = QByteArray::fromBase64(fileDataString.toUtf8());
-    QString fileUrl = fileDataJson["fileName"].toString();
+    files::FileData response;
+    QProtobufSerializer serializer;
+    if(!response.deserialize(&serializer, fileData)) {
+        logger->log(Logger::WARN,"filemanager.cpp::uploadFiles", "Failed to deserialize FileRequest");
+        return;
+    }
+    QByteArray newFileData = response.fileData();
+    QString fileUrl = response.fileName();
 
     checkingForFileChecker();
     QFile fileChecker(QCoreApplication::applicationDirPath() + "/.data/" + QString::number(activeUserId) + "/.fileChecker/checker.json");
@@ -111,7 +122,7 @@ void FileManager::uploadVoiceFile(const QJsonObject &fileDataJson)
     QJsonObject newFileObject;
     newFileObject["fileUrl"] = fileUrl;
     newFileObject["fileName"] = fileUrl;
-    newFileObject["fileHash"] = calculateDataHash(fileData);
+    newFileObject["fileHash"] = calculateDataHash(newFileData);
     checkerArray.append(newFileObject);
 
     QDir dir(QCoreApplication::applicationDirPath() + "/.data/" + QString::number(activeUserId) + "/.voiceFiles/");
@@ -131,7 +142,7 @@ void FileManager::uploadVoiceFile(const QJsonObject &fileDataJson)
     fileChecker.write(jsonDoc.toJson());
     fileChecker.close();
 
-    file.write(fileData);
+    file.write(newFileData);
     file.close();
 }
 
@@ -228,16 +239,17 @@ void FileManager::getFile(const QString &fileUrl, const QString &flag)
     QString filePath = "";
     QString filesDir;
     if(flag == "fileUrl") {
-        filesDir = QCoreApplication::applicationDirPath() + "/.data/" + QString::number(activeUserId) + "/uploads/";
+        filesDir = QCoreApplication::applicationDirPath() + "/.data/" +
+                   QString::number(activeUserId) + "/uploads/";
     } else if (flag == "voiceFileUrl") {
-        filesDir = QCoreApplication::applicationDirPath() + "/.data/" + QString::number(activeUserId) + "/.voiceFiles/";
+        filesDir = QCoreApplication::applicationDirPath() + "/.data/" +
+                   QString::number(activeUserId) + "/.voiceFiles/";
     }
     if(!isFileDownloaded(fileUrl,filePath,filesDir)) {
-        QJsonObject fileUrlJson;
-        fileUrlJson["flag"] = flag;
-        fileUrlJson["fileUrl"] = fileUrl;
-        QJsonDocument doc(fileUrlJson);
-        emit sendToFileServer(doc);
+        files::FileRequest request;
+        request.setFileUrl(fileUrl);
+        QProtobufSerializer serializer;
+        emit sendDataFile(flag, request.serialize(&serializer));
     } else {
         logger->log(Logger::INFO,"filemanager.cpp::getFile","File is downloaded: " + filePath);
         if(flag == "fileUrl") {
