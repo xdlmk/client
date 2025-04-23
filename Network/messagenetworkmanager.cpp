@@ -188,7 +188,7 @@ void MessageNetworkManager::onDataReceived()
         QJsonObject receivedFromServerJson = doc.object();
 
         QString flag = receivedFromServerJson["flag"].toString();*/
-        logger->log(Logger::INFO,"messagenetworkmanager.cpp::onDataReceived","Readings JSON for " + flag);
+        logger->log(Logger::INFO,"messagenetworkmanager.cpp::onDataReceived","Readings PROTO for " + flag);
 
         auto it = flagMap.find(flag.toStdString());
         uint flagId = (it != flagMap.end()) ? it->second : 0;

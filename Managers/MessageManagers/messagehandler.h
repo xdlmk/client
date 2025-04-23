@@ -51,9 +51,10 @@ signals:
     void getContactList();
     void getChatsInfo();
 
-    void sendMessageJson(const QJsonObject &messageJson);
-    void sendMessageData(const QString &flag, const QByteArray &data);;
-    void sendToFileServer(const QJsonDocument &doc);
+    void sendMessageJson(const QJsonObject &messageJson); // remove
+    void sendMessageData(const QString &flag, const QByteArray &data);
+    void sendToFileServer(const QJsonDocument &doc); // remove
+    void sendMessageFileData(const QString &flag, const QByteArray &data);
 
     void insertMessage(QVariant message, bool isOutgoing);
     void returnChatToPosition();
@@ -61,8 +62,8 @@ signals:
     void updatingLatestMessagesFromServer(const QByteArray &latestMessages);
 
     void sendMessage(const QString &message, const int &receiver_id, const QString &flag);
-    void sendMessageWithFile(const QString &message, const QString &receiver_login, const int &receiver_id,const QString& filePath, const QString &flag);
-    void sendVoiceMessage(const QString &receiver_login, const int &receiver_id, const QString &flag);
+    void sendMessageWithFile(const QString &message, const int &receiver_id,const QString& filePath, const QString &flag);
+    void sendVoiceMessage(const int &receiver_id, const QString &flag);
 
     void sendRequestMessagesLoading(const int &chat_id, const QString &chat_name, const QString& flag, const int& offset);
 

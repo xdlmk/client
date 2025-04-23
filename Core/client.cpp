@@ -117,9 +117,10 @@ void Client::setupFileConnections() {
     connect(networkManager->getFileNetwork(), &FileNetworkManager::uploadAvatar, fileManager, &FileManager::uploadAvatar);
 
     connect(this, &Client::getFile, fileManager, &FileManager::getFile);
-    connect(fileManager, &FileManager::sendToFileServer, networkManager->getFileNetwork(), &FileNetworkManager::sendToFileServer);
+    connect(fileManager, &FileManager::sendToFileServer, networkManager->getFileNetwork(), &FileNetworkManager::sendToFileServer); // remove
     connect(fileManager, &FileManager::sendDataFile, networkManager->getFileNetwork(), &FileNetworkManager::sendData);
-    connect(messageHandler, &MessageHandler::sendToFileServer, networkManager->getFileNetwork(), &FileNetworkManager::sendToFileServer);
+    connect(messageHandler, &MessageHandler::sendToFileServer, networkManager->getFileNetwork(), &FileNetworkManager::sendToFileServer); // remove
+    connect(messageHandler, &MessageHandler::sendMessageFileData, networkManager->getFileNetwork(), &FileNetworkManager::sendData);
 
     connect(messageHandler, &MessageHandler::sendAvatarsUpdate, accountManager, &AccountManager::sendAvatarsUpdate);
     connect(accountManager, &AccountManager::sendAvatarUrl, fileManager, &FileManager::sendAvatarUrl);

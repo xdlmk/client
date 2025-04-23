@@ -22,7 +22,8 @@ MessageHandler::MessageHandler(QObject *parent)
     connect(messageSender,&MessageSender::sendMessageJson,this,&MessageHandler::sendMessageJson);// remove
     connect(messageSender,&MessageSender::sendMessageData,this,&MessageHandler::sendMessageData);
 
-    connect(messageSender,&MessageSender::sendToFileServer,this,&MessageHandler::sendToFileServer);
+    connect(messageSender,&MessageSender::sendToFileServer,this,&MessageHandler::sendToFileServer); // remove
+    connect(messageSender,&MessageSender::sendMessageFileData,this,&MessageHandler::sendMessageFileData);
 }
 
 void MessageHandler::setActiveUser(const QString &userLogin, const int &userId)
