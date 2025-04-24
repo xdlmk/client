@@ -51,7 +51,7 @@ signals:
 
     void clientLogout();
 
-    void loadingChat(const QString userlogin, const QString &flag);
+    void loadingChat(const quint64& id, const QString &flag);
 
     void showPersonalChat(QString login,QString message, int id, QString out, QString type);
     void checkActiveDialog(QVariant message,const QString& type);

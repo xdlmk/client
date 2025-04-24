@@ -36,7 +36,7 @@ public slots:
     void processingPersonalMessage(const QByteArray &receivedMessageData);
     void processingGroupMessage(const QByteArray &receivedMessageData);
 
-    void loadingChat(const QString userlogin, const QString &flag);
+    void loadingChat(const quint64& id, const QString &flag);
 
     void loadingNextMessages(const QByteArray &messagesData);
 signals:

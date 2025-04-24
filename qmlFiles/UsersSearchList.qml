@@ -64,7 +64,7 @@ Rectangle {
                     listModel.clear();
                     isSearchListExtended = false;
                     searchField.clear();
-                    client.loadingChat(userlogin,"personal");
+                    client.loadingChat(user_id, "personal");
                 }
             }
 

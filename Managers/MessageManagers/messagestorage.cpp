@@ -193,7 +193,7 @@ bool MessageStorage::saveGroupMessageToFile(const chats::ChatMessage &newMessage
     if (!dir.exists()) {
         dir.mkpath(".");
     }
-    QString filePath = basePath + "/group_" + QString::number(newMessage.groupId()) + ".pb";
+    QString filePath = basePath + "/message_" + QString::number(newMessage.groupId()) + ".pb";
 
     if (!QFile::exists(filePath)) {
         QFile file(filePath);

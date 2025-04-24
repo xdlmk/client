@@ -203,22 +203,26 @@ void MessageHandler::processingGroupMessage(const QByteArray &receivedMessageDat
     emit checkActiveDialog(messageToLoad, "group");
 }
 
-void MessageHandler::loadingChat(const QString userlogin, const QString &flag)
+void MessageHandler::loadingChat(const quint64& id, const QString &flag)
 {
-    QDir dir(QCoreApplication::applicationDirPath() + "/.data/"+ QString::number(activeUserId) + "/messages/" + flag);
+    QString baseDir = QCoreApplication::applicationDirPath() + "/.data/" +
+                      QString::number(activeUserId) + "/messages/" + flag;
+
+    QDir dir(baseDir);
     if (!dir.exists()) {
         dir.mkpath(".");
     }
 
-    QFile file(QCoreApplication::applicationDirPath() + "/.data/" + QString::number(activeUserId) + "/messages/" + flag +"/message_" + userlogin + ".json");
+    QFile file(baseDir + "/message_" + QString::number(id) + ".pb");
 
     if (!file.exists()) {
         logger->log(Logger::INFO,"messagehandler.cpp::loadingChat","File not exist, creating new file");
 
         if (file.open(QIODevice::WriteOnly)) {
-            QJsonArray emptyArray;
-            QJsonDocument doc(emptyArray);
-            file.write(doc.toJson());
+            chats::MessageHistory emptyHistory;
+            QProtobufSerializer serializer;
+            QByteArray emptyData = emptyHistory.serialize(&serializer);
+            file.write(emptyData);
             file.close();
         } else {
             logger->log(Logger::INFO,"messagehandler.cpp::loadingChat","File not create");
@@ -232,23 +236,38 @@ void MessageHandler::loadingChat(const QString userlogin, const QString &flag)
 
     QByteArray fileData = file.readAll();
     if (!fileData.isEmpty()) {
-        QJsonDocument doc = QJsonDocument::fromJson(fileData);
-        QJsonArray chatHistory = doc.array();
+        chats::MessageHistory history;
+        QProtobufSerializer serializer;
+        if (!history.deserialize(&serializer, fileData)) {
+            logger->log(Logger::ERROR, "messagehandler.cpp::loadingChat", "Failed to deserialize MessageHistory");
+            file.close();
+            return;
+        }
+        QList<chats::ChatMessage> messages = history.messages();
 
         emit clearMainListView();
 
         logger->log(Logger::INFO,"messagehandler.cpp::loadingChat","Loading personal chat from json");
-        for (const QJsonValue &value : chatHistory) {
-            QJsonObject messageObject = value.toObject();
+        for (const auto &msg : messages) {
             QJsonObject messageToDisplay;
-            messageToDisplay["login"] = messageObject["login"].toString();
-            messageToDisplay["message"] = messageObject["str"].toString();
-            messageToDisplay["Out"] = messageObject["Out"].toString();
 
-            if(messageObject.contains("fileUrl")) messageToDisplay["fileUrl"] = messageObject["fileUrl"].toString();
-            else messageToDisplay["fileUrl"] = "";
+            messageToDisplay["login"] = msg.senderLogin();
+            if (msg.senderId() == activeUserId) {
+                messageToDisplay["Out"] = "out";
+            } else {
+                messageToDisplay["Out"] = "";
+            }
 
-            messageToDisplay["time"] = messageObject["time"].toString();
+            messageToDisplay["message"] = msg.content();
+            //messageToDisplay["message_id"] = msg.messageId();
+            messageToDisplay["fileUrl"] = msg.mediaUrl();
+
+            QString fullDate = msg.timestamp();
+            QDateTime dt = QDateTime::fromString(fullDate, Qt::ISODate);
+            QString time = dt.isValid() ? dt.toString("hh:mm") : "";
+            messageToDisplay["time"] = time;
+            messageToDisplay["timestamp"] = fullDate;
+            messageToDisplay["special_type"] = msg.specialType();
 
             loadMessageToQml(messageToDisplay);
         }
