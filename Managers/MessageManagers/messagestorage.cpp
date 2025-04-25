@@ -15,59 +15,6 @@ void MessageStorage::setLogger(Logger *logger)
     this->logger = logger;
 }
 
-void MessageStorage::saveMessageToJson(const QJsonObject &messageToSave)
-{
-    QDir dir(QCoreApplication::applicationDirPath() + "/.data/" + QString::number(activeUserId) + "/messages/personal");
-    if (!dir.exists()) {
-        dir.mkpath(".");
-    }
-    QFile file(QCoreApplication::applicationDirPath() + "/.data/" + QString::number(activeUserId) + "/messages/personal" +"/message_" + messageToSave["login"].toString() + ".json");
-
-    if (!file.exists()) {
-        if (file.open(QIODevice::WriteOnly)) {
-            QJsonArray emptyArray;
-            QJsonDocument doc(emptyArray);
-            file.write(doc.toJson());
-            file.close();
-        } else {
-            logger->log(Logger::ERROR,"messagestorage.cpp::saveMessageToJson","File dont create " + messageToSave["login"].toString());
-        }
-    }
-    if (!file.open(QIODevice::ReadWrite)) {
-        logger->log(Logger::ERROR,"messagestorage.cpp::saveMessageToJson","File did not open with error: " + file.errorString());
-        return;
-    }
-
-    QJsonArray chatHistory;
-    QByteArray fileData = file.readAll();
-    if (!fileData.isEmpty()) {
-        QJsonDocument doc = QJsonDocument::fromJson(fileData);
-        chatHistory = doc.array();
-    }
-
-    QJsonObject messageObject;
-    if(messageToSave["Out"].toString() == "out") messageObject["login"] = activeUserLogin;
-    else messageObject["login"] = messageToSave["login"].toString();
-
-    messageObject["id"] = messageToSave["id"].toInt();
-    messageObject["message_id"] = messageToSave["message_id"].toInt();
-    messageObject["dialog_id"] = messageToSave["dialog_id"].toInt();
-    messageObject["str"] = messageToSave["message"].toString();
-    messageObject["Out"] = messageToSave["Out"].toString();
-    messageObject["FullDate"] = messageToSave["FullDate"].toString();
-    messageObject["time"] = messageToSave["time"].toString();
-    messageObject["fileUrl"] = messageToSave["fileUrl"].toString();
-
-    chatHistory.append(messageObject);
-
-    file.resize(0);
-    QJsonDocument updatedDoc(chatHistory);
-    file.write(updatedDoc.toJson());
-    file.close();
-
-    emit showPersonalChat(messageToSave["login"].toString(), messageObject["str"].toString(), messageObject["id"].toInt(), messageObject["Out"].toString(), "personal");
-}
-
 bool MessageStorage::savePersonalMessageToFile(const chats::ChatMessage &newMessage)
 {
     QString basePath = QCoreApplication::applicationDirPath() + "/.data/" +
@@ -130,59 +77,6 @@ bool MessageStorage::savePersonalMessageToFile(const chats::ChatMessage &newMess
     }
 
     return true;
-}
-
-void MessageStorage::saveGroupMessageToJson(const QJsonObject &messageToSave)
-{
-    QDir dir(QCoreApplication::applicationDirPath() + "/.data/" + QString::number(activeUserId) + "/messages/group");
-    if (!dir.exists()) {
-        dir.mkpath(".");
-    }
-    QFile file(QCoreApplication::applicationDirPath() + "/.data/" + QString::number(activeUserId) + "/messages/group" +"/message_" + messageToSave["group_name"].toString() + ".json");
-
-    if (!file.exists()) {
-        if (file.open(QIODevice::WriteOnly)) {
-            QJsonArray emptyArray;
-            QJsonDocument doc(emptyArray);
-            file.write(doc.toJson());
-            file.close();
-        } else {
-            logger->log(Logger::ERROR,"messagestorage.cpp::saveGroupMessageToJson","File dont create " + messageToSave["login"].toString());
-        }
-    }
-
-    if (!file.open(QIODevice::ReadWrite)) {
-        logger->log(Logger::ERROR,"messagestorage.cpp::saveGroupMessageToJson","File did not open with error: " + file.errorString());
-        return;
-    }
-
-    QJsonArray chatHistory;
-    QByteArray fileData = file.readAll();
-    if (!fileData.isEmpty()) {
-        QJsonDocument doc = QJsonDocument::fromJson(fileData);
-        chatHistory = doc.array();
-    }
-
-    QJsonObject messageObject;
-    messageObject["login"] = messageToSave["login"].toString();;
-    messageObject["id"] = messageToSave["id"].toInt();
-    messageObject["message_id"] = messageToSave["message_id"].toInt();
-    messageObject["group_name"] = messageToSave["group_name"].toString();
-    messageObject["group_id"] = messageToSave["group_id"].toInt();
-    messageObject["str"] = messageToSave["message"].toString();
-    messageObject["Out"] = messageToSave["Out"].toString();
-    messageObject["FullDate"] = messageToSave["FullDate"].toString();
-    messageObject["time"] = messageToSave["time"].toString();
-    messageObject["fileUrl"] = messageToSave["fileUrl"].toString();
-
-    chatHistory.append(messageObject);
-
-    file.resize(0);
-    QJsonDocument updatedDoc(chatHistory);
-    file.write(updatedDoc.toJson());
-    file.close();
-
-    emit showPersonalChat(messageObject["group_name"].toString(), messageObject["str"].toString(), messageObject["group_id"].toInt(), messageObject["Out"].toString(), "group");
 }
 
 bool MessageStorage::saveGroupMessageToFile(const chats::ChatMessage &newMessage)

@@ -27,9 +27,7 @@ public:
     void setActiveUser(const QString &userLogin, const int &userId);
     void setLogger(Logger* logger);
 
-    void saveMessageToJson(const QJsonObject& messageToSave);
     bool savePersonalMessageToFile(const chats::ChatMessage &newMessage);
-    void saveGroupMessageToJson(const QJsonObject& messageToSave);
     bool saveGroupMessageToFile(const chats::ChatMessage &newMessage);
 public slots:
     void updatingLatestMessagesFromServer(const QByteArray &latestMessagesData);

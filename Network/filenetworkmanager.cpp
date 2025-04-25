@@ -51,29 +51,6 @@ void FileNetworkManager::connectToFileServer()
     fileSocket->connectToHost(ip,2021);
 }
 
-void FileNetworkManager::sendToFileServer(const QJsonDocument &doc)
-{
-    logger->log(Logger::INFO,"filenetworkmanager.cpp::sendToFileServer","sendToFileServer starts");
-    QByteArray fileDataOut = doc.toJson(QJsonDocument::Compact);
-
-    bool shouldStartProcessing = false;
-    {
-        QMutexLocker lock(&fileMutex);
-        if (sendFileQueue.size() >= MAX_QUEUE_SIZE) {
-            logger->log(Logger::DEBUG, "filenetworkmanager.cpp::sendToFileServer", "Send queue overflow! Dropping message.");
-            return;
-        }
-        sendFileQueue.enqueue(fileDataOut);
-        logger->log(Logger::INFO, "filenetworkmanager.cpp::sendToFileServer", "Message added to queue. Queue size: " + QString::number(sendFileQueue.size()));
-        shouldStartProcessing = sendFileQueue.size() == 1;
-    }
-
-    if (shouldStartProcessing) {
-        logger->log(Logger::INFO, "filenetworkmanager.cpp::sendToFileServer", "Starting to process the send queue.");
-        processSendFileQueue();
-    }
-}
-
 void FileNetworkManager::sendData(const QString &flag, const QByteArray &data)
 {
     messages::Envelope envelope;
@@ -140,17 +117,6 @@ void FileNetworkManager::sendAvatar(const QString &avatarPath, const QString &ty
     QProtobufSerializer serializer;
 
     sendData("newAvatarData", msg.serialize(&serializer));
-
-    /*QJsonObject fileDataJson;
-    fileDataJson["flag"] = "newAvatarData";
-    fileDataJson["type"] = type;
-    fileDataJson["id"] = id;
-    fileDataJson["fileName"] = fileInfo.baseName();
-    fileDataJson["fileExtension"] = fileInfo.suffix();
-    fileDataJson["fileData"] = QString(fileData.toBase64());
-
-    QJsonDocument doc(fileDataJson);
-    sendToFileServer(doc);*/
 }
 
 void FileNetworkManager::setActiveUser(const QString &userName, const int &userId)

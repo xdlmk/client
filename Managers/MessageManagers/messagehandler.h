@@ -51,9 +51,7 @@ signals:
     void getContactList();
     void getChatsInfo();
 
-    void sendMessageJson(const QJsonObject &messageJson); // remove
     void sendMessageData(const QString &flag, const QByteArray &data);
-    void sendToFileServer(const QJsonDocument &doc); // remove
     void sendMessageFileData(const QString &flag, const QByteArray &data);
 
     void insertMessage(QVariant message, bool isOutgoing);

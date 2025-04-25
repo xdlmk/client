@@ -19,10 +19,8 @@ MessageHandler::MessageHandler(QObject *parent)
     connect(this,&MessageHandler::sendVoiceMessage,messageSender,&MessageSender::sendVoiceMessage);
     connect(this,&MessageHandler::sendRequestMessagesLoading,messageSender,&MessageSender::sendRequestMessagesLoading);
 
-    connect(messageSender,&MessageSender::sendMessageJson,this,&MessageHandler::sendMessageJson);// remove
     connect(messageSender,&MessageSender::sendMessageData,this,&MessageHandler::sendMessageData);
 
-    connect(messageSender,&MessageSender::sendToFileServer,this,&MessageHandler::sendToFileServer); // remove
     connect(messageSender,&MessageSender::sendMessageFileData,this,&MessageHandler::sendMessageFileData);
 }
 

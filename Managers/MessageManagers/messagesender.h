@@ -32,8 +32,6 @@ public slots:
 signals:
     void sendMessageData(const QString &flag, const QByteArray &data);
     void sendMessageFileData(const QString &flag, const QByteArray &data);
-    void sendMessageJson(const QJsonObject &messageJson); // remove
-    void sendToFileServer(const QJsonDocument &doc); // remove
 private:
     QString activeUserLogin;
     int activeUserId;

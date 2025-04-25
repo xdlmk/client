@@ -16,6 +16,7 @@
 
 #include "generated_protobuf/envelope.qpb.h"
 #include "generated_protobuf/chatsInfo.qpb.h"
+#include "generated_protobuf/identifiers.qpb.h"
 #include <QtProtobuf/qprotobufserializer.h>
 
 class MessageNetworkManager : public QObject
@@ -30,7 +31,6 @@ public slots:
     void processSendMessageQueue();
 
     void connectToServer();
-    void sendDataJson(const QJsonObject &jsonToSend);
     void sendData(const QString &flag,const QByteArray &data);
 
     void setActiveUser(const QString &userName, const int &userId);

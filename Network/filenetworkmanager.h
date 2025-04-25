@@ -32,7 +32,6 @@ public slots:
     void processSendFileQueue();
 
     void connectToFileServer();
-    void sendToFileServer(const QJsonDocument &doc);
     void sendData(const QString &flag, const QByteArray &data);
     void sendAvatar(const QString &avatarPath, const QString &type, const int& id);
 
@@ -59,7 +58,7 @@ private:
     QMutex fileMutex;
 
     QString activeUserLogin;
-    int activeUserId;
+    quint64 activeUserId;
 
     Logger* logger;
 

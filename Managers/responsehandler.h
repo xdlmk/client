@@ -73,10 +73,8 @@ signals:
     void clearMessagesAfterDelete(const int& group_id);
 private:
     int deleteUserFromInfoFile(const int& group_id, const int& user_id);
-    bool writeJsonToFile(const QString& path, const QJsonObject& json);
-    bool saveProtoObjectToFile(const QString& path, const QByteArray& data);
 
-    bool readJsonFromFile(const QString &path, QJsonObject &jsonForWriting);
+    bool saveProtoObjectToFile(const QString& path, const QByteArray& data);
     bool readProtoObjectFromFile(const QString &path, QByteArray &data);
 
 

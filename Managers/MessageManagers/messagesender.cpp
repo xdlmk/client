@@ -109,14 +109,4 @@ void MessageSender::sendRequestMessagesLoading(const int &chat_id, const QString
     }
     QProtobufSerializer serializer;
     emit sendMessageData("load_messages", request.serialize(&serializer));
-    /*
-    QJsonObject request;
-    request["flag"] = "load_messages";
-    request["chat_id"] = chat_id;
-    request["user_id"] = activeUserId;
-    request["chat_name"] = chat_name;
-    request["offset"] = offset;
-    request["type"] = flag;
-    emit sendMessageJson(request);*/
-
 }

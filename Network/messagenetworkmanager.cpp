@@ -13,10 +13,10 @@ MessageNetworkManager::MessageNetworkManager(QObject *parent)
         emit connectionSuccess();
 
         if(activeUserId != 0) {
-            /*QJsonObject setIdentifiers;
-            setIdentifiers["flag"] = "identifiers";
-            setIdentifiers["user_id"] = activeUserId;
-            sendDataJson(setIdentifiers);*/
+            common::Identifiers ident;
+            ident.setUserId(activeUserId);
+            QProtobufSerializer serializer;
+            sendData("identifiers", ident.serialize(&serializer));
         }
         {
             QMutexLocker lock(&messageMutex);
@@ -54,30 +54,6 @@ void MessageNetworkManager::connectToServer()
     QString ip = QString::fromUtf8(file.readLine()).trimmed();
     file.close();
     socket->connectToHost(ip,2020);
-}
-
-void MessageNetworkManager::sendDataJson(const QJsonObject &jsonToSend)
-{
-    QJsonDocument doc(jsonToSend);
-    logger->log(Logger::INFO,"messagenetworkmanager.cpp::sendData","Sending json for " + jsonToSend["flag"].toString());
-    QByteArray jsonDataOut = doc.toJson(QJsonDocument::Compact);
-
-    bool shouldStartProcessing = false;
-    {
-        QMutexLocker lock(&messageMutex);
-        if (sendMessageQueue.size() >= MAX_QUEUE_SIZE) {
-            logger->log(Logger::DEBUG, "messagenetworkmanager.cpp::sendData", "Send queue overflow! Dropping message.");
-            return;
-        }
-        sendMessageQueue.enqueue(jsonDataOut);
-        logger->log(Logger::INFO, "messagenetworkmanager.cpp::sendData", "Message added to queue. Queue size: " + QString::number(sendMessageQueue.size()));
-        shouldStartProcessing = sendMessageQueue.size() == 1;
-    }
-
-    if (shouldStartProcessing) {
-        logger->log(Logger::INFO, "messagenetworkmanager.cpp::sendData", "Starting to process the send queue.");
-        processSendMessageQueue();
-    }
 }
 
 void MessageNetworkManager::sendData(const QString &flag, const QByteArray &data)

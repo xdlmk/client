@@ -358,18 +358,6 @@ int ResponseHandler::deleteUserFromInfoFile(const int &group_id, const int &user
     return 0;
 }
 
-bool ResponseHandler::writeJsonToFile(const QString &path, const QJsonObject &json)
-{
-    QFile file(path);
-    if (!file.open(QIODevice::WriteOnly)) {
-        logger->log(Logger::WARN, "responsehandler.cpp::writeJsonToFile", "Open file failed: " + path);
-        return false;
-    }
-    file.write(QJsonDocument(json).toJson(QJsonDocument::Indented));
-    file.close();
-    return true;
-}
-
 bool ResponseHandler::saveProtoObjectToFile(const QString &path, const QByteArray &data)
 {
     QFile file(path);
@@ -381,29 +369,6 @@ bool ResponseHandler::saveProtoObjectToFile(const QString &path, const QByteArra
         logger->log(Logger::WARN, "responsehandler.cpp::saveDialogInfoToFile", "Failed to open file for writing: " + path);
         return false;
     }
-}
-
-bool ResponseHandler::readJsonFromFile(const QString &path, QJsonObject &jsonForWriting)
-{
-    QFile file(path);
-    if (!file.open(QIODevice::ReadOnly)) {
-        logger->log(Logger::WARN, "responsehandler.cpp::readJsonFromFile",
-                    QString("Failed to open file for reading: %1, error: %2")
-                        .arg(path, file.errorString()));
-        return false;
-    }
-
-    QJsonParseError parseError;
-    jsonForWriting = QJsonDocument::fromJson(file.readAll(), &parseError).object();
-    file.close();
-
-    if (parseError.error != QJsonParseError::NoError) {
-        logger->log(Logger::WARN, "responsehandler.cpp::readJsonFromFile",
-                    QString("JSON parse error in %1: %2")
-                        .arg(path, parseError.errorString()));
-        return false;
-    }
-    return true;
 }
 
 bool ResponseHandler::readProtoObjectFromFile(const QString &path, QByteArray &data)

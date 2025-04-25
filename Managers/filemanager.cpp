@@ -43,14 +43,6 @@ void FileManager::sendAvatarUrl(const QString &avatar_url,const int& user_id, co
     QByteArray data = request.serialize(&serializer);
 
     emit sendDataFile("avatarUrl", data);
-
-    /*QJsonObject avatarUrlJson;
-    avatarUrlJson["flag"] = "avatarUrl";
-    avatarUrlJson["type"] = type;
-    avatarUrlJson["avatar_url"] = avatar_url;
-    avatarUrlJson["user_id"] = user_id;
-    QJsonDocument doc(avatarUrlJson);
-    emit sendToFileServer(doc);*/
 }
 
 void FileManager::setLogger(Logger *logger)

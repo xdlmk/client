@@ -35,7 +35,6 @@ public:
 
     Q_INVOKABLE QString openFile(QString type);
 signals:
-    void sendToFileServer(const QJsonDocument& avatarUrlDoc);
     void sendDataFile(const QString &flag, const QByteArray &data);
     void voiceExists();
 
