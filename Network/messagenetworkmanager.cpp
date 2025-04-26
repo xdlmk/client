@@ -149,21 +149,6 @@ void MessageNetworkManager::onDataReceived()
         QString flag = envelope.flag();
         QByteArray payload = envelope.payload();
 
-        /*QByteArray jsonData;
-        jsonData.resize(blockSize);
-        in.readRawData(jsonData.data(), blockSize);
-
-        QJsonDocument doc = QJsonDocument::fromJson(jsonData);
-
-        if (doc.isNull()) {
-            logger->log(Logger::ERROR,"messagenetworkmanager.cpp::onDataReceived","Received JSON doc is null");
-            blockSize = 0;
-            return;
-        }
-
-        QJsonObject receivedFromServerJson = doc.object();
-
-        QString flag = receivedFromServerJson["flag"].toString();*/
         logger->log(Logger::INFO,"messagenetworkmanager.cpp::onDataReceived","Readings PROTO for " + flag);
 
         auto it = flagMap.find(flag.toStdString());

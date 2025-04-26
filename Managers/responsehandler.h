@@ -7,9 +7,7 @@
 #include <QDir>
 #include <QFile>
 
-#include <QJsonObject>
-#include <QJsonArray>
-#include <QJsonDocument>
+#include <QByteArray>
 
 #include "Utils/logger.h"
 

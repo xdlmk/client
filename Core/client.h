@@ -2,23 +2,6 @@
 #define CLIENT_H
 
 #include <QObject>
-#include <QTcpSocket>
-#include <QByteArray>
-#include <QTimer>
-
-#include <QJsonDocument>
-#include <QJsonObject>
-#include <QJsonArray>
-#include <QRegularExpression>
-
-#include <QDir>
-#include <QFile>
-#include <QDateTime>
-#include <QStandardPaths>
-#include <QSettings>
-#include <QCoreApplication>
-
-#include <QImage>
 
 #include "Managers/accountmanager.h"
 #include "Managers/audiomanager.h"

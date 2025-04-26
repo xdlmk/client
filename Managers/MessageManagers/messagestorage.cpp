@@ -166,5 +166,4 @@ void MessageStorage::updatingLatestMessagesFromServer(const QByteArray &latestMe
     }
 
     emit sendAvatarsUpdate();
-    emit getContactList();
 }

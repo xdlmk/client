@@ -86,12 +86,9 @@ void Client::setupMessageConnections() {
 
     connect(messageHandler,&MessageHandler::sendMessageData, networkManager->getMessageNetwork(), &MessageNetworkManager::sendData);
     connect(messageHandler,&MessageHandler::checkAndSendAvatarUpdate,accountManager,&AccountManager::checkAndSendAvatarUpdate);
-    connect(messageHandler,&MessageHandler::getContactList,accountManager,&AccountManager::getContactList);
     connect(messageHandler,&MessageHandler::getChatsInfo,accountManager,&AccountManager::getChatsInfo);
 
     connect(messageHandler,&MessageHandler::removeAccountFromConfigManager,accountManager,&AccountManager::removeAccountFromConfigManager);
-
-    connect(accountManager, &AccountManager::checkingChatAvailability, messageHandler, &MessageHandler::checkingChatAvailability);
 
     connect(messageHandler, &MessageHandler::showPersonalChat, this, &Client::showPersonalChat);
 

@@ -2,11 +2,8 @@
 #define ACCOUNTMANAGER_H
 
 #include <QObject>
-#include <QJsonObject>
+
 #include <QVariantList>
-#include <QStandardPaths>
-#include <QSettings>
-#include <QImage>
 #include <QCoreApplication>
 #include <QDir>
 
@@ -55,7 +52,6 @@ public slots:
 
     void removeAccountFromConfigManager();
 
-    void getContactList();
     void showContacts();
     void getChatsInfo();
 signals:
@@ -64,7 +60,6 @@ signals:
     void changeActiveAccount(QString username);
 
     void checkConfigFile();
-    void checkingChatAvailability(QString &login, const QString &flag);
 
     void loginSuccess(QString &name, int &user_id);
     void loginFail();
@@ -106,10 +101,8 @@ private:
     void sendAuthRequest(const QString& flag, const QString& login, const QString& password);
 
     QList<groups::GroupMemberContact> convertContactsToProto(const QVariantList &contacts);
-    QJsonArray convertContactsToArray(const QVariantList &contacts);
     QList<quint64> convertContactToList(const QVariantList &contacts);
 
-    QVariantList convertArrayToVariantList(const QJsonArray &array);
     QVariantList convertProtoListToVariantList(const QList<chats::GroupMember> &members);
 
     int activeUserId;

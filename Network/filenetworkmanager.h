@@ -7,9 +7,6 @@
 #include <QFile>
 #include <QFileInfo>
 
-#include <QJsonObject>
-#include <QJsonDocument>
-
 #include <QMutex>
 #include <QTimer>
 

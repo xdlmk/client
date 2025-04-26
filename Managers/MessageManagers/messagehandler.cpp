@@ -9,7 +9,6 @@ MessageHandler::MessageHandler(QObject *parent)
 
     connect(this,&MessageHandler::updatingLatestMessagesFromServer,messageStorage,&MessageStorage::updatingLatestMessagesFromServer);
 
-    connect(messageStorage,&MessageStorage::getContactList,this,&MessageHandler::getContactList);
     connect(messageStorage,&MessageStorage::sendAvatarsUpdate,this,&MessageHandler::sendAvatarsUpdate);
     connect(messageStorage,&MessageStorage::showPersonalChat,this,&MessageHandler::showPersonalChat);
     connect(messageStorage,&MessageStorage::removeAccountFromConfigManager,this,&MessageHandler::removeAccountFromConfigManager);
@@ -40,39 +39,7 @@ void MessageHandler::setLogger(Logger *logger)
     messageSender->setLogger(logger);
 }
 
-void MessageHandler::checkingChatAvailability(QString &login, const QString &flag)
-{
-    logger->log(Logger::INFO,"messagehandler.cpp::checkingChatAvailability","Checking if a chat exists in a local save");
-    QFile file(QCoreApplication::applicationDirPath() + "/.data/" + QString::number(activeUserId) + "/messages/" + flag + "/message_" + login + ".json");
-    if (!file.open(QIODevice::ReadWrite)) {
-        logger->log(Logger::ERROR,"messagehandler.cpp::checkingChatAvailability","File did not open with error: " + file.errorString());
-        return;
-    }
-
-    QByteArray fileData = file.readAll();
-    if (!fileData.isEmpty()) {
-        QJsonArray chatHistory = QJsonDocument::fromJson(fileData).array();
-
-        if (!chatHistory.isEmpty()) {
-            QJsonObject lastMessageObject = chatHistory.last().toObject();
-
-            QString message = lastMessageObject["str"].toString();
-
-            int id;
-            if(flag == "group") id = lastMessageObject["group_id"].toInt();
-            else if (flag == "personal") id = lastMessageObject["id"].toInt();
-
-            QString out = lastMessageObject["Out"].toString();
-
-            emit showPersonalChat(login, message, id, out, flag);
-        } else {
-            logger->log(Logger::INFO,"messagehandler.cpp::checkingChatAvailability","Chat history is empty");
-        }
-    }
-    file.close();
-}
-
-void MessageHandler::loadMessageToQml(QJsonObject& messageToDisplay)
+void MessageHandler::loadMessageToQml(QVariantMap& messageToDisplay)
 {
     QString fileUrl = messageToDisplay["fileUrl"].toString();
     if(fileUrl != "") {
@@ -81,8 +48,7 @@ void MessageHandler::loadMessageToQml(QJsonObject& messageToDisplay)
             messageToDisplay["fileName"] = fileUrl.mid(underscoreIndex + 1);
         }
     } else messageToDisplay["fileName"] = "";
-    QVariant message = messageToDisplay.toVariantMap();
-    emit newMessage(message);
+    emit newMessage(messageToDisplay);
 }
 
 void MessageHandler::processingPersonalMessage(const QByteArray &receivedMessageData)
@@ -139,7 +105,6 @@ void MessageHandler::processingPersonalMessage(const QByteArray &receivedMessage
     logger->log(Logger::INFO,"messagehandler.cpp::processingPersonalMessage","Message: " + messageToLoad["message"].toString() +" from: " + messageToLoad["login"].toString());
 
     emit checkActiveDialog(messageToLoad,"personal");
-    emit getContactList();
 }
 
 void MessageHandler::processingGroupMessage(const QByteArray &receivedMessageData)
@@ -247,7 +212,7 @@ void MessageHandler::loadingChat(const quint64& id, const QString &flag)
 
         logger->log(Logger::INFO,"messagehandler.cpp::loadingChat","Loading personal chat from json");
         for (const auto &msg : messages) {
-            QJsonObject messageToDisplay;
+            QVariantMap messageToDisplay;
 
             messageToDisplay["login"] = msg.senderLogin();
             if (msg.senderId() == activeUserId) {

@@ -3,10 +3,6 @@
 
 #include <QObject>
 
-#include <QJsonDocument>
-#include <QJsonObject>
-#include <QJsonArray>
-
 #include <QVariantMap>
 
 #include <QDir>
@@ -35,7 +31,6 @@ signals:
     void showPersonalChat(const QString& login, const QString& message, const int& id, const QString& out, const QString& type);
 
     void sendAvatarsUpdate();
-    void getContactList();
 
     void removeAccountFromConfigManager();
 private:

@@ -167,83 +167,48 @@ void AccountManager::removeAccountFromConfigManager()
     configManager.removeAccount(configManager.getActiveAccount());
 }
 
-void AccountManager::getContactList()
+void AccountManager::showContacts()
 {
-    logger->log(Logger::DEBUG,"accountmanager.cpp::getContactList", "getContactList starts!");
+    logger->log(Logger::DEBUG,"accountmanager.cpp::showContacts", "showContacts starts!");
     QString appPath = QCoreApplication::applicationDirPath();
 
     QString personalDirPath = appPath + "/.data/" + QString::number(activeUserId) + "/dialogsInfo";
     QDir personalDir(personalDirPath);
     if (!personalDir.exists()) {
-        logger->log(Logger::DEBUG,"accountmanager.cpp::getContactList", "personalDir not exists!");
+        logger->log(Logger::DEBUG,"accountmanager.cpp::showContacts", "personalDir not exists!");
         return;
     }
-    QStringList messageFiles = personalDir.entryList(QStringList() << "*.json", QDir::Files);
-    QJsonArray contactsArray;
+    QStringList messageFiles = personalDir.entryList(QStringList() << "*.pb", QDir::Files);
 
+    QVariantList contactsList;
     for (const QString &fileName : messageFiles) {
         QString filePath = personalDirPath + "/" + fileName;
 
         QFile file(filePath);
         if (!file.open(QIODevice::ReadOnly)) {
-            logger->log(Logger::DEBUG,"accountmanager.cpp::getContactList", "Open file failed:" + filePath);
+            logger->log(Logger::DEBUG,"accountmanager.cpp::showContacts", "Open file failed:" + filePath);
             continue;
         }
 
         QByteArray fileData = file.readAll();
         file.close();
 
-        QJsonDocument doc = QJsonDocument::fromJson(fileData);
+        chats::DialogInfoItem item;
+        QProtobufSerializer serializer;
+        if(!item.deserialize(&serializer,fileData)) {
+            continue;
+        }
 
-        QJsonObject json = doc.object();
-        if (json.isEmpty()) continue;
+        quint64 id = item.userId();
 
-        int id = json["user_id"].toInt();
-
-        QString userlogin = json["userlogin"].toString();
+        QString userlogin = item.userlogin();
 
         if(id == activeUserId) continue;
 
-        QJsonObject contact;
+        QVariantMap contact;
         contact["id"] = id;
         contact["username"] = userlogin;
-        contactsArray.append(contact);
-    }
-
-    QString savePath = appPath + "/.data/" + QString::number(activeUserId) + "/contacts/contacts.json";
-    QDir saveDir(QFileInfo(savePath).absolutePath());
-    if (!saveDir.exists()) {
-        saveDir.mkpath(".");
-    }
-
-    QFile saveFile(savePath);
-    if (!saveFile.open(QIODevice::WriteOnly)) {
-        logger->log(Logger::DEBUG,"accountmanager.cpp::getContactList", "Open file failed:" + savePath);
-        return;
-    }
-
-    QJsonDocument saveDoc(contactsArray);
-    saveFile.write(saveDoc.toJson(QJsonDocument::Indented));
-    saveFile.close();
-}
-
-void AccountManager::showContacts()
-{
-    QJsonArray contactsArray;
-    QString contactsFilePath = QCoreApplication::applicationDirPath() + "/.data/" + activeUserLogin + "/contacts/contacts.json";
-
-    QFile contactsFile(contactsFilePath);
-    if (!contactsFile.open(QIODevice::ReadOnly)) {
-        logger->log(Logger::DEBUG,"accountmanager.cpp::showContacts", "Open file failed:" + contactsFilePath);
-        return;
-    }
-    QByteArray fileData = contactsFile.readAll();
-    contactsFile.close();
-
-    contactsArray = QJsonDocument::fromJson(fileData).array();
-    QVariantList contactsList;
-    for (const QJsonValue &value : contactsArray) {
-        contactsList.append(value.toObject().toVariantMap());
+        contactsList.append(contact);
     }
 
     emit loadContacts(contactsList);
@@ -349,17 +314,6 @@ QList<groups::GroupMemberContact> AccountManager::convertContactsToProto(const Q
     return protoList;
 }
 
-QJsonArray AccountManager::convertContactsToArray(const QVariantList &contacts)
-{
-    QJsonArray membersArray;
-    for (const QVariant &contact : contacts) {
-        QVariantMap contactMap = contact.toMap();
-        QJsonObject contactJson = QJsonObject::fromVariantMap(contactMap);
-        membersArray.append(contactJson);
-    }
-    return membersArray;
-}
-
 QList<quint64> AccountManager::convertContactToList(const QVariantList &contacts)
 {
     QList<quint64> ids;
@@ -368,15 +322,6 @@ QList<quint64> AccountManager::convertContactToList(const QVariantList &contacts
         ids.append(contactMap.value("id").toULongLong());
     }
     return ids;
-}
-
-QVariantList AccountManager::convertArrayToVariantList(const QJsonArray &array)
-{
-    QVariantList list;
-    for (const QJsonValue &value : array) {
-        list.append(value.toObject().toVariantMap());
-    }
-    return list;
 }
 
 QVariantList AccountManager::convertProtoListToVariantList(const QList<chats::GroupMember> &members)

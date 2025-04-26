@@ -6,9 +6,6 @@
 #include <QTcpSocket>
 #include <QQueue>
 
-#include <QJsonObject>
-#include <QJsonDocument>
-
 #include <QMutex>
 #include <QTimer>
 

@@ -3,8 +3,6 @@
 
 #include <QObject>
 
-#include <QJsonDocument>
-#include <QJsonObject>
 #include <QByteArray>
 
 #include <QDir>
