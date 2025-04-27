@@ -228,7 +228,7 @@ Item {
     MediaPlayer {
         id: audioPlayer
         audioOutput: audioOutput
-        source: appPath + "/.voiceFiles/" + userlogin + "/" + fileUrl
+        source: fileUrl == "" ? "" : appPath + "/.data/" + activeUserId + "/.voiceFiles/" + fileUrl
         onDurationChanged: lblDuration.text = formatTime(audioPlayer.duration)
         onPositionChanged: {
             lblCurrentTime.text = formatTime(audioPlayer.position);

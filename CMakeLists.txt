@@ -38,6 +38,8 @@ qt_add_protobuf(protosource
         ${CMAKE_SOURCE_DIR}/proto/group/addMembers.proto
 
         ${CMAKE_SOURCE_DIR}/proto/files/files.proto
+        ${CMAKE_SOURCE_DIR}/proto/files/fileChecker.proto
+
 
     OUTPUT_DIRECTORY
         "${CMAKE_BINARY_DIR}/generated_protobuf"

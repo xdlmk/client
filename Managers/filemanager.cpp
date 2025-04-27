@@ -63,34 +63,28 @@ void FileManager::uploadFiles(const QByteArray &fileData)
     QByteArray newFileData = response.fileData();
     QString fileUrl = response.fileName();
 
-    checkingForFileChecker();
-    QFile fileChecker(QCoreApplication::applicationDirPath() + "/.data/" + QString::number(activeUserId) + "/.fileChecker/checker.json");
-    QJsonArray checkerArray = loadJsonArrayFromFile(fileChecker);
+    files::FileChecker fileChecker = loadFileChecker();
 
-    if(!checkJsonForMatches(checkerArray,newFileData,fileUrl)) {
-        QDir dir(QCoreApplication::applicationDirPath() + "/.data/" + QString::number(activeUserId) + "/uploads/" );
+    if (!checkProtoForMatches(fileChecker, newFileData, fileUrl)) {
+        QDir dir(QCoreApplication::applicationDirPath() + "/.data/" + QString::number(activeUserId) + "/uploads/");
         if (!dir.exists()) {
             dir.mkpath(".");
         }
-        fileUrl = extractFileName(fileUrl);
-        QFile file(QCoreApplication::applicationDirPath() + "/.data/" + QString::number(activeUserId) + "/uploads/" + fileUrl);
-        if (!file.open(QIODevice::WriteOnly)) {
-            logger->log(Logger::WARN,"filemanager.cpp::uploadFiles", "Failed to save file");
-            return;
-        }
-        if (!fileChecker.open(QIODevice::WriteOnly)) {
-            logger->log(Logger::WARN,"filemanager.cpp::uploadFiles", "Failed to save fileChecker");
-            return;
-        }
-        QJsonDocument jsonDoc(checkerArray);
-        fileChecker.write(jsonDoc.toJson());
-        fileChecker.close();
 
+        QString localFilePath = dir.path() + "/" + fileUrl;
+        QFile file(localFilePath);
+        if (!file.open(QIODevice::WriteOnly)) {
+            logger->log(Logger::WARN, "filemanager.cpp::uploadFiles", "Failed to save file");
+            return;
+        }
         file.write(newFileData);
         file.close();
+
+        saveFileChecker(fileChecker);
     } else {
-        if (!QDesktopServices::openUrl(QUrl::fromLocalFile(QCoreApplication::applicationDirPath() + "/.data/" + QString::number(activeUserId) + "/uploads/" + fileUrl))) {
-            logger->log(Logger::WARN,"filemanager.cpp::uploadFiles", "Failed to open file");
+        QString localFilePath = QCoreApplication::applicationDirPath() + "/.data/" + QString::number(activeUserId) + "/uploads/" + fileUrl;
+        if (!QDesktopServices::openUrl(QUrl::fromLocalFile(localFilePath))) {
+            logger->log(Logger::WARN, "filemanager.cpp::uploadFiles", "Failed to open file");
         }
     }
 }
@@ -107,35 +101,24 @@ void FileManager::uploadVoiceFile(const QByteArray &fileData)
     QByteArray newFileData = response.fileData();
     QString fileUrl = response.fileName();
 
-    checkingForFileChecker();
-    QFile fileChecker(QCoreApplication::applicationDirPath() + "/.data/" + QString::number(activeUserId) + "/.fileChecker/checker.json");
-    QJsonArray checkerArray = loadJsonArrayFromFile(fileChecker);
+    files::FileChecker fileChecker = loadFileChecker();
 
-    QJsonObject newFileObject;
-    newFileObject["fileUrl"] = fileUrl;
-    newFileObject["fileName"] = fileUrl;
-    newFileObject["fileHash"] = calculateDataHash(newFileData);
-    checkerArray.append(newFileObject);
+    if (!checkProtoForMatches(fileChecker, newFileData, fileUrl)) {
+        QDir dir(QCoreApplication::applicationDirPath() + "/.data/" + QString::number(activeUserId) + "/.voiceFiles/");
+        if (!dir.exists()) {
+            dir.mkpath(".");
+        }
 
-    QDir dir(QCoreApplication::applicationDirPath() + "/.data/" + QString::number(activeUserId) + "/.voiceFiles/");
-    if (!dir.exists()) {
-        dir.mkpath(".");
-    }
-    QFile file(QCoreApplication::applicationDirPath() + "/.data/" + QString::number(activeUserId) + "/.voiceFiles/" + fileUrl);
-    if (!file.open(QIODevice::WriteOnly)) {
-        logger->log(Logger::WARN,"filemanager.cpp::uploadVoiceFile", "Failed to save voiceFile");
-        return;
-    }
-    if (!fileChecker.open(QIODevice::WriteOnly)) {
-        logger->log(Logger::WARN,"filemanager.cpp::uploadVoiceFile", "Failed to save fileChecker");
-        return;
-    }
-    QJsonDocument jsonDoc(checkerArray);
-    fileChecker.write(jsonDoc.toJson());
-    fileChecker.close();
+        QFile file(dir.path() + "/" + fileUrl);
+        if (!file.open(QIODevice::WriteOnly)) {
+            logger->log(Logger::WARN, "filemanager.cpp::uploadVoiceFile", "Failed to save voice file");
+            return;
+        }
+        file.write(newFileData);
+        file.close();
 
-    file.write(newFileData);
-    file.close();
+        saveFileChecker(fileChecker);
+    }
 }
 
 void FileManager::uploadAvatar(const QByteArray &data)
@@ -320,109 +303,125 @@ QString FileManager::calculateDataHash(const QByteArray &data)
 
 bool FileManager::isFileDownloaded(const QString &fileUrl,QString &filePath,const QString &downloadFilesDir)
 {
-    QFile checker(QCoreApplication::applicationDirPath() + "/.data/" + QString::number(activeUserId) + "/.fileChecker/checker.json");
-    QJsonArray checkerArray = loadJsonArrayFromFile(checker);
+    files::FileChecker fileChecker = loadFileChecker();
 
-    for (int i = 0; i < checkerArray.size(); ++i) {
-        QJsonValue item = checkerArray.at(i);
-        if (!item.isObject()) {
-            logger->log(Logger::WARN,"filemanager.cpp::isFileDownloaded", "Element is not a JSON object. Skipping");
-            continue;
-        }
+    for (auto it = fileChecker.items().begin(); it != fileChecker.items().end();) {
 
-        QJsonObject jsonObject = item.toObject();
-        QString jsonFileUrl = jsonObject["fileUrl"].toString();
-        QString localFileName = jsonObject["fileName"].toString();
+        QString savedFileUrl = it->fileUrl();
+        QString localFileName = it->fileName();
 
-        if (jsonFileUrl == fileUrl) {
+        if (savedFileUrl == fileUrl) {
             QFile file(downloadFilesDir + localFileName);
-            if(file.exists()){
+            if(file.exists()) {
                 if (!file.open(QIODevice::ReadOnly)) {
                     logger->log(Logger::WARN,"filemanager.cpp::isFileDownloaded", "Failed to open file: " + file.errorString());
                     file.remove();
-                    checkerArray.removeAt(i);
+
+                    QList<files::FileCheckItem> items = fileChecker.items();
+                    items.erase(it);
+                    fileChecker.setItems(items);
+
                     continue;
                 }
                 QByteArray fileData = file.readAll();
                 file.close();
-                if (jsonObject["fileHash"].toString() == calculateDataHash(fileData)) {
+                if (it->fileHash() == calculateDataHash(fileData)) {
                     filePath = downloadFilesDir + localFileName;
                     logger->log(Logger::DEBUG,"filemanager.cpp::isFileDownloaded", "File downloaded");
                     return true;
-                }
-                else {
-                    checkerArray.removeAt(i);
+                } else {
+                    QList<files::FileCheckItem> items = fileChecker.items();
+                    items.erase(it);
+                    fileChecker.setItems(items);
                     continue;
                 }
             } else {
-                checkerArray.removeAt(i);
+                QList<files::FileCheckItem> items = fileChecker.items();
+                items.erase(it);
+                fileChecker.setItems(items);
                 continue;
             }
         }
+        ++it;
     }
-    if(checker.open(QIODevice::WriteOnly)) {
-        QJsonDocument jsonDoc(checkerArray);
-        checker.write(jsonDoc.toJson());
-        checker.close();
-    }
+    saveFileChecker(fileChecker);
+
     logger->log(Logger::DEBUG,"filemanager.cpp::isFileDownloaded", "File not downloaded");
     return false;
 }
 
-bool FileManager::checkJsonForMatches(QJsonArray &checkerArray, const QByteArray &fileData, QString &fileUrl)
+bool FileManager::checkProtoForMatches(files::FileChecker &fileChecker, const QByteArray &fileData, QString &fileUrl)
 {
-    logger->log(Logger::INFO,"filemanager.cpp::checkJsonForMatches", "checkJsonForMatches starts");
+    logger->log(Logger::INFO, "filemanager.cpp::checkProtoForMatches", "checkProtoForMatches starts");
+
     QString filesDir = QCoreApplication::applicationDirPath() + "/.data/" + QString::number(activeUserId) + "/uploads/";
-    for (int i = 0; i < checkerArray.size(); ++i) {
-        QJsonValue item = checkerArray.at(i);
-        if (!item.isObject()) {
-            logger->log(Logger::WARN,"filemanager.cpp::checkJsonForMatches", "Element is not a JSON object. Skipping");
-            continue;
-        }
 
-        QJsonObject jsonObject = item.toObject();
-        QString jsonFileUrl = jsonObject["fileUrl"].toString();
-
-        if (jsonFileUrl == fileUrl) {
-            logger->log(Logger::DEBUG,"filemanager.cpp::checkJsonForMatches", "fileUrl matches");
-            QString jsonFileHash = jsonObject["fileHash"].toString();
-            if (jsonFileHash == calculateDataHash(fileData)) {
-                logger->log(Logger::DEBUG,"filemanager.cpp::checkJsonForMatches", "fileUrl and dataHash match");
-                QString localFileName = jsonObject["fileName"].toString();
-                QFile file(filesDir + "/" + localFileName);
-                if(file.exists()) {
+    for (auto it = fileChecker.items().begin(); it != fileChecker.items().end(); ) {
+        if (it->fileUrl() == fileUrl) {
+            QString localFileName = it->fileName();
+            QFile file(filesDir + "/" + localFileName);
+            if (calculateDataHash(file.readAll()) == it->fileHash()) {
+                if (file.exists()) {
                     fileUrl = localFileName;
                     return true;
                 } else {
-                    checkerArray.removeAt(i);
+                    QList<files::FileCheckItem> items = fileChecker.items();
+                    items.erase(it);
+                    fileChecker.setItems(items);
+                    continue;
                 }
             }
         }
+        ++it;
     }
 
-    QJsonObject newFileObject;
-    newFileObject["fileUrl"] = fileUrl;
-    QString uniqName = generateUniqueFileName(extractFileName(fileUrl),filesDir);
-    newFileObject["fileName"] = uniqName;
-    fileUrl = replaceAfterUnderscore(fileUrl,uniqName);
-    newFileObject["fileHash"] = calculateDataHash(fileData);
-    checkerArray.append(newFileObject);
+    files::FileCheckItem newItem;
+    newItem.setFileUrl(fileUrl);
+    newItem.setFileName(generateUniqueFileName(fileUrl, filesDir));
+    newItem.setFileHash(calculateDataHash(fileData));
 
-    logger->log(Logger::INFO,"filemanager.cpp::checkJsonForMatches", "returning false");
+    QList<files::FileCheckItem> listItems = fileChecker.items();
+    listItems.append(newItem);
+    fileChecker.setItems(listItems);
+
+    logger->log(Logger::INFO, "filemanager.cpp::checkProtoForMatches", "File not found. Added to checker.");
     return false;
 }
 
-QJsonArray FileManager::loadJsonArrayFromFile(QFile &fileChecker)
+files::FileChecker FileManager::loadFileChecker()
 {
-    logger->log(Logger::INFO,"filemanager.cpp::loadJsonArrayFromFile", "loadJsonArrayFromFile starts");
-    if(!fileChecker.open(QIODevice::ReadWrite)) {
-        logger->log(Logger::WARN,"filemanager.cpp::loadJsonArrayFromFile", "Failed to open filechecker");
-    }
-    QByteArray fileCheckerData = fileChecker.readAll();
-    fileChecker.close();
-    QJsonDocument fileCheckerDoc = QJsonDocument::fromJson(fileCheckerData);
+    QFile file(QCoreApplication::applicationDirPath() + "/.data/" + QString::number(activeUserId) + "/.fileChecker/checker.dat");
+    files::FileChecker fileChecker;
 
-    return fileCheckerDoc.array();
+    if (file.open(QIODevice::ReadOnly)) {
+        QProtobufSerializer serializer;
+        if (fileChecker.deserialize(&serializer, file.readAll())) {
+            file.close();
+            return fileChecker;
+        }
+        file.close();
+    }
+
+    logger->log(Logger::WARN, "filemanager.cpp::loadFileChecker", "Failed to load FileChecker");
+    return fileChecker;
+}
+
+bool FileManager::saveFileChecker(const files::FileChecker &fileChecker)
+{
+    QFile file(QCoreApplication::applicationDirPath() + "/.data/" + QString::number(activeUserId) + "/.fileChecker/checker.dat");
+    if (file.open(QIODevice::WriteOnly)) {
+        QProtobufSerializer serializer;
+        if(!file.write(fileChecker.serialize(&serializer))){
+            logger->log(Logger::WARN, "filemanager.cpp::saveFileChecker", "Failed to write FileChecker");
+            return false;
+        }
+        file.close();
+        logger->log(Logger::INFO, "filemanager.cpp::saveFileChecker", "FileChecker saved successfully");
+    } else {
+        logger->log(Logger::WARN, "filemanager.cpp::saveFileChecker", "Failed to save FileChecker");
+        return false;
+    }
+    return true;
 }
 
 QString FileManager::extractFileName(const QString &input)

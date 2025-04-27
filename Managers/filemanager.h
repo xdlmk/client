@@ -13,10 +13,6 @@
 #include <QDesktopServices>
 #include <QUrl>
 
-#include <QJsonObject>
-#include <QJsonArray>
-#include <QJsonDocument>
-
 #include <QCryptographicHash>
 
 #include "Utils/logger.h"
@@ -24,6 +20,7 @@
 #include "generated_protobuf/getAvatar.qpb.h"
 #include "generated_protobuf/chatsInfo.qpb.h"
 #include "generated_protobuf/files.qpb.h"
+#include "generated_protobuf/fileChecker.qpb.h"
 #include "QProtobufSerializer"
 
 class FileManager : public QObject
@@ -54,9 +51,12 @@ private:
     void checkingForFileChecker();
     QString calculateDataHash(const QByteArray& data);
     bool isFileDownloaded(const QString &fileUrl,QString &filePath,const QString &downloadFilesDir);
-    bool checkJsonForMatches(QJsonArray &checkerArray, const QByteArray &fileData, QString &fileUrl);
 
-    QJsonArray loadJsonArrayFromFile(QFile &fileChecker);
+    bool checkProtoForMatches(files::FileChecker &fileChecker, const QByteArray &fileData, QString &fileUrl);
+
+    files::FileChecker loadFileChecker();
+    bool saveFileChecker(const files::FileChecker &fileChecker);
+
     QString extractFileName(const QString &input);
 
     QString activeUserName;

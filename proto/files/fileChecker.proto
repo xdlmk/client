@@ -1,0 +1,12 @@
+syntax = "proto3";
+package files;
+
+message FileCheckItem {
+    string fileUrl = 1;
+    string fileName = 2;
+    string fileHash = 3;
+}
+
+message FileChecker {
+    repeated FileCheckItem items = 1;
+}
