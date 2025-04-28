@@ -4,6 +4,7 @@ AccountManager::AccountManager(NetworkManager* networkManager,QObject *parent)
     : QObject{parent}
 {
     this->networkManager = networkManager;
+    avatarGenerator = new AvatarGenerator(this);
     setupConfigManager();
     setupResponseHandler();
 }
@@ -54,6 +55,7 @@ void AccountManager::checkAndSendAvatarUpdate(const QString &avatar_url, const i
     if(!isAvatarUpToDate(avatar_url, user_id, type)) {
         emit sendAvatarUrl(avatar_url, user_id, type);
     }
+
 }
 
 void AccountManager::sendAvatarsUpdate()
@@ -70,6 +72,7 @@ void AccountManager::setActiveUser(const QString &user_login, const int &user_id
     activeUserLogin = user_login;
     activeUserId = user_id;
     responseHandler.setActiveUser(user_login,user_id);
+    avatarGenerator->setActiveUser(user_login,user_id);
 }
 
 void AccountManager::setLogger(Logger *logger)
@@ -246,10 +249,6 @@ bool AccountManager::isAvatarUpToDate(QString avatar_url, int user_id,const QStr
     }
 
     QFile avatar(pathToAvatar);
-    if (!avatar.exists() || avatar.size() == 0) {
-        logger->log(Logger::WARN, "accountmanager.cpp::isAvatarUpToDate", "Avatar not downloaded");
-        return false;
-    }
 
     QFile avatarChecker(avatarCheckerPath);
     if (!avatarChecker.open(QIODevice::ReadOnly)) {
@@ -267,8 +266,19 @@ bool AccountManager::isAvatarUpToDate(QString avatar_url, int user_id,const QStr
             logger->log(Logger::WARN, "accountmanager.cpp::isAvatarUpToDate", "Failed to deserialize DialogInfoItem");
             return false;
         }
-        if (dialogInfo.avatarUrl() == avatar_url)
+
+        if(avatar_url == "basic") {
+            avatarGenerator->generateAvatarImage(dialogInfo.userlogin(), dialogInfo.userId(), "personal");
             return true;
+        } else {
+            if (dialogInfo.avatarUrl() == avatar_url) {
+                if (!avatar.exists() || avatar.size() == 0) {
+                    logger->log(Logger::WARN, "accountmanager.cpp::isAvatarUpToDate", "Avatar not downloaded");
+                    return false;
+                }
+                return true;
+            }
+        }
         logger->log(Logger::DEBUG, "accountmanager.cpp::isAvatarUpToDate", "isAvatarUpToDate return false (personal)");
     } else if (type == "group") {
         chats::GroupInfoItem groupInfo;
@@ -276,8 +286,19 @@ bool AccountManager::isAvatarUpToDate(QString avatar_url, int user_id,const QStr
             logger->log(Logger::WARN, "accountmanager.cpp::isAvatarUpToDate", "Failed to deserialize GroupInfoItem");
             return false;
         }
-        if (groupInfo.avatarUrl() == avatar_url)
+
+        if(avatar_url == "basic") {
+            avatarGenerator->generateAvatarImage(groupInfo.groupName(), groupInfo.groupId(), "group");
             return true;
+        } else {
+            if (groupInfo.avatarUrl() == avatar_url) {
+                if (!avatar.exists() || avatar.size() == 0) {
+                    logger->log(Logger::WARN, "accountmanager.cpp::isAvatarUpToDate", "Avatar not downloaded");
+                    return false;
+                }
+                return true;
+            }
+        }
         logger->log(Logger::DEBUG, "accountmanager.cpp::isAvatarUpToDate", "isAvatarUpToDate return false (group)");
     }
 

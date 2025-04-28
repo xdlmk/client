@@ -11,7 +11,6 @@
 #include <QCoreApplication>
 
 #include "Utils/logger.h"
-#include "Utils/avatargenerator.h"
 #include "Managers/MessageManagers/messagestorage.h"
 #include "Managers/MessageManagers/messagesender.h"
 
@@ -66,7 +65,6 @@ private:
 
     MessageStorage *messageStorage;
     MessageSender *messageSender;
-    AvatarGenerator *avatarGenerator;
 
     QString activeUserLogin;
     int activeUserId;

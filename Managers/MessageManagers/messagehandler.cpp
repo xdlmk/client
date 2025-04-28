@@ -5,7 +5,6 @@ MessageHandler::MessageHandler(QObject *parent)
 {
     messageStorage = new MessageStorage(this);
     messageSender = new MessageSender(this);
-    avatarGenerator = new AvatarGenerator(this);
 
     connect(this,&MessageHandler::updatingLatestMessagesFromServer,messageStorage,&MessageStorage::updatingLatestMessagesFromServer);
 
@@ -29,7 +28,6 @@ void MessageHandler::setActiveUser(const QString &userLogin, const int &userId)
     this->activeUserId = userId;
     messageStorage->setActiveUser(userLogin,userId);
     messageSender->setActiveUser(userLogin,userId);
-    avatarGenerator->setActiveUser(userLogin,userId);
 }
 
 void MessageHandler::setLogger(Logger *logger)
@@ -146,11 +144,7 @@ void MessageHandler::processingGroupMessage(const QByteArray &receivedMessageDat
     messageToLoad["group_name"] = protoMsg.groupName();
     messageToLoad["group_id"] = protoMsg.groupId();
 
-    if(protoMsg.groupAvatarUrl() == "basic"){
-        avatarGenerator->generateAvatarImage(protoMsg.groupName(), protoMsg.groupId(), "group");
-    } else {
-        emit checkAndSendAvatarUpdate(protoMsg.groupAvatarUrl(), protoMsg.groupId(), "group");
-    }
+    emit checkAndSendAvatarUpdate(protoMsg.groupAvatarUrl(), protoMsg.groupId(), "group");
 
     if(protoMsg.senderId() == activeUserId) {
         messageToLoad["Out"] = "out";

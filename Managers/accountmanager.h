@@ -10,6 +10,8 @@
 #include "Network/networkmanager.h"
 #include "Core/configmanager.h"
 #include "Managers/responsehandler.h"
+
+#include "Utils/avatargenerator.h"
 #include "Utils/logger.h"
 
 #include "generated_protobuf/login.qpb.h"
@@ -110,6 +112,7 @@ private:
 
     NetworkManager* networkManager;
     Logger* logger;
+    AvatarGenerator *avatarGenerator;
     ConfigManager configManager;
     ResponseHandler responseHandler;
 
