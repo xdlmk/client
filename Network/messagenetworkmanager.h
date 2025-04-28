@@ -6,13 +6,15 @@
 #include <QTcpSocket>
 #include <QQueue>
 
-#include <QJsonObject>
-#include <QJsonDocument>
-
 #include <QMutex>
 #include <QTimer>
 
 #include "Utils/logger.h"
+
+#include "generated_protobuf/envelope.qpb.h"
+#include "generated_protobuf/chatsInfo.qpb.h"
+#include "generated_protobuf/identifiers.qpb.h"
+#include <QtProtobuf/qprotobufserializer.h>
 
 class MessageNetworkManager : public QObject
 {
@@ -26,25 +28,28 @@ public slots:
     void processSendMessageQueue();
 
     void connectToServer();
-    void sendData(const QJsonObject &jsonToSend);
+    void sendData(const QString &flag,const QByteArray &data);
 
     void setActiveUser(const QString &userName, const int &userId);
     void setLogger(Logger *logger);
 
 signals:
-    void messageReceived(const QJsonObject &receivedMessageJson);
-    void groupMessageReceived(const QJsonObject &receivedMessageJson);
-    void groupInfoReceived(const QJsonObject &receivedGroupInfoJson);
-    void deleteGroupMemberReceived(const QJsonObject &receivedDeleteMemberFromGroup);
-    void addGroupMemberReceived(const QJsonObject &receivedAddMemberFromGroup);
-    void dialogsInfoReceived(const QJsonObject &receivedDialogInfoJson);
-    void loginResultsReceived(const QJsonObject &loginResultsJson);
-    void registrationResultsReceived(const QJsonObject &registrationResultsJson);
-    void searchDataReceived(const QJsonObject &searchDataJson);
-    void chatsUpdateDataReceived(QJsonObject &chatsUpdateDataJson);
-    void loadMeassgesReceived(QJsonObject &messagesJson);
-    void editResultsReceived(const QJsonObject &editResultsJson);
-    void avatarsUpdateReceived(const QJsonObject &avatarsUpdateJson);
+    void loginResultsReceived(const QByteArray &loginResultsData);
+    void registrationResultsReceived(const QByteArray &registrationResultsData);
+    void messageReceived(const QByteArray &receivedMessageData);
+    void groupMessageReceived(const QByteArray &receivedMessageData);
+    void deleteGroupMemberReceived(const QByteArray &receivedDeleteMemberFromGroupData);
+    void addGroupMemberReceived(const QByteArray &receivedAddMemberFromGroupData);
+    void dialogsInfoReceived(const QList<chats::DialogInfoItem> &receivedDialogInfo);
+    void groupInfoReceived(const QList<chats::GroupInfoItem> &receivedGroupInfo);
+
+    void searchDataReceived(const QByteArray &searchData);
+    void chatsUpdateDataReceived(const QByteArray &chatsUpdateData);
+    void loadMeassgesReceived(const QByteArray &messagesData);
+    void editResultsReceived(const QByteArray &editResultsData);
+
+    void avatarsUpdateReceived(const QByteArray &avatarsUpdateData);
+
 
     void removeAccountFromConfigManager();
 

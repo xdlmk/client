@@ -2,18 +2,29 @@
 #define ACCOUNTMANAGER_H
 
 #include <QObject>
-#include <QJsonObject>
+
 #include <QVariantList>
-#include <QStandardPaths>
-#include <QSettings>
-#include <QImage>
 #include <QCoreApplication>
 #include <QDir>
 
 #include "Network/networkmanager.h"
 #include "Core/configmanager.h"
 #include "Managers/responsehandler.h"
+
+#include "Utils/avatargenerator.h"
 #include "Utils/logger.h"
+
+#include "generated_protobuf/login.qpb.h"
+#include "generated_protobuf/register.qpb.h"
+#include "generated_protobuf/search.qpb.h"
+#include "generated_protobuf/editProfile.qpb.h"
+#include "generated_protobuf/avatarsUpdate.qpb.h"
+#include "generated_protobuf/createGroup.qpb.h"
+#include "generated_protobuf/deleteMember.qpb.h"
+#include "generated_protobuf/addMembers.qpb.h"
+#include "generated_protobuf/chatsInfo.qpb.h"
+#include "generated_protobuf/updatingChats.qpb.h"
+#include <QtProtobuf/qprotobufserializer.h>
 
 class AccountManager : public QObject
 {
@@ -43,7 +54,6 @@ public slots:
 
     void removeAccountFromConfigManager();
 
-    void getContactList();
     void showContacts();
     void getChatsInfo();
 signals:
@@ -52,7 +62,6 @@ signals:
     void changeActiveAccount(QString username);
 
     void checkConfigFile();
-    void checkingChatAvailability(QString &login, const QString &flag);
 
     void loginSuccess(QString &name, int &user_id);
     void loginFail();
@@ -75,27 +84,35 @@ signals:
     void loadGroupMembers(QVariantList membersList, const int& group_id);
     void clearMessagesAfterDelete(const int& group_id);
 
-    void processingLoginResultsFromServer(const QJsonObject &loginResultsJson);
-    void processingRegistrationResultsFromServer(const QJsonObject &regResultsJson);
-    void processingSearchDataFromServer(const QJsonObject &searchDataJson);
-    void processingEditProfileFromServer(const QJsonObject &editResultsJson);
-    void processingAvatarsUpdateFromServer(const QJsonObject &avatarsUpdateJson);
-    void processingGroupInfoSave(const QJsonObject &receivedGroupInfoJson);
-    void processingDialogsInfoSave(const QJsonObject &receivedDialogInfoJson);
-    void processingDeleteGroupMember(const QJsonObject &receivedDeleteMemberFromGroup);
-    void processingAddGroupMember(const QJsonObject &receivedAddMemberFromGroup);
+    void processingLoginResultsFromServer(const QByteArray &loginResultsData);
+    void processingRegistrationResultsFromServer(const QByteArray &regResultsData);
+
+    void processingDeleteGroupMember(const QByteArray &receivedDeleteMemberFromGroupData);
+    void processingAddGroupMember(const QByteArray &receivedAddMemberFromGroupData);
+    void processingDialogsInfoSave(const QList<chats::DialogInfoItem> &receivedDialogInfo);
+    void processingGroupInfoSave(const QList<chats::GroupInfoItem> &receivedGroupInfo);
+
+    void processingSearchDataFromServer(const QByteArray &searchData);
+
+    void processingEditProfileFromServer(const QByteArray &editResultsData);
+
+    void processingAvatarsUpdateFromServer(const QByteArray &avatarsUpdateData);
 private:
     bool isAvatarUpToDate(QString avatar_url,int user_id,const QString& type);
 
     void sendAuthRequest(const QString& flag, const QString& login, const QString& password);
-    QJsonArray convertContactsToArray(const QVariantList &contacts);
-    QVariantList convertArrayToVariantList(const QJsonArray &array);
+
+    QList<groups::GroupMemberContact> convertContactsToProto(const QVariantList &contacts);
+    QList<quint64> convertContactToList(const QVariantList &contacts);
+
+    QVariantList convertProtoListToVariantList(const QList<chats::GroupMember> &members);
 
     int activeUserId;
     QString activeUserLogin;
 
     NetworkManager* networkManager;
     Logger* logger;
+    AvatarGenerator *avatarGenerator;
     ConfigManager configManager;
     ResponseHandler responseHandler;
 

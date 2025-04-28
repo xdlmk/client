@@ -84,14 +84,11 @@ void Client::setupMessageConnections() {
     connect(this, &Client::requestMessageDownload, messageHandler, &MessageHandler::sendRequestMessagesLoading);
     connect(this, &Client::sendMessageWithFile, messageHandler, &MessageHandler::sendMessageWithFile);
 
-    connect(messageHandler, &MessageHandler::sendMessageJson, networkManager->getMessageNetwork(), &MessageNetworkManager::sendData);
+    connect(messageHandler,&MessageHandler::sendMessageData, networkManager->getMessageNetwork(), &MessageNetworkManager::sendData);
     connect(messageHandler,&MessageHandler::checkAndSendAvatarUpdate,accountManager,&AccountManager::checkAndSendAvatarUpdate);
-    connect(messageHandler,&MessageHandler::getContactList,accountManager,&AccountManager::getContactList);
     connect(messageHandler,&MessageHandler::getChatsInfo,accountManager,&AccountManager::getChatsInfo);
 
     connect(messageHandler,&MessageHandler::removeAccountFromConfigManager,accountManager,&AccountManager::removeAccountFromConfigManager);
-
-    connect(accountManager, &AccountManager::checkingChatAvailability, messageHandler, &MessageHandler::checkingChatAvailability);
 
     connect(messageHandler, &MessageHandler::showPersonalChat, this, &Client::showPersonalChat);
 
@@ -116,8 +113,8 @@ void Client::setupFileConnections() {
     connect(networkManager->getFileNetwork(), &FileNetworkManager::uploadAvatar, fileManager, &FileManager::uploadAvatar);
 
     connect(this, &Client::getFile, fileManager, &FileManager::getFile);
-    connect(fileManager, &FileManager::sendToFileServer, networkManager->getFileNetwork(), &FileNetworkManager::sendToFileServer);
-    connect(messageHandler, &MessageHandler::sendToFileServer, networkManager->getFileNetwork(), &FileNetworkManager::sendToFileServer);
+    connect(fileManager, &FileManager::sendDataFile, networkManager->getFileNetwork(), &FileNetworkManager::sendData);
+    connect(messageHandler, &MessageHandler::sendMessageFileData, networkManager->getFileNetwork(), &FileNetworkManager::sendData);
 
     connect(messageHandler, &MessageHandler::sendAvatarsUpdate, accountManager, &AccountManager::sendAvatarsUpdate);
     connect(accountManager, &AccountManager::sendAvatarUrl, fileManager, &FileManager::sendAvatarUrl);

@@ -7,11 +7,20 @@
 #include <QDir>
 #include <QFile>
 
-#include <QJsonObject>
-#include <QJsonArray>
-#include <QJsonDocument>
+#include <QByteArray>
 
 #include "Utils/logger.h"
+
+#include "generated_protobuf/login.qpb.h"
+#include "generated_protobuf/register.qpb.h"
+#include "generated_protobuf/search.qpb.h"
+#include "generated_protobuf/editProfile.qpb.h"
+#include "generated_protobuf/avatarsUpdate.qpb.h"
+#include "generated_protobuf/deleteMember.qpb.h"
+#include "generated_protobuf/addMembers.qpb.h"
+#include "generated_protobuf/chatsInfo.qpb.h"
+#include "generated_protobuf/identifiers.qpb.h"
+#include <QtProtobuf/qprotobufserializer.h>
 
 class ResponseHandler : public QObject
 {
@@ -21,15 +30,19 @@ public:
     void setLogger(Logger *logger);
     void setActiveUser(const QString &userLogin,const int &userId);
 public slots:
-    void processingLoginResults(const QJsonObject &loginResultsJson);
-    void processingRegistrationResults(const QJsonObject &regResultsJson);
-    void processingSearchData(const QJsonObject &searchDataJson);
-    void processingEditProfile(const QJsonObject &editResultsJson);
-    void processingAvatarsUpdate(const QJsonObject &avatarsUpdateJson);
-    void processingGroupInfoSave(const QJsonObject &receivedGroupInfoJson);
-    void processingDialogsInfoSave(const QJsonObject &receivedDialogInfoJson);
-    void processingDeleteGroupMember(const QJsonObject &receivedDeleteMemberFromGroup);
-    void processingAddGroupMember(const QJsonObject &receivedAddMemberFromGroup);
+    void processingLoginResults(const QByteArray &loginResultsData);
+    void processingRegistrationResults(const QByteArray &regResultsData);
+
+    void processingDeleteGroupMember(const QByteArray &receivedDeleteMemberFromGroupData);
+    void processingAddGroupMember(const QByteArray &receivedAddMemberFromGroupData);
+    void processingDialogsInfoSave(const QList<chats::DialogInfoItem> &receivedDialogInfo);
+    void processingGroupInfoSave(const QList<chats::GroupInfoItem> &receivedGroupInfo);
+
+    void processingSearchData(const QByteArray &searchData);
+
+    void processingEditProfile(const QByteArray &editResultsData);
+
+    void processingAvatarsUpdate(const QByteArray &avatarsUpdateData);
 
 signals:
     void transferUserNameAndIdAfterLogin(const QString &activeUserName,const int &activeUserId);
@@ -39,7 +52,7 @@ signals:
     void addAccount(const QString &login, const QString &password, int userId);
     void updatingChats();
 
-    void sendData(const QJsonObject& json);
+    void sendData(const QString& flag, const QByteArray& data);
 
     void registrationSuccess();
     void registrationFail(QString error);
@@ -58,8 +71,9 @@ signals:
     void clearMessagesAfterDelete(const int& group_id);
 private:
     int deleteUserFromInfoFile(const int& group_id, const int& user_id);
-    bool writeJsonToFile(const QString& path, const QJsonObject& json);
-    bool readJsonFromFile(const QString &path, QJsonObject &jsonForWriting);
+
+    bool saveProtoObjectToFile(const QString& path, const QByteArray& data);
+    bool readProtoObjectFromFile(const QString &path, QByteArray &data);
 
 
     Logger *logger;

@@ -13,10 +13,10 @@ MessageNetworkManager::MessageNetworkManager(QObject *parent)
         emit connectionSuccess();
 
         if(activeUserId != 0) {
-            QJsonObject setIdentifiers;
-            setIdentifiers["flag"] = "identifiers";
-            setIdentifiers["user_id"] = activeUserId;
-            sendData(setIdentifiers);
+            common::Identifiers ident;
+            ident.setUserId(activeUserId);
+            QProtobufSerializer serializer;
+            sendData("identifiers", ident.serialize(&serializer));
         }
         {
             QMutexLocker lock(&messageMutex);
@@ -56,26 +56,46 @@ void MessageNetworkManager::connectToServer()
     socket->connectToHost(ip,2020);
 }
 
-void MessageNetworkManager::sendData(const QJsonObject &jsonToSend)
+void MessageNetworkManager::sendData(const QString &flag, const QByteArray &data)
 {
-    QJsonDocument doc(jsonToSend);
-    logger->log(Logger::INFO,"messagenetworkmanager.cpp::sendData","Sending json for " + jsonToSend["flag"].toString());
-    QByteArray jsonDataOut = doc.toJson(QJsonDocument::Compact);
+    messages::Envelope envelope;
+    envelope.setFlag(flag);
+    envelope.setPayload(data);
+    QProtobufSerializer serializer;
+    QByteArray envelopeData = envelope.serialize(&serializer);
+
+    logger->log(
+        Logger::INFO,
+        "messagenetworkmanager.cpp::sendData",
+        "Sending envelope for flag: " + flag
+        );
 
     bool shouldStartProcessing = false;
     {
         QMutexLocker lock(&messageMutex);
         if (sendMessageQueue.size() >= MAX_QUEUE_SIZE) {
-            logger->log(Logger::DEBUG, "messagenetworkmanager.cpp::sendData", "Send queue overflow! Dropping message.");
+            logger->log(
+                Logger::DEBUG,
+                "messagenetworkmanager.cpp::sendData",
+                "Send queue overflow! Dropping message."
+                );
             return;
         }
-        sendMessageQueue.enqueue(jsonDataOut);
-        logger->log(Logger::INFO, "messagenetworkmanager.cpp::sendData", "Message added to queue. Queue size: " + QString::number(sendMessageQueue.size()));
+        sendMessageQueue.enqueue(envelopeData);
+        logger->log(
+            Logger::INFO,
+            "messagenetworkmanager.cpp::sendData",
+            "Message added to queue. Queue size: " + QString::number(sendMessageQueue.size())
+            );
         shouldStartProcessing = sendMessageQueue.size() == 1;
     }
 
     if (shouldStartProcessing) {
-        logger->log(Logger::INFO, "messagenetworkmanager.cpp::sendData", "Starting to process the send queue.");
+        logger->log(
+            Logger::INFO,
+            "messagenetworkmanager.cpp::sendData",
+            "Starting to process the send queue."
+            );
         processSendMessageQueue();
     }
 }
@@ -114,67 +134,67 @@ void MessageNetworkManager::onDataReceived()
 
         if (socket->bytesAvailable() < blockSize) return;
 
-        QByteArray jsonData;
-        jsonData.resize(blockSize);
-        in.readRawData(jsonData.data(), blockSize);
+        QByteArray envelopeData;
+        envelopeData.resize(blockSize);
+        in.readRawData(envelopeData.data(), blockSize);
 
-        QJsonDocument doc = QJsonDocument::fromJson(jsonData);
-
-        if (doc.isNull()) {
-            logger->log(Logger::ERROR,"messagenetworkmanager.cpp::onDataReceived","Received JSON doc is null");
+        QProtobufSerializer serializer;
+        messages::Envelope envelope;
+        if (!envelope.deserialize(&serializer, envelopeData)) {
+            logger->log(Logger::WARN, "clienthandler.cpp::readClient", "Failed to deserialize protobuf");
             blockSize = 0;
             return;
         }
 
-        QJsonObject receivedFromServerJson = doc.object();
+        QString flag = envelope.flag();
+        QByteArray payload = envelope.payload();
 
-        QString flag = receivedFromServerJson["flag"].toString();
-        logger->log(Logger::INFO,"messagenetworkmanager.cpp::onDataReceived","Readings JSON for " + flag);
+        logger->log(Logger::INFO,"messagenetworkmanager.cpp::onDataReceived","Readings PROTO for " + flag);
 
         auto it = flagMap.find(flag.toStdString());
         uint flagId = (it != flagMap.end()) ? it->second : 0;
         switch (flagId) {
         case 1:
-            emit loginResultsReceived(receivedFromServerJson);
+            emit loginResultsReceived(payload);
             break;
         case 2:
-            emit registrationResultsReceived(receivedFromServerJson);
+            emit registrationResultsReceived(payload);
             break;
         case 3:
-            emit messageReceived(receivedFromServerJson);
+            emit messageReceived(payload);
             break;
         case 4:
-            emit groupMessageReceived(receivedFromServerJson);
+            emit groupMessageReceived(payload);
             break;
         case 5:
-            emit deleteGroupMemberReceived(receivedFromServerJson);
+            emit deleteGroupMemberReceived(payload);
             break;
         case 6:
-            emit addGroupMemberReceived(receivedFromServerJson);
+            emit addGroupMemberReceived(payload);
             break;
-        case 7:
-            if (receivedFromServerJson.contains("dialogs_info") && receivedFromServerJson.contains("groups_info")) {
-                emit dialogsInfoReceived(receivedFromServerJson["dialogs_info"].toObject());
-                emit groupInfoReceived(receivedFromServerJson["groups_info"].toObject());
-            } else {
-                emit removeAccountFromConfigManager();
-                QCoreApplication::quit();
-            }
+        case 7:{
+            chats::ChatsInfoResponse response;
+            QProtobufSerializer serializer;
+            response.deserialize(&serializer,payload);
+
+            emit dialogsInfoReceived(response.dialogsInfo());
+            emit groupInfoReceived(response.groupsInfo());
             break;
+        }
         case 8:
-            emit searchDataReceived(receivedFromServerJson);
+            emit searchDataReceived(payload);
             break;
         case 9:
-            emit chatsUpdateDataReceived(receivedFromServerJson);
+            emit chatsUpdateDataReceived(payload);
             break;
         case 10:
-            emit loadMeassgesReceived(receivedFromServerJson);
+            emit loadMeassgesReceived(payload);
             break;
         case 11:
-            emit editResultsReceived(receivedFromServerJson);
+            emit editResultsReceived(payload);
             break;
         case 12:
-            emit avatarsUpdateReceived(receivedFromServerJson);
+            emit avatarsUpdateReceived(payload);
             break;
         default:
             logger->log(Logger::WARN, "messagenetworkmanager.cpp::onDataReceived", "Unknown flag received: " + flag);

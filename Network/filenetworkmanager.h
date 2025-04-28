@@ -7,13 +7,15 @@
 #include <QFile>
 #include <QFileInfo>
 
-#include <QJsonObject>
-#include <QJsonDocument>
-
 #include <QMutex>
 #include <QTimer>
 
 #include "Utils/logger.h"
+
+#include "generated_protobuf/envelope.qpb.h"
+#include "generated_protobuf/identifiers.qpb.h"
+#include "generated_protobuf/getAvatar.qpb.h"
+#include "QProtobufSerializer"
 
 class FileNetworkManager : public QObject
 {
@@ -27,16 +29,16 @@ public slots:
     void processSendFileQueue();
 
     void connectToFileServer();
-    void sendToFileServer(const QJsonDocument &doc);
+    void sendData(const QString &flag, const QByteArray &data);
     void sendAvatar(const QString &avatarPath, const QString &type, const int& id);
 
     void setActiveUser(const QString &userName, const int &userId);
     void setLogger(Logger *logger);
 
 signals:
-    void uploadFiles(const QJsonObject &fileDataJson);
-    void uploadVoiceFile(const QJsonObject &fileDataJson);
-    void uploadAvatar(const QJsonObject &avatarDataJson);
+    void uploadFiles(const QByteArray &fileData);
+    void uploadVoiceFile(const QByteArray &fileData);
+    void uploadAvatar(const QByteArray &data);
     void sendAvatarUrl(const QString &avatar_url, const int& user_id, const QString& type);
 
     void onDisconnected();
@@ -53,7 +55,7 @@ private:
     QMutex fileMutex;
 
     QString activeUserLogin;
-    int activeUserId;
+    quint64 activeUserId;
 
     Logger* logger;
 

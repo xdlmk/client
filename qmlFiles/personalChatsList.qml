@@ -85,7 +85,7 @@ Rectangle {
                     if(user_id !== 0) {
                         upLine.user_id = user_id;
                         nameText.text = userlogin;
-                        client.loadingChat(userlogin,chatType);
+                        client.loadingChat(user_id, chatType);
 
                         if(chatType === "group") {
                             client.getGroupMembers(user_id);

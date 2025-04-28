@@ -9,9 +9,6 @@
 #include <QDir>
 #include <QCoreApplication>
 
-#include <QJsonDocument>
-#include <QJsonObject>
-#include <QJsonArray>
 #include <QQueue>
 
 #include <QMutex>

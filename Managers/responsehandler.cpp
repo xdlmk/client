@@ -1,4 +1,5 @@
 #include "responsehandler.h"
+#include "addMembers.qpb.h"
 
 ResponseHandler::ResponseHandler(QObject *parent)
     : QObject{parent}
@@ -15,85 +16,111 @@ void ResponseHandler::setActiveUser(const QString &userLogin, const int &userId)
     activeUserId = userId;
 }
 
-void ResponseHandler::processingLoginResults(const QJsonObject &loginResultsJson)
+void ResponseHandler::processingLoginResults(const QByteArray &loginResultsData)
 {
-    logger->log(Logger::INFO,"responsehandler.cpp::processingLoginResults","processingLoginResults has begun");
-    QString success = loginResultsJson["success"].toString();
-    QString userlogin = loginResultsJson["userlogin"].toString();
-    QString password = loginResultsJson["password"].toString();
-    int userId = loginResultsJson["user_id"].toInt();
+    logger->log(Logger::INFO, "responsehandler.cpp::processingLoginResults", "processingLoginResults has begun");
 
-    QString avatar_url = loginResultsJson["avatar_url"].toString();
+    QProtobufSerializer serializer;
+    auth::LoginResponse response;
 
-    if(success == "ok")
-    {
-        QJsonObject setIdentifiers;
-        setIdentifiers["flag"] = "identifiers";
-        setIdentifiers["user_id"] = userId;
-        emit sendData(setIdentifiers);
-        emit transferUserNameAndIdAfterLogin(userlogin,userId);
+    if (!response.deserialize(&serializer, loginResultsData)) {
+        logger->log(Logger::ERROR, "responsehandler.cpp::processingLoginResults", "Failed to parse login response");
+        emit loginFail();
+        return;
+    }
+
+    QString success = response.success();
+    QString userlogin = response.userlogin();
+    QString password = response.password();
+    int userId = response.userId();
+    QString avatar_url = response.avatarUrl();
+
+    if (success == "ok") {
+        common::Identifiers identifiers;
+        identifiers.setUserId(userId);
+        emit sendData("identifiers", identifiers.serialize(&serializer));
+        emit transferUserNameAndIdAfterLogin(userlogin, userId);
         emit loginSuccess(userlogin, userId);
         emit checkAndSendAvatarUpdate(avatar_url, userId, "personal");
-        emit addAccount(userlogin,password,userId);
+        emit addAccount(userlogin, password, userId);
         emit updatingChats();
-    }
-    else if(success == "poor")
-    {
+    } else if (success == "poor") {
         emit loginFail();
     }
 }
 
-void ResponseHandler::processingRegistrationResults(const QJsonObject &regResultsJson)
+void ResponseHandler::processingRegistrationResults(const QByteArray &regResultsData)
 {
-    logger->log(Logger::INFO,"responsehandler.cpp::processingRegistrationResults","processingRegistrationResultsFromServer has begun");
-    QString success = regResultsJson["success"].toString();
-    if(success == "ok")
-    {
-        emit registrationSuccess() ;
-    }
-    else if (success == "poor")
-    {
-        QString error = regResultsJson["errorMes"].toString();
-        emit registrationFail(error);
-    }
-}
+    QProtobufSerializer serializer;
+    auth::RegisterResponse response;
 
-void ResponseHandler::processingSearchData(const QJsonObject &searchDataJson)
-{
-    logger->log(Logger::INFO,"responsehandler.cpp::processingSearchData","processingSearchDataFromServer has begun");
-    QJsonArray resultsArray = searchDataJson.value("results").toArray();
-    for (const QJsonValue &value : resultsArray) {
-        QJsonObject userObj = value.toObject();
-        int id = userObj.value("id").toInt();
-        QString userlogin = userObj.value("userlogin").toString();
-        QString avatar_url = userObj.value("avatar_url").toString();
-        emit checkAndSendAvatarUpdate(avatar_url,id,"personal");
+    if (!response.deserialize(&serializer, regResultsData)) {
+        logger->log(Logger::ERROR, "responsehandler.cpp::processingRegistrationResults", "Failed to parse registration response");
+        emit registrationFail("Failed to parse response");
+        return;
+    }
+    QString success = response.success();
+    QString errorMes = response.errorMes();
 
-        emit newSearchUser(userlogin,id);
+    if (success == "ok") {
+        emit registrationSuccess();
+    } else if (success == "poor") {
+        emit registrationFail(errorMes);
     }
 }
 
-void ResponseHandler::processingEditProfile(const QJsonObject &editResultsJson)
+void ResponseHandler::processingSearchData(const QByteArray &searchData)
 {
-    logger->log(Logger::INFO,"responsehandler.cpp::processingEditProfile","processingEditProfileFromServer has begun");
+    logger->log(Logger::INFO, "responsehandler.cpp::processingSearchData", "processingSearchDataFromServer has begun");
 
-    QString status = editResultsJson["status"].toString();
-    if(status == "poor"){
-        QString error = editResultsJson["error"].toString();
-        if(error == "Unique error"){
-            emit editUniqueError();
-            logger->log(Logger::ERROR,"responsehandler.cpp::processingEditProfile","Information changed was not unique");
-            return;
-        }
-        logger->log(Logger::WARN,"responsehandler.cpp::processingEditProfile","Unknown request error");
+    QProtobufSerializer serializer;
+    search::SearchResponse response;
+
+    if (!response.deserialize(&serializer, searchData)) {
+        logger->log(Logger::ERROR, "responsehandler.cpp::processingSearchData", "Failed to parse search response");
+        return;
+    }
+
+    for (const auto &result : response.results()) {
+        int id = result.id_proto();
+        QString userlogin = result.userlogin();
+        QString avatar_url = result.avatarUrl();
+
+        emit checkAndSendAvatarUpdate(avatar_url, id, "personal");
+        emit newSearchUser(userlogin, id);
+    }
+}
+
+void ResponseHandler::processingEditProfile(const QByteArray &editResultsData)
+{
+    logger->log(Logger::INFO, "responsehandler.cpp::processingEditProfile", "processingEditProfileFromServer has begun");
+
+    QProtobufSerializer serializer;
+    profile::EditProfileResponse response;
+
+    if (!response.deserialize(&serializer, editResultsData)) {
+        logger->log(Logger::ERROR, "responsehandler.cpp::processingEditProfile", "Failed to parse edit profile response");
         emit unknownError();
         return;
     }
 
-    QString editable = editResultsJson["editable"].toString();
-    QString editInformation = editResultsJson["editInformation"].toString();
+    QString status = response.status();
+    if (status == "poor") {
+        QString error = response.error();
+        if (error == "Unique error") {
+            emit editUniqueError();
+            logger->log(Logger::ERROR, "responsehandler.cpp::processingEditProfile", "Information changed was not unique");
+            return;
+        }
+        logger->log(Logger::WARN, "responsehandler.cpp::processingEditProfile", "Unknown request error");
+        emit unknownError();
+        return;
+    }
 
-    if(editable == "Username") {
+    QString editable = response.editable();
+    QString editInformation = response.editInformation();
+
+    if (editable == "Username") {
         emit editUserlogin(editInformation);
     } else if (editable == "Phone number") {
         emit editPhoneNumber(editInformation);
@@ -102,43 +129,46 @@ void ResponseHandler::processingEditProfile(const QJsonObject &editResultsJson)
     }
 }
 
-void ResponseHandler::processingAvatarsUpdate(const QJsonObject &avatarsUpdateJson)
+void ResponseHandler::processingAvatarsUpdate(const QByteArray &avatarsUpdateData)
 {
-    logger->log(Logger::INFO,"responsehandler.cpp::processingAvatarsUpdate","processingAvatarsUpdate has begun");
-    QJsonArray avatarsArray = avatarsUpdateJson["avatars"].toArray();
-    QJsonArray groupsAvatarsArray = avatarsUpdateJson["groups_avatars"].toArray();
-    if (avatarsArray.isEmpty()) {
-        logger->log(Logger::WARN,"responsehandler.cpp::processingAvatarsUpdate","Urls json array is empty");
+    logger->log(Logger::INFO, "responsehandler.cpp::processingAvatarsUpdate", "processingAvatarsUpdate has begun");
+
+    QProtobufSerializer serializer;
+    avatars::AvatarsUpdateResponse response;
+
+    if (!response.deserialize(&serializer, avatarsUpdateData)) {
+        logger->log(Logger::ERROR, "responsehandler.cpp::processingAvatarsUpdate", "Failed to parse avatars update response");
+        return;
     }
-    if (groupsAvatarsArray.isEmpty()) {
-        logger->log(Logger::WARN,"responsehandler.cpp::processingAvatarsUpdate","Groups urls json array is empty");
+
+    if (response.avatars().isEmpty()) {
+        logger->log(Logger::WARN, "responsehandler.cpp::processingAvatarsUpdate", "Urls protobuf array is empty");
+    }
+    if (response.groupsAvatars().isEmpty()) {
+        logger->log(Logger::WARN, "responsehandler.cpp::processingAvatarsUpdate", "Groups urls protobuf array is empty");
     }
 
-    for (const QJsonValue &value : avatarsArray) {
-        QJsonObject avatarObject = value.toObject();
-
-        int id = avatarObject["id"].toInt();
-        QString avatarUrl = avatarObject["avatar_url"].toString();
-
+    for (const auto &avatarItem : response.avatars()) {
+        int id = avatarItem.id_proto();
+        QString avatarUrl = avatarItem.avatarUrl();
         emit checkAndSendAvatarUpdate(avatarUrl, id, "personal");
     }
 
-    for (const QJsonValue &value : groupsAvatarsArray) {
-        QJsonObject avatarObject = value.toObject();
-
-        int id = avatarObject["group_id"].toInt();
-        QString avatarUrl = avatarObject["avatar_url"].toString();
-
+    for (const auto &groupAvatarItem : response.groupsAvatars()) {
+        int id = groupAvatarItem.groupId();
+        QString avatarUrl = groupAvatarItem.avatarUrl();
         emit checkAndSendAvatarUpdate(avatarUrl, id, "group");
     }
 
     emit getChatsInfo();
 }
 
-void ResponseHandler::processingGroupInfoSave(const QJsonObject &receivedGroupInfoJson)
+void ResponseHandler::processingGroupInfoSave(const QList<chats::GroupInfoItem> &receivedGroupInfo)
 {
-    QJsonArray groupsInfoArray = receivedGroupInfoJson["info"].toArray();
-    QDir saveDir(QCoreApplication::applicationDirPath() + "/.data/" + QString::number(activeUserId) + "/groupsInfo");
+    logger->log(Logger::INFO, "responsehandler.cpp::processingGroupInfoSave", "processingGroupInfoSave has begun");
+
+    QString basePath = QCoreApplication::applicationDirPath() + "/.data/" + QString::number(activeUserId) + "/groupsInfo";
+    QDir saveDir(basePath);
     if (!saveDir.exists()) {
         saveDir.mkpath(".");
     } else {
@@ -146,153 +176,212 @@ void ResponseHandler::processingGroupInfoSave(const QJsonObject &receivedGroupIn
         saveDir.mkpath(".");
     }
 
-    for(QJsonValue value : groupsInfoArray) {
-        QJsonObject groupInfo = value.toObject();
-        int group_id = groupInfo["group_id"].toInt();
+    for (const auto &groupItem : receivedGroupInfo) {
+        quint64 group_id = groupItem.groupId();
 
-        QString savePath = QCoreApplication::applicationDirPath() + "/.data/" + QString::number(activeUserId) + "/groupsInfo/" + QString::number(group_id) + ".json";
+        QString savePath = basePath + "/" + QString::number(group_id) + ".pb";
 
-        if(!writeJsonToFile(savePath,groupInfo)) {
-            logger->log(Logger::WARN, "responsehandler.cpp::processingGroupInfoSave", "writeJsonToFile return false");
+        QProtobufSerializer serializer;
+        QByteArray data = groupItem.serialize(&serializer);
+
+        if (!saveProtoObjectToFile(savePath, data)) {
+            logger->log(Logger::WARN, "responsehandler.cpp::processingGroupInfoSave", "saveProtoObjectToFile returned false");
         }
     }
 }
 
-void ResponseHandler::processingDialogsInfoSave(const QJsonObject &receivedDialogInfoJson)
+void ResponseHandler::processingDialogsInfoSave(const QList<chats::DialogInfoItem> &receivedDialogInfo)
 {
-    QJsonArray dialogsInfoArray = receivedDialogInfoJson["info"].toArray();
+    logger->log(Logger::INFO, "responsehandler.cpp::processingDialogsInfoSave", "processingDialogsInfoSave has begun");
 
-    QDir saveDir(QCoreApplication::applicationDirPath() + "/.data/" + QString::number(activeUserId) + "/dialogsInfo");
+    QString basePath = QCoreApplication::applicationDirPath() + "/.data/" + QString::number(activeUserId) + "/dialogsInfo";
+    QDir saveDir(basePath);
     if (!saveDir.exists()) {
         saveDir.mkpath(".");
     } else {
         saveDir.removeRecursively();
         saveDir.mkpath(".");
     }
-    for(QJsonValue value : dialogsInfoArray) {
-        QJsonObject dialogInfo = value.toObject();
-        if(!dialogInfo.contains("user_id")) continue;
-        int user_id = dialogInfo["user_id"].toInt();
 
-        QString savePath = QCoreApplication::applicationDirPath() + "/.data/" + QString::number(activeUserId) + "/dialogsInfo/" + QString::number(user_id) + ".json";
-        if(!writeJsonToFile(savePath,dialogInfo)) {
-            logger->log(Logger::WARN, "responsehandler.cpp::processingDialogsInfoSave", "writeJsonToFile return false");
+    for (const auto &dialogItem : receivedDialogInfo) {
+        quint64 user_id = dialogItem.userId();
+
+        QString savePath = basePath + "/" + QString::number(user_id) + ".pb";
+
+        QProtobufSerializer serializer;
+        QByteArray data = dialogItem.serialize(&serializer);
+
+        if (!saveProtoObjectToFile(savePath, data)) {
+            logger->log(Logger::WARN, "responsehandler.cpp::processingDialogsInfoSave", "saveProtoObjectToFile returned false");
         }
     }
 }
 
-void ResponseHandler::processingDeleteGroupMember(const QJsonObject &receivedDeleteMemberFromGroup)
+void ResponseHandler::processingDeleteGroupMember(const QByteArray &receivedDeleteMemberFromGroupData)
 {
-    if(receivedDeleteMemberFromGroup["error_code"].toInt() == 0) {
-        int group_id = receivedDeleteMemberFromGroup["group_id"].toInt();
-        int error_code = deleteUserFromInfoFile(group_id, receivedDeleteMemberFromGroup["deleted_user_id"].toInt());
-        if(error_code == 0){
-            logger->log(Logger::INFO,"responsehandler.cpp::deleteGroupMemberReceived", "Member with user_id: " + QString::number(receivedDeleteMemberFromGroup["deleted_user_id"].toInt()) + " successfuly removed from info list");
+    QProtobufSerializer serializer;
+    groups::DeleteMemberResponse response;
+
+    if (!response.deserialize(&serializer, receivedDeleteMemberFromGroupData)) {
+        logger->log(Logger::WARN, "responsehandler.cpp::deleteGroupMemberReceived", "Failed to deserialize DeleteMemberResponse");
+        return;
+    }
+
+    if (response.errorCode() == 0) {
+        quint64 group_id = response.groupId();
+        quint64 deleted_user_id = response.deletedUserId();
+        int error_code = deleteUserFromInfoFile(group_id, deleted_user_id);
+
+        if (error_code == 0) {
+            logger->log(Logger::INFO, "responsehandler.cpp::deleteGroupMemberReceived",
+                        "Member with user_id: " + QString::number(deleted_user_id) + " successfully removed from info list");
             emit getGroupMembers(group_id);
         } else {
-            logger->log(Logger::WARN,"responsehandler.cpp::deleteGroupMemberReceived", "Member with user_id: " + QString::number(receivedDeleteMemberFromGroup["deleted_user_id"].toInt()) + " not removed from info list");
+            logger->log(Logger::WARN, "responsehandler.cpp::deleteGroupMemberReceived",
+                        "Member with user_id: " + QString::number(deleted_user_id) + " not removed from info list");
         }
 
-    } else if(receivedDeleteMemberFromGroup["error_code"].toInt() == 1) {
-        logger->log(Logger::WARN,"responsehandler.cpp::deleteGroupMemberReceived", "Member with user_id: " + QString::number(receivedDeleteMemberFromGroup["deleted_user_id"].toInt()) + " is not a member of the group");
-    } else if(receivedDeleteMemberFromGroup["error_code"].toInt() == 2) {
-        logger->log(Logger::WARN,"responsehandler.cpp::deleteGroupMemberReceived", "The active user does not have sufficient rights to perform this operation");
+    } else if (response.errorCode() == 1) {
+        logger->log(Logger::WARN, "responsehandler.cpp::deleteGroupMemberReceived",
+                    "Member with user_id: " + QString::number(response.deletedUserId()) + " is not a member of the group");
+    } else if (response.errorCode() == 2) {
+        logger->log(Logger::WARN, "responsehandler.cpp::deleteGroupMemberReceived",
+                    "The active user does not have sufficient rights to perform this operation");
     }
 }
 
-void ResponseHandler::processingAddGroupMember(const QJsonObject &receivedAddMemberFromGroup)
+void ResponseHandler::processingAddGroupMember(const QByteArray &receivedAddMemberFromGroupData)
 {
-    int group_id = receivedAddMemberFromGroup["group_id"].toInt();
-    QJsonArray newMembers = receivedAddMemberFromGroup["addedMembers"].toArray();
+    QProtobufSerializer serializer;
+    groups::AddGroupMembersResponse response;
 
-    for(const QJsonValue &value : newMembers) {
-        QJsonObject member = value.toObject();
-        if(member["id"].toInt() == this->activeUserId) {
+    if (!response.deserialize(&serializer, receivedAddMemberFromGroupData)) {
+        logger->log(Logger::WARN, "responsehandler.cpp::processingAddGroupMember",
+                    "Failed to deserialize AddGroupMembersResponse");
+        return;
+    }
+
+    quint64 group_id = response.groupId();
+
+    for (const auto &member : response.addedMembers()) {
+        if (member.userId() == static_cast<quint64>(this->activeUserId)) {
             updatingChats();
             return;
         }
     }
 
-    QString pathToGroupInfo = QCoreApplication::applicationDirPath() + "/.data/" + QString::number(activeUserId) + "/groupsInfo/" + QString::number(group_id) + ".json";
-    QJsonObject json;
-    readJsonFromFile(pathToGroupInfo,json);
-    QJsonArray members = json["members"].toArray();
+    QString pathToGroupInfo = QCoreApplication::applicationDirPath() + "/.data/" +
+                              QString::number(activeUserId) + "/groupsInfo/" +
+                              QString::number(group_id) + ".pb";
 
-    for(const QJsonValue &value : newMembers) {
-        QJsonObject member = value.toObject();
-        members.append(member);
+    QByteArray protoData;
+    if (!readProtoObjectFromFile(pathToGroupInfo, protoData)) {
+        logger->log(Logger::WARN, "responsehandler.cpp::processingAddGroupMember",
+                    "Failed to read proto object from file: " + pathToGroupInfo);
+        return;
     }
 
-    json["members"] = members;
+    chats::GroupInfoItem groupInfo;
+    if (!groupInfo.deserialize(&serializer, protoData)) {
+        logger->log(Logger::WARN, "responsehandler.cpp::processingAddGroupMember",
+                    "Failed to deserialize GroupInfoItem from file data");
+        return;
+    }
+    QList<chats::GroupMember> members = groupInfo.members();
+    for (const auto &addedMember : response.addedMembers()) {
+        chats::GroupMember newMember;
+        newMember.setId_proto(addedMember.userId());
+        newMember.setUsername(addedMember.username());
+        newMember.setStatus(addedMember.status());
+        newMember.setAvatarUrl(addedMember.avatarUrl());
+        members.append(newMember);
+    }
+    groupInfo.setMembers(members);
 
-    if(writeJsonToFile(pathToGroupInfo,json)) emit getGroupMembers(group_id);
+    QByteArray outData = groupInfo.serialize(&serializer);
+
+    if (saveProtoObjectToFile(pathToGroupInfo, outData)) {
+        emit getGroupMembers(group_id);
+    } else {
+        logger->log(Logger::WARN, "responsehandler.cpp::processingAddGroupMember",
+                    "Failed to save updated GroupInfoItem to file.");
+    }
 }
 
 int ResponseHandler::deleteUserFromInfoFile(const int &group_id, const int &user_id)
 {
-    QString pathToGroupInfo = QCoreApplication::applicationDirPath() + "/.data/" + QString::number(activeUserId) + "/groupsInfo/" + QString::number(group_id) + ".json";
-    QFile file(pathToGroupInfo);
-    if(user_id == this->activeUserId) {
+    QString pathToGroupInfo = QCoreApplication::applicationDirPath() + "/.data/" +
+                              QString::number(activeUserId) + "/groupsInfo/" +
+                              QString::number(group_id) + ".pb";
+
+    if (user_id == this->activeUserId) {
         QFile::remove(pathToGroupInfo);
-        QFile::remove(QCoreApplication::applicationDirPath() + "/.data/" + QString::number(activeUserId) + "/messages/group/message_" + QString::number(group_id) + ".json");
+        QFile::remove(QCoreApplication::applicationDirPath() + "/.data/" +
+                      QString::number(activeUserId) + "/messages/group/message_" +
+                      QString::number(group_id) + ".json");
         emit clearMessagesAfterDelete(group_id);
     }
-    QJsonObject json;
-    readJsonFromFile(pathToGroupInfo,json);
-    QJsonArray members = json["members"].toArray();
-    QJsonArray newMembers;
 
-    for (const QJsonValue &value : members) {
-        QJsonObject member = value.toObject();
-        int memberId = member["id"].toInt();
-        if (memberId == user_id) {
-            logger->log(Logger::DEBUG,"responsehandler.cpp::deleteUserFromInfoFile", "User with id: " + QString::number(user_id) + " successfuly removed from group with id: " + QString::number(group_id));
+    QByteArray protoData;
+    if (!readProtoObjectFromFile(pathToGroupInfo, protoData)) {
+        logger->log(Logger::WARN, "responsehandler.cpp::deleteUserFromInfoFile", "Failed to read proto object from file");
+        return 1;
+    }
+
+    QProtobufSerializer serializer;
+    chats::GroupInfoItem groupInfo;
+    if (!groupInfo.deserialize(&serializer, protoData)) {
+        logger->log(Logger::WARN, "responsehandler.cpp::deleteUserFromInfoFile", "Failed to deserialize proto object");
+        return 1;
+    }
+
+    QList<chats::GroupMember> newMembers;
+    const QList<chats::GroupMember> &members = groupInfo.members();
+    for (const auto &member : members) {
+        if (static_cast<int>(member.id_proto()) == user_id) {
+            logger->log(Logger::DEBUG, "responsehandler.cpp::deleteUserFromInfoFile",
+                        "User with id: " + QString::number(user_id) +
+                            " successfully removed from group with id: " + QString::number(group_id));
             continue;
         }
-
         newMembers.append(member);
     }
-    json["members"] = newMembers;
+    groupInfo.setMembers(newMembers);
 
-    if (!writeJsonToFile(pathToGroupInfo,json)) {
-        logger->log(Logger::WARN,"responsehandler.cpp::deleteUserFromInfoFile", "Group info file not open for write");
+    QByteArray outData = groupInfo.serialize(&serializer);
+
+    if (!saveProtoObjectToFile(pathToGroupInfo, outData)) {
+        logger->log(Logger::WARN, "responsehandler.cpp::deleteUserFromInfoFile", "Group info file not open for write");
         return 1;
     }
 
     return 0;
 }
 
-bool ResponseHandler::writeJsonToFile(const QString &path, const QJsonObject &json)
+bool ResponseHandler::saveProtoObjectToFile(const QString &path, const QByteArray &data)
 {
     QFile file(path);
-    if (!file.open(QIODevice::WriteOnly)) {
-        logger->log(Logger::DEBUG, "responsehandler.cpp::writeJsonToFile", "Open file failed: " + path);
+    if (file.open(QIODevice::WriteOnly)) {
+        file.write(data);
+        file.close();
+        return true;
+    } else {
+        logger->log(Logger::WARN, "responsehandler.cpp::saveDialogInfoToFile", "Failed to open file for writing: " + path);
         return false;
     }
-    file.write(QJsonDocument(json).toJson(QJsonDocument::Indented));
-    file.close();
-    return true;
 }
 
-bool ResponseHandler::readJsonFromFile(const QString &path, QJsonObject &jsonForWriting)
+bool ResponseHandler::readProtoObjectFromFile(const QString &path, QByteArray &data)
 {
     QFile file(path);
-    if (!file.open(QIODevice::ReadOnly)) {
-        logger->log(Logger::WARN, "responsehandler.cpp::readJsonFromFile",
+    if (file.open(QIODevice::ReadOnly)) {
+        data = file.readAll();
+        file.close();
+        return true;
+    } else {
+        logger->log(Logger::WARN, "responsehandler.cpp::readProtoObjectFromFile",
                     QString("Failed to open file for reading: %1, error: %2")
                         .arg(path, file.errorString()));
         return false;
     }
-
-    QJsonParseError parseError;
-    jsonForWriting = QJsonDocument::fromJson(file.readAll(), &parseError).object();
-    file.close();
-
-    if (parseError.error != QJsonParseError::NoError) {
-        logger->log(Logger::WARN, "responsehandler.cpp::readJsonFromFile",
-                    QString("JSON parse error in %1: %2")
-                        .arg(path, parseError.errorString()));
-        return false;
-    }
-    return true;
 }

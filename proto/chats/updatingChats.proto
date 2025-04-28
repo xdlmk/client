@@ -1,0 +1,17 @@
+syntax = "proto3";
+package chats;
+
+import "chatMessage.proto";
+
+message UpdatingChatsRequest {
+    uint64 user_id = 1;
+}
+
+message UpdatingChatsResponse {
+    string status = 1;
+    repeated ChatMessage messages = 2;
+}
+
+message MessageHistory {
+    repeated ChatMessage messages = 1;
+}

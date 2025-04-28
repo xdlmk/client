@@ -6,7 +6,6 @@
 #include <QStandardPaths>
 #include <QString>
 #include <QList>
-#include <QJsonObject>
 #include "logger.h"
 
 class ConfigManager : public QObject

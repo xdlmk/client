@@ -2,23 +2,6 @@
 #define CLIENT_H
 
 #include <QObject>
-#include <QTcpSocket>
-#include <QByteArray>
-#include <QTimer>
-
-#include <QJsonDocument>
-#include <QJsonObject>
-#include <QJsonArray>
-#include <QRegularExpression>
-
-#include <QDir>
-#include <QFile>
-#include <QDateTime>
-#include <QStandardPaths>
-#include <QSettings>
-#include <QCoreApplication>
-
-#include <QImage>
 
 #include "Managers/accountmanager.h"
 #include "Managers/audiomanager.h"
@@ -51,7 +34,7 @@ signals:
 
     void clientLogout();
 
-    void loadingChat(const QString userlogin, const QString &flag);
+    void loadingChat(const quint64& id, const QString &flag);
 
     void showPersonalChat(QString login,QString message, int id, QString out, QString type);
     void checkActiveDialog(QVariant message,const QString& type);
@@ -61,8 +44,8 @@ signals:
     void addAccount();
 
     void sendMessage(const QString &message, const int &receiver_id, const QString &flag);
-    void sendMessageWithFile(const QString &message, const QString &receiver_login, const int &receiver_id,const QString& filePath, const QString &flag);
-    void sendVoiceMessage(const QString &receiver_login, const int &receiver_id, const QString &flag);
+    void sendMessageWithFile(const QString &message, const int &receiver_id,const QString& filePath, const QString &flag);
+    void sendVoiceMessage(const int &receiver_id, const QString &flag);
     void sendSearchToServer(const QString &searchable);
     void sendLoginRequest(QString userlogin,QString password);
     void sendRegisterRequest(const QString login, const QString password);
