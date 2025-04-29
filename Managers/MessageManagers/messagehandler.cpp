@@ -46,6 +46,7 @@ void MessageHandler::loadMessageToQml(QVariantMap& messageToDisplay)
             messageToDisplay["fileName"] = fileUrl.mid(underscoreIndex + 1);
         }
     } else messageToDisplay["fileName"] = "";
+    qDebug() << "special_type: " + messageToDisplay["special_type"].toString();
     emit newMessage(messageToDisplay);
 }
 
@@ -79,10 +80,7 @@ void MessageHandler::processingPersonalMessage(const QByteArray &receivedMessage
     messageToLoad["fileName"] = fileName;
 
     messageToLoad["FullDate"] = timestamp;
-
-    if(!protoMsg.specialType().isEmpty()){
-        messageToLoad["special_type"] = protoMsg.specialType();
-    }
+    messageToLoad["special_type"] = protoMsg.specialType();
 
     logger->log(Logger::INFO,"messagehandler.cpp::processingPersonalMessage","Personal message received");
 
@@ -137,9 +135,7 @@ void MessageHandler::processingGroupMessage(const QByteArray &receivedMessageDat
 
     messageToLoad["FullDate"] = timestamp;
 
-    if(!protoMsg.specialType().isEmpty()){
-        messageToLoad["special_type"] = protoMsg.specialType();
-    }
+    messageToLoad["special_type"] = protoMsg.specialType();
 
     messageToLoad["group_name"] = protoMsg.groupName();
     messageToLoad["group_id"] = protoMsg.groupId();
@@ -225,6 +221,7 @@ void MessageHandler::loadingChat(const quint64& id, const QString &flag)
             messageToDisplay["time"] = time;
             messageToDisplay["timestamp"] = fullDate;
             messageToDisplay["special_type"] = msg.specialType();
+            qDebug() << "1special_type: " + msg.specialType();
 
             loadMessageToQml(messageToDisplay);
         }
@@ -273,6 +270,8 @@ void MessageHandler::loadingNextMessages(const QByteArray &messagesData)
             }
         }
         messageToLoad["fileName"] = fileName;
+
+        messageToLoad["special_type"] = protoMsg.specialType();
 
         if (protoMsg.groupId() != 0) {
             messageToLoad["group_id"] = protoMsg.groupId();

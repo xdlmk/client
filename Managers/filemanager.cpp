@@ -275,7 +275,7 @@ QString FileManager::generateUniqueFileName(const QString &baseName, const QStri
 void FileManager::checkingForFileChecker()
 {
     logger->log(Logger::INFO,"filemanager.cpp::checkingForFileChecker", "checkingForFileChecker starts");
-    QFile fileChecker(QCoreApplication::applicationDirPath() + "/.data/" + QString::number(activeUserId) + "/.fileChecker/checker.json");
+    QFile fileChecker(QCoreApplication::applicationDirPath() + "/.data/" + QString::number(activeUserId) + "/.fileChecker/checker.dat");
     QDir dirFileChecker(QCoreApplication::applicationDirPath() + "/.data/" + QString::number(activeUserId) + "/.fileChecker/" );
     QDir dirUploadFiles(QCoreApplication::applicationDirPath() + "/.data/" + QString::number(activeUserId) + "/uploads/");
     if (dirFileChecker.exists()) {
@@ -390,6 +390,7 @@ bool FileManager::checkProtoForMatches(files::FileChecker &fileChecker, const QB
 
 files::FileChecker FileManager::loadFileChecker()
 {
+    checkingForFileChecker();
     QFile file(QCoreApplication::applicationDirPath() + "/.data/" + QString::number(activeUserId) + "/.fileChecker/checker.dat");
     files::FileChecker fileChecker;
 

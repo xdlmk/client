@@ -32,7 +32,7 @@ Item {
 
         Text {
             id: fileText
-            visible: fileName !== "" && lblText.text !== ""
+            visible: fileName !== "" && special_type === "file_message"
             text: fileName
             height: fileText.visible ? implicitHeight : 0
             width: fileText.visible ? implicitWidth : 0
@@ -74,7 +74,7 @@ Item {
 
         Item {
             id: voiceMessage
-            visible: lblText.text === ""
+            visible: special_type === "voice_message"
             anchors {
                 top:nameText.bottom
                 left: parent.left

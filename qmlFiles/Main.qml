@@ -116,6 +116,7 @@ Window {
             property bool isOutgoing: model.isOutgoing
             property string fileUrl: model.fileUrl
             property string fileName: model.fileName
+            property string special_type: model.special_type
             isWaitingForVoice: false
         }
 
@@ -290,13 +291,17 @@ Window {
     }
 
     function onNewMessage(data) {
-        listModel.append({text: data.message, time: data.time, name: data.login, isOutgoing: data.Out === "out" ? true : false,fileName: data.fileName, fileUrl: data.fileUrl});
+        console.log("add type: " + data.special_type);
+        listModel.append({text: data.message, time: data.time, name: data.login, isOutgoing: data.Out === "out" ? true : false,
+                             fileName: data.fileName, fileUrl: data.fileUrl, special_type: data.special_type});
         listView.positionViewAtIndex(listModel.count - 1, ListView.End);
     }
 
     function addMessageToTop(data,isOutgoing) {
+        console.log("insert type: " + data.special_type);
         if(activeChatIdBeforeRequest === upLine.user_id && activeChatTypeBeforeRequest === upLine.currentState) {
-            listModel.insert(0, {text: data.message, time: data.time, name: data.login, isOutgoing: isOutgoing,fileName: data.fileName, fileUrl: data.fileUrl});
+            listModel.insert(0, {text: data.message, time: data.time, name: data.login, isOutgoing: isOutgoing,
+                                 fileName: data.fileName, fileUrl: data.fileUrl, special_type: data.special_type});
         }
     }
 
