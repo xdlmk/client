@@ -5,7 +5,6 @@
 
 #include <QObject>
 #include <QByteArray>
-#include <QDebug>
 #include <QUuid>
 
 #include <QFile>

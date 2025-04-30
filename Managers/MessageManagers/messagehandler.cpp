@@ -46,7 +46,7 @@ void MessageHandler::loadMessageToQml(QVariantMap& messageToDisplay)
             messageToDisplay["fileName"] = fileUrl.mid(underscoreIndex + 1);
         }
     } else messageToDisplay["fileName"] = "";
-    qDebug() << "special_type: " + messageToDisplay["special_type"].toString();
+
     emit newMessage(messageToDisplay);
 }
 
@@ -136,6 +136,9 @@ void MessageHandler::processingGroupMessage(const QByteArray &receivedMessageDat
     messageToLoad["FullDate"] = timestamp;
 
     messageToLoad["special_type"] = protoMsg.specialType();
+    if(protoMsg.specialType() == "create_group") {
+        getChatsInfo();
+    }
 
     messageToLoad["group_name"] = protoMsg.groupName();
     messageToLoad["group_id"] = protoMsg.groupId();
@@ -221,7 +224,6 @@ void MessageHandler::loadingChat(const quint64& id, const QString &flag)
             messageToDisplay["time"] = time;
             messageToDisplay["timestamp"] = fullDate;
             messageToDisplay["special_type"] = msg.specialType();
-            qDebug() << "1special_type: " + msg.specialType();
 
             loadMessageToQml(messageToDisplay);
         }

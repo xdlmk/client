@@ -223,7 +223,7 @@ void ResponseHandler::processingDeleteGroupMember(const QByteArray &receivedDele
     groups::DeleteMemberResponse response;
 
     if (!response.deserialize(&serializer, receivedDeleteMemberFromGroupData)) {
-        logger->log(Logger::WARN, "responsehandler.cpp::deleteGroupMemberReceived", "Failed to deserialize DeleteMemberResponse");
+        logger->log(Logger::WARN, "responsehandler.cpp::processingDeleteGroupMember", "Failed to deserialize DeleteMemberResponse");
         return;
     }
 
@@ -233,19 +233,19 @@ void ResponseHandler::processingDeleteGroupMember(const QByteArray &receivedDele
         int error_code = deleteUserFromInfoFile(group_id, deleted_user_id);
 
         if (error_code == 0) {
-            logger->log(Logger::INFO, "responsehandler.cpp::deleteGroupMemberReceived",
+            logger->log(Logger::INFO, "responsehandler.cpp::processingDeleteGroupMember",
                         "Member with user_id: " + QString::number(deleted_user_id) + " successfully removed from info list");
             emit getGroupMembers(group_id);
         } else {
-            logger->log(Logger::WARN, "responsehandler.cpp::deleteGroupMemberReceived",
+            logger->log(Logger::WARN, "responsehandler.cpp::processingDeleteGroupMember",
                         "Member with user_id: " + QString::number(deleted_user_id) + " not removed from info list");
         }
 
     } else if (response.errorCode() == 1) {
-        logger->log(Logger::WARN, "responsehandler.cpp::deleteGroupMemberReceived",
+        logger->log(Logger::WARN, "responsehandler.cpp::processingDeleteGroupMember",
                     "Member with user_id: " + QString::number(response.deletedUserId()) + " is not a member of the group");
     } else if (response.errorCode() == 2) {
-        logger->log(Logger::WARN, "responsehandler.cpp::deleteGroupMemberReceived",
+        logger->log(Logger::WARN, "responsehandler.cpp::processingDeleteGroupMember",
                     "The active user does not have sufficient rights to perform this operation");
     }
 }
@@ -318,7 +318,7 @@ int ResponseHandler::deleteUserFromInfoFile(const int &group_id, const int &user
         QFile::remove(pathToGroupInfo);
         QFile::remove(QCoreApplication::applicationDirPath() + "/.data/" +
                       QString::number(activeUserId) + "/messages/group/message_" +
-                      QString::number(group_id) + ".json");
+                      QString::number(group_id) + ".pb");
         emit clearMessagesAfterDelete(group_id);
     }
 
