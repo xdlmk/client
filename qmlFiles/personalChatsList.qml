@@ -47,7 +47,7 @@ Rectangle {
                     color: "white"
                     font.pointSize: 10
                     font.bold: true
-                    anchors{
+                    anchors {
                         left: personalChatAvatar.right
                         top:parent.top
                         topMargin: 5
@@ -57,17 +57,18 @@ Rectangle {
 
                 Text {
                     id: messageText
-                    anchors{
+                    anchors {
                         left: personalChatAvatar.right
                         leftMargin: 10
                         top: userLogin.bottom
                         topMargin: 10
                     }
-                    text: message.indexOf('\n') !== -1 && message.indexOf('\n') < 15
+                    elide: Text.ElideRight
+                    width: personalChat.width - (personalChatAvatar.width + personalChatAvatar.anchors.leftMargin + 20)
+                    text: message.indexOf('\n') !== -1
                           ? message.substring(0, message.indexOf('\n')) + "..."
-                          : message.length > 15
-                              ? message.substring(0, 15) + "..."
-                              : message;
+                          : message;
+
                     font.pointSize: 10
                     color: "white"
                 }

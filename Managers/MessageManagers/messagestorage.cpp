@@ -69,11 +69,20 @@ bool MessageStorage::savePersonalMessageToFile(const chats::ChatMessage &newMess
     file.close();
 
     QString out = "";
+    QString message;
+    if(newMessage.specialType() == "voice_message") {
+        message = "Voice message";
+    } else if(newMessage.specialType() == "file_message" && newMessage.content() == "") {
+        message = newMessage.file().fileName();
+    } else {
+        message = newMessage.content();
+    }
+
     if (newMessage.senderId() == activeUserId) {
         out = "out";
-        emit showPersonalChat(newMessage.receiverLogin(), newMessage.content(), newMessage.receiverId(), out, "personal");
+        emit showPersonalChat(newMessage.receiverLogin(), message, newMessage.receiverId(), out, "personal");
     } else if (newMessage.receiverId() == activeUserId) {
-        emit showPersonalChat(newMessage.senderLogin(), newMessage.content(), newMessage.senderId(), out, "personal");
+        emit showPersonalChat(newMessage.senderLogin(), message, newMessage.senderId(), out, "personal");
     }
 
     return true;
@@ -129,7 +138,16 @@ bool MessageStorage::saveGroupMessageToFile(const chats::ChatMessage &newMessage
 
     QString out = "";
     if (newMessage.senderId() == activeUserId) out = "out";
-    emit showPersonalChat(newMessage.groupName(), newMessage.content(), newMessage.groupId(), out, "group");
+
+    QString message;
+    if(newMessage.specialType() == "voice_message") {
+        message = "Voice message";
+    } else if(newMessage.specialType() == "file_message" && newMessage.content() == "") {
+        message = newMessage.file().fileName();
+    } else {
+        message = newMessage.content();
+    }
+    emit showPersonalChat(newMessage.groupName(), message, newMessage.groupId(), out, "group");
 
     return true;
 }

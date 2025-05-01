@@ -309,11 +309,11 @@ Window {
 
     function onCheckActiveDialog(data,type) {
         if(type === "group") {
-            logger.qmlLog("INFO","Main.qml::onCheckActiveDialog","Dialog active: " + (nameText.text === data.group_name));
+            logger.qmlLog("INFO","Main.qml::onCheckActiveDialog","Dialog active: " + (upLine.user_id === data.group_id && upLine.currentState === type));
             if (upLine.user_id === data.group_id && upLine.currentState === type) onNewMessage(data);
         } else if (type === "personal") {
-            logger.qmlLog("INFO","Main.qml::onCheckActiveDialog","Dialog active: " + (nameText.text === data.login));
-            if (upLine.user_id === data.id && upLine.currentState === type) onNewMessage(data);
+            logger.qmlLog("INFO","Main.qml::onCheckActiveDialog","Dialog active: " + ((upLine.user_id === data.id || upLine.user_id === data.second_id) && upLine.currentState === type));
+            if ((upLine.user_id === data.id || upLine.user_id === data.second_id) && upLine.currentState === type) onNewMessage(data);
         }
     }
 

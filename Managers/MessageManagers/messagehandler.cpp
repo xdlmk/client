@@ -84,16 +84,17 @@ void MessageHandler::processingPersonalMessage(const QByteArray &receivedMessage
 
     logger->log(Logger::INFO,"messagehandler.cpp::processingPersonalMessage","Personal message received");
 
-    int conversationId = 0;
+    qDebug() << protoMsg.senderId();
+    qDebug() << activeUserId;
+    qDebug() << protoMsg.receiverId();
+    messageToLoad["login"] = protoMsg.senderLogin();
+    messageToLoad["id"] = protoMsg.senderId();
+    messageToLoad["second_id"] = protoMsg.receiverId();
 
     if(protoMsg.senderId() == activeUserId) {
-        messageToLoad["login"] = protoMsg.receiverLogin();
-        messageToLoad["id"] = protoMsg.receiverId();
         messageToLoad["Out"] = "out";
         emit checkAndSendAvatarUpdate(protoMsg.receiverAvatarUrl(), protoMsg.receiverId(), "personal");
     } else if (protoMsg.receiverId() == activeUserId) {
-        messageToLoad["login"] = protoMsg.senderLogin();
-        messageToLoad["id"] = protoMsg.senderId();
         messageToLoad["Out"] = "";
         emit checkAndSendAvatarUpdate(protoMsg.senderAvatarUrl(), protoMsg.senderId(), "personal");
     }
@@ -215,7 +216,7 @@ void MessageHandler::loadingChat(const quint64& id, const QString &flag)
             }
 
             messageToDisplay["message"] = msg.content();
-            //messageToDisplay["message_id"] = msg.messageId();
+            messageToDisplay["message_id"] = msg.messageId();
             messageToDisplay["fileUrl"] = msg.mediaUrl();
 
             QString fullDate = msg.timestamp();
