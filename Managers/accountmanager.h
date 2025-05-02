@@ -10,9 +10,12 @@
 #include "Network/networkmanager.h"
 #include "Core/configmanager.h"
 #include "Managers/responsehandler.h"
+#include "Managers/cryptomanager.h"
 
 #include "Utils/avatargenerator.h"
 #include "Utils/logger.h"
+
+#include "sodium.h"
 
 #include "generated_protobuf/login.qpb.h"
 #include "generated_protobuf/register.qpb.h"
@@ -35,6 +38,8 @@ public:
     void registerAccount(const QString login, const QString password);
     void logout();
     void clientChangeAccount();
+
+    void setCryptoManager(CryptoManager *cryptoManager);
 public slots:
     void checkAndSendAvatarUpdate(const QString &avatar_url, const int &user_id, const QString& type);
     void updatingChats();
@@ -111,6 +116,7 @@ private:
     QString activeUserLogin;
 
     NetworkManager* networkManager;
+    CryptoManager* cryptoManager;
     Logger* logger;
     AvatarGenerator *avatarGenerator;
     ConfigManager configManager;

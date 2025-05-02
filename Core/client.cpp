@@ -6,7 +6,9 @@ Client::Client(QObject *parent)
     networkManager = new NetworkManager(this);
     messageHandler = new MessageHandler(this);
     fileManager = new FileManager(this);
+    cryptoManager = new CryptoManager(this);
     accountManager = new AccountManager(networkManager, this);
+    accountManager->setCryptoManager(cryptoManager);
     audioManager = new AudioManager(this);
 
     setupConnections();
@@ -145,6 +147,11 @@ AccountManager* Client::getAccountManager() {
 FileManager *Client::getFileManager()
 {
     return fileManager;
+}
+
+CryptoManager *Client::getCryptoManager()
+{
+    return cryptoManager;
 }
 
 void Client::setLogger(Logger *logger)

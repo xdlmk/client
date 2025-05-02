@@ -47,6 +47,16 @@ qt_add_protobuf(protosource
 
 include_directories(${CMAKE_CURRENT_BINARY_DIR})
 
+# include files for sodium (LIBSODIUM_ROOT points to the root folder of libsodium)
+include_directories(${LIBSODIUM_ROOT}/include)
+find_library(SODIUM_LIB NAMES libsodium PATHS ${LIBSODIUM_ROOT}/lib NO_DEFAULT_PATH )
+if(NOT SODIUM_LIB)
+    message(
+        FATAL_ERROR "libsodium library not found in ${LIBSODIUM_ROOT}/lib"
+    )
+endif()
+message(STATUS "Found libsodium library at: ${SODIUM_LIB}")
+
 qt_add_executable(regagram
     main.cpp
 )
@@ -87,6 +97,7 @@ qt_add_qml_module(regagram
         Managers/audiomanager.h Managers/audiomanager.cpp
         Managers/filemanager.h Managers/filemanager.cpp
         Managers/responsehandler.h Managers/responsehandler.cpp
+        Managers/cryptomanager.h Managers/cryptomanager.cpp
         Managers/MessageManagers/messagehandler.h Managers/MessageManagers/messagehandler.cpp
         Managers/MessageManagers/messagestorage.h Managers/MessageManagers/messagestorage.cpp
         Managers/MessageManagers/messagesender.h Managers/MessageManagers/messagesender.cpp
@@ -129,6 +140,7 @@ target_link_libraries(regagram
     Qt${QT_VERSION_MAJOR}::Widgets
     Qt${QT_VERSION_MAJOR}::Multimedia
     protosource
+    ${SODIUM_LIB}
 )
 
 include(GNUInstallDirs)

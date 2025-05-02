@@ -11,12 +11,36 @@ AccountManager::AccountManager(NetworkManager* networkManager,QObject *parent)
 
 void AccountManager::login(const QString login, const QString password)
 {
-    sendAuthRequest("login",login,password);
+    QProtobufSerializer serializer;
+    QByteArray data;
+
+    auth::LoginRequest loginRequest;
+    loginRequest.setLogin(login);
+    loginRequest.setPassword(password);
+
+    networkManager->getMessageNetwork()->sendData("login", loginRequest.serialize(&serializer));
 }
 
 void AccountManager::registerAccount(const QString login, const QString password)
 {
-    sendAuthRequest("reg",login,password);
+    QProtobufSerializer serializer;
+    QByteArray data;
+
+    auth::RegisterRequest regRequest;
+    regRequest.setLogin(login);
+    regRequest.setPassword(password);
+    try {
+        CryptoKeys keys = cryptoManager->generateKeys(password);
+        regRequest.setPublicKey(keys.publicKey);
+        regRequest.setEncryptedPrivateKey(keys.encryptedPrivateKey);
+        regRequest.setSalt(keys.salt);
+        regRequest.setNonce(keys.nonce);
+    } catch (const std::exception &e) {
+        logger->log(Logger::ERROR, "accountmanager.cpp::registerAccount", "Error generate keys: " + QString(e.what()));
+        return;
+    }
+
+    networkManager->getMessageNetwork()->sendData("reg", regRequest.serialize(&serializer));
 }
 
 void AccountManager::logout()
@@ -47,6 +71,11 @@ void AccountManager::sendEditProfileRequest(const QString editable, const QStrin
 void AccountManager::clientChangeAccount()
 {
     networkManager->getMessageNetwork()->sendData("logout",QByteArray());
+}
+
+void AccountManager::setCryptoManager(CryptoManager *cryptoManager)
+{
+    this->cryptoManager = cryptoManager;
 }
 
 void AccountManager::checkAndSendAvatarUpdate(const QString &avatar_url, const int &user_id,const QString& type)

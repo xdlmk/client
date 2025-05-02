@@ -8,6 +8,7 @@
 #include "Managers/filemanager.h"
 #include "Managers/MessageManagers/messagehandler.h"
 #include "Network/networkmanager.h"
+#include "Managers/cryptomanager.h"
 #include "Utils/logger.h"
 
 class Client : public QObject
@@ -19,6 +20,7 @@ public:
 
     AccountManager* getAccountManager();
     FileManager *getFileManager();
+    CryptoManager *getCryptoManager();
 
 signals:
     void newMessage(QVariant message);
@@ -100,6 +102,7 @@ private:
     NetworkManager *networkManager;
     MessageHandler *messageHandler;
     AccountManager *accountManager;
+    CryptoManager *cryptoManager;
     FileManager *fileManager;
     AudioManager *audioManager;
 
