@@ -23,6 +23,7 @@
 #include "generated_protobuf/editProfile.qpb.h"
 #include "generated_protobuf/avatarsUpdate.qpb.h"
 #include "generated_protobuf/createGroup.qpb.h"
+#include "generated_protobuf/createDialog.qpb.h"
 #include "generated_protobuf/deleteMember.qpb.h"
 #include "generated_protobuf/addMembers.qpb.h"
 #include "generated_protobuf/chatsInfo.qpb.h"
@@ -53,6 +54,8 @@ public slots:
 
     void createGroup(const QString& groupName, const QString& avatarPath, const QVariantList &selectedContacts);
     void addGroupMembers(const int& group_id, const QVariantList &selectedContacts);
+
+    void createDialogKeys(const QByteArray &createDialogKeysData);
 
     void getGroupMembers(const int& group_id);
     void deleteMemberFromGroup(const int& user_id, const int &group_id);

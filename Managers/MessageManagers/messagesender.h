@@ -4,6 +4,7 @@
 #include <QObject>
 
 #include <QByteArray>
+#include <QUuid>
 
 #include <QDir>
 #include <QFile>
@@ -12,6 +13,7 @@
 #include "Utils/logger.h"
 
 #include "generated_protobuf/loadMessages.qpb.h"
+#include "generated_protobuf/createDialog.qpb.h"
 #include <QProtobufSerializer>
 class MessageSender : public QObject
 {
@@ -22,14 +24,16 @@ public:
     void setLogger(Logger* logger);
 
 public slots:
-    void sendMessage(const QString &message, const int &receiver_id, const QString &flag);
+    void sendMessage(const QString &message, const quint64 &receiver_id, const QString &flag);
     void sendMessageWithFile(const QString &message, const int &receiver_id,const QString& filePath, const QString &flag);
     void sendVoiceMessage(const int &receiver_id, const QString &flag);
 
     void sendRequestMessagesLoading(const int &chat_id, const QString &chat_name, const QString& flag, const int& offset);
+
 signals:
     void sendMessageData(const QString &flag, const QByteArray &data);
     void sendMessageFileData(const QString &flag, const QByteArray &data);
+
 private:
     QString activeUserLogin;
     int activeUserId;

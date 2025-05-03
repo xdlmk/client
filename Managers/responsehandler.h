@@ -54,6 +54,8 @@ signals:
 
     void sendData(const QString& flag, const QByteArray& data);
 
+    void savePrivateKey(const QByteArray &encryptedPrivateKey, const QByteArray &salt, const QByteArray &nonce);
+
     void registrationSuccess();
     void registrationFail(QString error);
 

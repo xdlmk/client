@@ -15,18 +15,45 @@ void MessageSender::setLogger(Logger *logger)
     this->logger = logger;
 }
 
-void MessageSender::sendMessage(const QString &message, const int &receiver_id, const QString &flag)
+void MessageSender::sendMessage(const QString &message, const quint64 &receiver_id, const QString &flag)
 {
     chats::ChatMessage msg;
-    msg.setContent(message);
+    QProtobufSerializer serializer;
     msg.setSenderId(activeUserId);
 
     if(flag == "personal") {
+        if(!QFile::exists(QCoreApplication::applicationDirPath() + "/.data/" + QString::number(activeUserId) + "/dialogsInfo" + "/" + QString::number(receiver_id) + ".pb")){
+            chats::CreateDialogRequest request;
+            request.setSenderId(activeUserId);
+            request.setReceiverId(receiver_id);
+
+            QString uniqName = QUuid::createUuid().toString(QUuid::WithoutBraces);
+            QString baseDir = QCoreApplication::applicationDirPath()
+                              + "/.tempData/"
+                              + QString::number(receiver_id);
+
+            QDir dir;
+            if (!dir.exists(baseDir)) dir.mkpath(baseDir);
+
+            QString filePath = baseDir + "/" + uniqName + ".txt";
+
+            QFile file(filePath);
+            if (!file.open(QIODevice::WriteOnly | QIODevice::Text)) {
+                QTextStream out(&file);
+                out << text;
+                file.close();
+            } else return;
+
+            request.setUniqMessageId(uniqName);
+
+            emit sendMessageData("create_dialog",request.serialize(&serializer));
+        }
+        // msg.setContent(message); first encrypt message
         msg.setReceiverId(receiver_id);
     } else if(flag == "group"){
+        msg.setContent(message);
         msg.setGroupId(receiver_id);
     }
-    QProtobufSerializer serializer;
     emit sendMessageData(flag + "_message",msg.serialize(&serializer)); // personal_message group_message
 }
 
