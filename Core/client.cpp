@@ -10,6 +10,7 @@ Client::Client(QObject *parent)
     accountManager = new AccountManager(networkManager, this);
     messageHandler->setCryptoManager(cryptoManager);
     messageHandler->getMessageSender()->setCryptoManager(cryptoManager);
+    messageHandler->getMessageStorage()->setCryptoManager(cryptoManager);
     accountManager->setCryptoManager(cryptoManager);
     audioManager = new AudioManager(this);
 

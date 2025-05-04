@@ -15,7 +15,12 @@ void MessageStorage::setLogger(Logger *logger)
     this->logger = logger;
 }
 
-bool MessageStorage::savePersonalMessageToFile(const chats::ChatMessage &newMessage)
+void MessageStorage::setCryptoManager(CryptoManager *cryptoManager)
+{
+    this->cryptoManager = cryptoManager;
+}
+
+bool MessageStorage::savePersonalMessageToFile(chats::ChatMessage &newMessage)
 {
     QString basePath = QCoreApplication::applicationDirPath() + "/.data/" +
                        QString::number(activeUserId) + "/messages/personal";
@@ -24,11 +29,32 @@ bool MessageStorage::savePersonalMessageToFile(const chats::ChatMessage &newMess
         dir.mkpath(".");
     }
     QString filePath;
+    QByteArray encryptedSessionKey;
     if(newMessage.senderId() == activeUserId) {
+        encryptedSessionKey = newMessage.senderEncryptedSessionKey();
         filePath = basePath + "/message_" + QString::number(newMessage.receiverId()) + ".pb";
     } else if (newMessage.receiverId() == activeUserId) {
+        encryptedSessionKey = newMessage.receiverEncryptedSessionKey();
         filePath = basePath + "/message_" + QString::number(newMessage.senderId()) + ".pb";
     }
+
+    QByteArray sessionKey;
+    try {
+        sessionKey = cryptoManager->unsealData(encryptedSessionKey);
+    } catch (const std::exception &e) {
+        logger->log(Logger::ERROR, "messagehandler.cpp::savePersonalMessageToFile", QString("Session key unsealing error: %1").arg(e.what()));
+        return false;
+    }
+    QByteArray encryptedMessageData = QByteArray::fromBase64(newMessage.content().toUtf8());
+    QByteArray decryptedMessageData;
+    try {
+        decryptedMessageData = cryptoManager->symmetricDecrypt(encryptedMessageData, sessionKey);
+    } catch (const std::exception &e) {
+        logger->log(Logger::ERROR, "messagehandler.cpp::savePersonalMessageToFile", QString("Message decryption error: %1").arg(e.what()));
+        return false;
+    }
+    QString decryptedContent = QString::fromUtf8(decryptedMessageData);
+    newMessage.setContent(decryptedContent);
 
     if (!QFile::exists(filePath)) {
         QFile file(filePath);
@@ -88,7 +114,7 @@ bool MessageStorage::savePersonalMessageToFile(const chats::ChatMessage &newMess
     return true;
 }
 
-bool MessageStorage::saveGroupMessageToFile(const chats::ChatMessage &newMessage)
+bool MessageStorage::saveGroupMessageToFile(chats::ChatMessage &newMessage)
 {
     QString basePath = QCoreApplication::applicationDirPath() + "/.data/" +
                        QString::number(activeUserId) + "/messages/group";
@@ -175,7 +201,7 @@ void MessageStorage::updatingLatestMessagesFromServer(const QByteArray &latestMe
 
     chats::UpdatingChatsResponse messageStorage;
 
-    for (const auto &msg : messagesList) {
+    for (auto &msg : messagesList) {
         if (msg.groupId() != 0) {
             saveGroupMessageToFile(msg);
         } else if(msg.receiverId() != 0){

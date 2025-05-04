@@ -27,6 +27,11 @@ MessageSender *MessageHandler::getMessageSender()
     return messageSender;
 }
 
+MessageStorage *MessageHandler::getMessageStorage()
+{
+    return messageStorage;
+}
+
 void MessageHandler::setCryptoManager(CryptoManager *cryptoManager)
 {
     this->cryptoManager = cryptoManager;
@@ -97,9 +102,7 @@ void MessageHandler::processingPersonalMessage(const QByteArray &receivedMessage
         logger->log(Logger::ERROR, "messagehandler.cpp::processingPersonalMessage", QString("Message decryption error: %1").arg(e.what()));
         return;
     }
-    qDebug() << "Get messageData: " + decryptedMessageData;
     QString decryptedContent = QString::fromUtf8(decryptedMessageData);
-    qDebug() << "Get message: " + decryptedContent;
 
     messageToLoad["message"] = decryptedContent;
     protoMsg.setContent(decryptedContent);

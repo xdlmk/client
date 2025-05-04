@@ -338,6 +338,7 @@ bool AccountManager::isAvatarUpToDate(QString avatar_url, int user_id,const QStr
                             QString::number(user_id) + ".pb";
     }
 
+    logger->log(Logger::INFO, "accountmanager.cpp::isAvatarUpToDate", "Path to avatar: " + pathToAvatar + ", path to checker: " + avatarCheckerPath);
     QFile avatar(pathToAvatar);
 
     QFile avatarChecker(avatarCheckerPath);
@@ -351,6 +352,7 @@ bool AccountManager::isAvatarUpToDate(QString avatar_url, int user_id,const QStr
     QProtobufSerializer serializer;
 
     if (type == "personal") {
+        logger->log(Logger::INFO, "accountmanager.cpp::isAvatarUpToDate", "Type personal");
         chats::DialogInfoItem dialogInfo;
         if (!dialogInfo.deserialize(&serializer, avatarCheckerData)) {
             logger->log(Logger::WARN, "accountmanager.cpp::isAvatarUpToDate", "Failed to deserialize DialogInfoItem");
@@ -358,6 +360,7 @@ bool AccountManager::isAvatarUpToDate(QString avatar_url, int user_id,const QStr
         }
 
         if(avatar_url == "basic") {
+            logger->log(Logger::INFO, "accountmanager.cpp::isAvatarUpToDate", "Type personal-basic");
             avatarGenerator->generateAvatarImage(dialogInfo.userlogin(), dialogInfo.userId(), "personal");
             return true;
         } else {

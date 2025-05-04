@@ -10,6 +10,7 @@
 #include <QCoreApplication>
 
 #include "Utils/logger.h"
+#include "Managers/cryptomanager.h"
 
 #include "generated_protobuf/updatingChats.qpb.h"
 #include "generated_protobuf/chatMessage.qpb.h"
@@ -22,9 +23,10 @@ public:
     explicit MessageStorage(QObject *parent = nullptr);
     void setActiveUser(const QString &userLogin, const int &userId);
     void setLogger(Logger* logger);
+    void setCryptoManager(CryptoManager* cryptoManager);
 
-    bool savePersonalMessageToFile(const chats::ChatMessage &newMessage);
-    bool saveGroupMessageToFile(const chats::ChatMessage &newMessage);
+    bool savePersonalMessageToFile(chats::ChatMessage &newMessage);
+    bool saveGroupMessageToFile(chats::ChatMessage &newMessage);
 public slots:
     void updatingLatestMessagesFromServer(const QByteArray &latestMessagesData);
 signals:
@@ -36,6 +38,8 @@ signals:
 private:
     QString activeUserLogin;
     int activeUserId;
+
+    CryptoManager* cryptoManager;
     Logger* logger;
 };
 

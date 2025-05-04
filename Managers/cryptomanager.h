@@ -30,7 +30,6 @@ public:
 
     QByteArray symmetricEncrypt(const QByteArray &plainText, const QByteArray &sessionKey);
     QByteArray symmetricDecrypt(const QByteArray &encryptedData, const QByteArray &sessionKey);
-signals:
 
 private:
     QByteArray loadPrivateKey();

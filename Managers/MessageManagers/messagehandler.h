@@ -24,7 +24,8 @@ class MessageHandler : public QObject
 public:
     explicit MessageHandler(QObject *parent = nullptr);
 
-    MessageSender* getMessageSender();
+    MessageSender *getMessageSender();
+    MessageStorage *getMessageStorage();
 
     void setCryptoManager(CryptoManager* cryptoManager);
 
