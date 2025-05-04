@@ -11,6 +11,7 @@
 #include <QCoreApplication>
 
 #include "Utils/logger.h"
+#include "Managers/cryptomanager.h"
 #include "Managers/MessageManagers/messagestorage.h"
 #include "Managers/MessageManagers/messagesender.h"
 
@@ -22,6 +23,10 @@ class MessageHandler : public QObject
     Q_OBJECT
 public:
     explicit MessageHandler(QObject *parent = nullptr);
+
+    MessageSender* getMessageSender();
+
+    void setCryptoManager(CryptoManager* cryptoManager);
 
 public slots:
     void setActiveUser(const QString &userLogin, const int &userId);
@@ -63,6 +68,7 @@ signals:
 private:
     void loadMessageToQml(QVariantMap& messageToDisplay);
 
+    CryptoManager *cryptoManager;
     MessageStorage *messageStorage;
     MessageSender *messageSender;
 

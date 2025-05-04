@@ -39,6 +39,20 @@ void ResponseHandler::processingLoginResults(const QByteArray &loginResultsData)
     QByteArray salt = response.salt();
     QByteArray encrypted_private_key = response.encryptedPrivateKey();
 
+    QByteArray public_key = response.publicKey();
+    QString fileUrl;
+    fileUrl = QCoreApplication::applicationDirPath() + "/.data/crypto/public_key.pem";
+    QFile file(fileUrl);
+
+    QDir dir = QFileInfo(file).absoluteDir();
+    if (!dir.exists()) dir.mkpath(".");
+
+    if (file.open(QIODevice::WriteOnly)) {
+        file.write(public_key);
+        file.close();
+    }
+
+
     if (success == "ok") {
         common::Identifiers identifiers;
         identifiers.setUserId(userId);

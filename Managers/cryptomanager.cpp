@@ -136,6 +136,32 @@ QByteArray CryptoManager::sealData(const QByteArray &data, const QByteArray &pub
     return sealed;
 }
 
+QByteArray CryptoManager::unsealData(const QByteArray &sealedData)
+{
+    QByteArray publicKey = loadPublicKey();
+    QByteArray secretKey = loadPrivateKey();
+
+    if (sealedData.size() < crypto_box_SEALBYTES) {
+        throw std::runtime_error("Invalid sealed data size");
+    }
+
+    size_t messageLen = sealedData.size() - crypto_box_SEALBYTES;
+    QByteArray decryptedData;
+    decryptedData.resize(messageLen);
+
+    if (crypto_box_seal_open(
+            reinterpret_cast<unsigned char*>(decryptedData.data()),
+            reinterpret_cast<const unsigned char*>(sealedData.constData()),
+            sealedData.size(),
+            reinterpret_cast<const unsigned char*>(publicKey.constData()),
+            reinterpret_cast<const unsigned char*>(secretKey.constData()))
+        != 0) {
+        throw std::runtime_error("Decrypt data error (crypto_box_seal_open)");
+    }
+
+    return decryptedData;
+}
+
 QByteArray CryptoManager::symmetricEncrypt(const QByteArray &plainText, const QByteArray &sessionKey)
 {
     if (sessionKey.size() != crypto_secretbox_KEYBYTES) {
@@ -164,4 +190,63 @@ QByteArray CryptoManager::symmetricEncrypt(const QByteArray &plainText, const QB
     encrypted.append(cipherText);
 
     return encrypted;
+}
+
+QByteArray CryptoManager::symmetricDecrypt(const QByteArray &encryptedData, const QByteArray &sessionKey)
+{
+    if (sessionKey.size() != crypto_secretbox_KEYBYTES) {
+        throw std::runtime_error("Invalid session key size");
+    }
+
+    if (encryptedData.size() < crypto_secretbox_NONCEBYTES + crypto_secretbox_MACBYTES) {
+        throw std::runtime_error("Encrypted data is too short");
+    }
+
+    QByteArray nonce = encryptedData.left(crypto_secretbox_NONCEBYTES);
+    QByteArray cipherText = encryptedData.mid(crypto_secretbox_NONCEBYTES);
+
+    size_t plainTextLen = cipherText.size() - crypto_secretbox_MACBYTES;
+    QByteArray plainText;
+    plainText.resize(plainTextLen);
+
+    if (crypto_secretbox_open_easy(
+            reinterpret_cast<unsigned char*>(plainText.data()),
+            reinterpret_cast<const unsigned char*>(cipherText.constData()),
+            cipherText.size(),
+            reinterpret_cast<const unsigned char*>(nonce.constData()),
+            reinterpret_cast<const unsigned char*>(sessionKey.constData())) != 0) {
+        throw std::runtime_error("Error in symmetric decryption (crypto_secretbox_open_easy)");
+    }
+
+    return plainText;
+}
+
+QByteArray CryptoManager::loadPrivateKey()
+{
+    QString privateKeyPath = QCoreApplication::applicationDirPath() + "/.data/crypto/private_key.pem";
+
+    QFile file(privateKeyPath);
+    if (!file.open(QIODevice::ReadOnly)) {
+        return QByteArray();
+    }
+
+    QByteArray privateKey = file.readAll();
+    file.close();
+
+    return privateKey;
+}
+
+QByteArray CryptoManager::loadPublicKey()
+{
+    QString publicKeyPath = QCoreApplication::applicationDirPath() + "/.data/crypto/public_key.pem";
+
+    QFile file(publicKeyPath);
+    if (!file.open(QIODevice::ReadOnly)) {
+        return QByteArray();
+    }
+
+    QByteArray publicKey = file.readAll();
+    file.close();
+
+    return publicKey;
 }

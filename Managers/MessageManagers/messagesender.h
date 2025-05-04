@@ -10,10 +10,13 @@
 #include <QFile>
 #include <QCoreApplication>
 
+#include "Managers/cryptomanager.h"
+
 #include "Utils/logger.h"
 
 #include "generated_protobuf/loadMessages.qpb.h"
 #include "generated_protobuf/createDialog.qpb.h"
+#include "generated_protobuf/chatsInfo.qpb.h"
 #include <QProtobufSerializer>
 class MessageSender : public QObject
 {
@@ -22,6 +25,7 @@ public:
     explicit MessageSender(QObject *parent = nullptr);
     void setActiveUser(const QString &userLogin, const int &userId);
     void setLogger(Logger* logger);
+    void setCryptoManager(CryptoManager *cryptoManager);
 
 public slots:
     void sendMessage(const QString &message, const quint64 &receiver_id, const QString &flag);
@@ -37,7 +41,10 @@ signals:
 private:
     QString activeUserLogin;
     int activeUserId;
+
     Logger* logger;
+
+    CryptoManager *cryptoManager;
 };
 
 #endif // MESSAGESENDER_H

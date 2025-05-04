@@ -156,7 +156,7 @@ void AccountManager::createDialogKeys(const QByteArray &createDialogKeysData)
     chats::CreateDialogResponse response;
 
     if (!response.deserialize(&serializer, createDialogKeysData)) {
-        logger.log(Logger::INFO, "chatmanager.cpp::createDialogKeys", "Error deserialize request");
+        logger->log(Logger::INFO, "chatmanager.cpp::createDialogKeys", "Error deserialize request");
         return;
     }
 
@@ -171,9 +171,9 @@ void AccountManager::createDialogKeys(const QByteArray &createDialogKeysData)
     QByteArray encryptedSessionKeyForReceiver;
     try {
         encryptedSessionKeyForSender = cryptoManager->sealData(sessionKeyData, sender_public_key);
-        encryptedSessionKeyForReceiver = cryptoManager->sealData(sessionKeyData, receiverPublicKey);
+        encryptedSessionKeyForReceiver = cryptoManager->sealData(sessionKeyData, receiver_public_key);
     } catch (const std::exception &e) {
-        logger.log(Logger::ERROR, "chatmanager.cpp::createDialogKeys", QString("Error encrypting session key: %1").arg(e.what()));
+        logger->log(Logger::ERROR, "chatmanager.cpp::createDialogKeys", QString("Error encrypting session key: %1").arg(e.what()));
         return;
     }
 
@@ -182,12 +182,13 @@ void AccountManager::createDialogKeys(const QByteArray &createDialogKeysData)
                       + QString::number(response.receiverId());
     QDir dir;
     if (!dir.exists(baseDir)) dir.mkpath(baseDir);
-    QString filePath = baseDir + "/" + uniqName + ".txt";
+    QString filePath = baseDir + "/" + response.uniqMessageId() + ".txt";
     QFile file(filePath);
     QString content;
-    if (!file.open(QIODevice::ReadOnly | QIODevice::Text)) {
+    if (file.open(QIODevice::ReadOnly)) {
         QTextStream in(&file);
         content = in.readAll();
+        file.remove();
         file.close();
     }
 
@@ -195,7 +196,7 @@ void AccountManager::createDialogKeys(const QByteArray &createDialogKeysData)
     try {
         encryptedMessage = cryptoManager->symmetricEncrypt(content.toUtf8(), sessionKeyData);
     } catch (const std::exception &e) {
-        logger.log(Logger::ERROR, "chatmanager.cpp::createDialogKeys", QString("Error encrypting message: %1").arg(e.what()));
+        logger->log(Logger::ERROR, "chatmanager.cpp::createDialogKeys", QString("Error encrypting message: ") + QString(e.what()));
         return;
     }
     QString message = QString::fromUtf8(encryptedMessage.toBase64());
@@ -204,6 +205,8 @@ void AccountManager::createDialogKeys(const QByteArray &createDialogKeysData)
     msg.setSenderId(activeUserId);
     msg.setReceiverId(response.receiverId());
     msg.setContent(message);
+    msg.setSenderEncryptedSessionKey(encryptedSessionKeyForSender);
+    msg.setReceiverEncryptedSessionKey(encryptedSessionKeyForReceiver);
     networkManager->getMessageNetwork()->sendData("personal_message", msg.serialize(&serializer));
 }
 

@@ -25,9 +25,16 @@ public:
     CryptoKeys generateKeys(const QString &password);
     bool decryptAndSavePrivateKey(const QByteArray &encryptedPrivateKey, const QByteArray &salt, const QByteArray &nonce, const QString &filePath);
 
+    QByteArray sealData(const QByteArray &data, const QByteArray &publicKey);
+    QByteArray unsealData(const QByteArray &sealedData);
+
+    QByteArray symmetricEncrypt(const QByteArray &plainText, const QByteArray &sessionKey);
+    QByteArray symmetricDecrypt(const QByteArray &encryptedData, const QByteArray &sessionKey);
 signals:
 
 private:
+    QByteArray loadPrivateKey();
+    QByteArray loadPublicKey();
     QString lastEnteredPassword;
 };
 

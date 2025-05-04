@@ -50,6 +50,8 @@ signals:
 
     void avatarsUpdateReceived(const QByteArray &avatarsUpdateData);
 
+    void createDialogReceived(const QByteArray &createDialogData);
+
     void removeAccountFromConfigManager();
 
     void connectionSuccess();

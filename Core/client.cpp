@@ -8,6 +8,8 @@ Client::Client(QObject *parent)
     fileManager = new FileManager(this);
     cryptoManager = new CryptoManager(this);
     accountManager = new AccountManager(networkManager, this);
+    messageHandler->setCryptoManager(cryptoManager);
+    messageHandler->getMessageSender()->setCryptoManager(cryptoManager);
     accountManager->setCryptoManager(cryptoManager);
     audioManager = new AudioManager(this);
 
@@ -41,6 +43,8 @@ void Client::setupNetworkConnections() {
     connect(networkManager->getMessageNetwork(), &MessageNetworkManager::dialogsInfoReceived, accountManager, &AccountManager::processingDialogsInfoSave);
     connect(networkManager->getMessageNetwork(), &MessageNetworkManager::deleteGroupMemberReceived, accountManager, &AccountManager::processingDeleteGroupMember);
     connect(networkManager->getMessageNetwork(), &MessageNetworkManager::addGroupMemberReceived, accountManager, &AccountManager::processingAddGroupMember);
+
+    connect(networkManager->getMessageNetwork(), &MessageNetworkManager::createDialogReceived, accountManager, &AccountManager::createDialogKeys);
 
     connect(networkManager->getMessageNetwork(), &MessageNetworkManager::removeAccountFromConfigManager, accountManager, &AccountManager::removeAccountFromConfigManager);
 }
