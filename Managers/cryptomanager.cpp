@@ -221,6 +221,31 @@ QByteArray CryptoManager::symmetricDecrypt(const QByteArray &encryptedData, cons
     return plainText;
 }
 
+QByteArray CryptoManager::getDecryptedSessionKey(const QString &dialogInfoPath)
+{
+    QFile infoFile(dialogInfoPath);
+    QByteArray infoData;
+
+    if (!infoFile.open(QIODevice::ReadOnly)) {
+        throw std::runtime_error("cryptomanager.cpp::getDecryptedSessionKey Failed to open dialog info file: " + dialogInfoPath.toStdString());
+        return QByteArray();
+    }
+
+    infoData = infoFile.readAll();
+    infoFile.close();
+
+    QProtobufSerializer serializer;
+    chats::DialogInfoItem info;
+    if (!info.deserialize(&serializer, infoData)) {
+        throw std::runtime_error("cryptomanager.cpp::getDecryptedSessionKey Deserialize DialogInfoItem failed: " + dialogInfoPath.toStdString());
+        return QByteArray();
+    }
+
+    QByteArray decryptedSessionKey = unsealData(info.encryptedSessionKey());
+
+    return decryptedSessionKey;
+}
+
 QByteArray CryptoManager::loadPrivateKey()
 {
     QString privateKeyPath = QCoreApplication::applicationDirPath() + "/.data/crypto/private_key.pem";

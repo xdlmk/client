@@ -7,6 +7,9 @@
 #include <QByteArray>
 #include <QApplication>
 
+#include "generated_protobuf/chatsInfo.qpb.h"
+#include <QProtobufSerializer>
+
 struct CryptoKeys {
     QByteArray publicKey;
     QByteArray encryptedPrivateKey;
@@ -30,6 +33,8 @@ public:
 
     QByteArray symmetricEncrypt(const QByteArray &plainText, const QByteArray &sessionKey);
     QByteArray symmetricDecrypt(const QByteArray &encryptedData, const QByteArray &sessionKey);
+
+    QByteArray getDecryptedSessionKey(const QString &dialogInfoPath);
 
 private:
     QByteArray loadPrivateKey();

@@ -183,6 +183,8 @@ void AccountManager::createDialogKeys(const QByteArray &createDialogKeysData)
     QDir dir;
     if (!dir.exists(baseDir)) dir.mkpath(baseDir);
     QString filePath = baseDir + "/" + response.uniqMessageId() + ".txt";
+    QString metaFilePath = baseDir + "/" + response.uniqMessageId() + ".meta";
+
     QFile file(filePath);
     QString content;
     if (file.open(QIODevice::ReadOnly)) {
@@ -190,6 +192,38 @@ void AccountManager::createDialogKeys(const QByteArray &createDialogKeysData)
         content = in.readAll();
         file.remove();
         file.close();
+    }
+
+    bool withFile = QFile::exists(metaFilePath);
+
+    chats::FileData fileDataMsg;
+    if(withFile){
+        QString filePath;
+        QFile metaFile(metaFilePath);
+        if (metaFile.open(QIODevice::ReadOnly)) {
+            QTextStream in(&metaFile);
+            filePath = in.readAll();
+            file.remove();
+            file.close();
+        }
+
+        QFile file(filePath);
+        QFileInfo fileInfo(filePath);
+        if (!file.open(QIODevice::ReadOnly)) {
+            logger->log(Logger::WARN,"messagesender.cpp::createDialogKeys","Failed open file");
+        }
+        QByteArray encryptedFileData;
+        try {
+            encryptedFileData = cryptoManager->symmetricEncrypt(file.readAll(), sessionKeyData);
+        } catch (const std::exception &e) {
+            logger->log(Logger::ERROR, "messagesender.cpp::createDialogKeys", QString("Error encrypting message: ") + QString(e.what()));
+            return;
+        }
+        file.close();
+
+        fileDataMsg.setFileName(fileInfo.baseName());
+        fileDataMsg.setFileExtension(fileInfo.suffix());
+        fileDataMsg.setFileData(encryptedFileData);
     }
 
     QByteArray encryptedMessage;
@@ -207,7 +241,11 @@ void AccountManager::createDialogKeys(const QByteArray &createDialogKeysData)
     msg.setContent(message);
     msg.setSenderEncryptedSessionKey(encryptedSessionKeyForSender);
     msg.setReceiverEncryptedSessionKey(encryptedSessionKeyForReceiver);
-    networkManager->getMessageNetwork()->sendData("personal_message", msg.serialize(&serializer));
+    if(withFile) {
+        msg.setFile(fileDataMsg);
+        networkManager->getFileNetwork()->sendData("personal_file_message", msg.serialize(&serializer));
+    } else
+        networkManager->getMessageNetwork()->sendData("personal_message", msg.serialize(&serializer));
 }
 
 void AccountManager::getGroupMembers(const int &group_id)
@@ -338,7 +376,6 @@ bool AccountManager::isAvatarUpToDate(QString avatar_url, int user_id,const QStr
                             QString::number(user_id) + ".pb";
     }
 
-    logger->log(Logger::INFO, "accountmanager.cpp::isAvatarUpToDate", "Path to avatar: " + pathToAvatar + ", path to checker: " + avatarCheckerPath);
     QFile avatar(pathToAvatar);
 
     QFile avatarChecker(avatarCheckerPath);
@@ -352,7 +389,6 @@ bool AccountManager::isAvatarUpToDate(QString avatar_url, int user_id,const QStr
     QProtobufSerializer serializer;
 
     if (type == "personal") {
-        logger->log(Logger::INFO, "accountmanager.cpp::isAvatarUpToDate", "Type personal");
         chats::DialogInfoItem dialogInfo;
         if (!dialogInfo.deserialize(&serializer, avatarCheckerData)) {
             logger->log(Logger::WARN, "accountmanager.cpp::isAvatarUpToDate", "Failed to deserialize DialogInfoItem");
@@ -360,7 +396,6 @@ bool AccountManager::isAvatarUpToDate(QString avatar_url, int user_id,const QStr
         }
 
         if(avatar_url == "basic") {
-            logger->log(Logger::INFO, "accountmanager.cpp::isAvatarUpToDate", "Type personal-basic");
             avatarGenerator->generateAvatarImage(dialogInfo.userlogin(), dialogInfo.userId(), "personal");
             return true;
         } else {
@@ -482,7 +517,7 @@ void AccountManager::setupResponseHandler()
         fileUrl = QCoreApplication::applicationDirPath() + "/.data/crypto/private_key.pem";
         try {
             cryptoManager->decryptAndSavePrivateKey(encryptedPrivateKey,salt,nonce,fileUrl);
-    } catch(const std::exception &e) {
+        } catch(const std::exception &e) {
             logger->log(Logger::ERROR, "responseHandler.cpp::savePrivateKey", "Error save private key: " + QString(e.what()));
             return;
         }
