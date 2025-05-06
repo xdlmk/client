@@ -19,7 +19,7 @@ class AudioManager : public QObject
 public:
     explicit AudioManager(QObject *parent = nullptr);
 
-    void startRecording();
+    void startRecording(const quint64& chat_id, const QString& type);
     void stopRecording();
 
 public slots:

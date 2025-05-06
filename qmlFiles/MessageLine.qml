@@ -217,7 +217,7 @@ Rectangle{
 
                 onClicked: {
                     if (edtText.text.trim() === "" && !isRecording) {
-                        client.startRecording();
+                        client.startRecording(upLine.user_id, upLine.currentState);
                         isRecording = !isRecording;
                     } else if (isRecording) {
                         client.stopRecording();

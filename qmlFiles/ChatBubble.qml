@@ -49,7 +49,10 @@ Item {
                 anchors.fill: parent
                 cursorShape: Qt.PointingHandCursor
                 onClicked: {
-                    client.getFile(fileUrl,"fileUrl");
+                    var receiver_id;
+                    if(upLine.currentState === "group") receiver_id = 0;
+                    else if(upLine.currentState === "personal") receiver_id = upLine.user_id;
+                    fileManager.getFile(fileUrl,"fileUrl", receiver_id); // client.
                 }
             }
         }
@@ -106,7 +109,10 @@ Item {
                     onClicked: {
                         if(audioPlayer.playbackState === MediaPlayer.StoppedState){
                             isWaitingForVoice = true;
-                            client.getFile(fileUrl,"voiceFileUrl");
+                            var receiver_id;
+                            if(upLine.currentState === "group") receiver_id = 0;
+                            else if(upLine.currentState === "personal") receiver_id = upLine.user_id;
+                            fileManager.getFile(fileUrl,"voiceFileUrl", receiver_id);
                         } else if (audioPlayer.playbackState === MediaPlayer.PlayingState) {
                             audioPlayer.pause();
                         } else if (audioPlayer.playbackState === MediaPlayer.PausedState) {

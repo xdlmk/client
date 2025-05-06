@@ -42,19 +42,25 @@ bool MessageStorage::savePersonalMessageToFile(chats::ChatMessage &newMessage)
     try {
         sessionKey = cryptoManager->unsealData(encryptedSessionKey);
     } catch (const std::exception &e) {
-        logger->log(Logger::ERROR, "messagehandler.cpp::savePersonalMessageToFile", QString("Session key unsealing error: %1").arg(e.what()));
+        logger->log(Logger::ERROR, "messagestorage.cpp::savePersonalMessageToFile", QString("Session key unsealing error: %1").arg(e.what()));
         return false;
     }
-    QByteArray encryptedMessageData = QByteArray::fromBase64(newMessage.content().toUtf8());
-    QByteArray decryptedMessageData;
-    try {
-        decryptedMessageData = cryptoManager->symmetricDecrypt(encryptedMessageData, sessionKey);
-    } catch (const std::exception &e) {
-        logger->log(Logger::ERROR, "messagehandler.cpp::savePersonalMessageToFile", QString("Message decryption error: %1").arg(e.what()));
-        return false;
-    }
-    QString decryptedContent = QString::fromUtf8(decryptedMessageData);
-    newMessage.setContent(decryptedContent);
+    QString content;
+    qDebug() << "ms " + newMessage.specialType();
+    if(newMessage.specialType() != "voice_message"){
+        QByteArray encryptedMessageData = QByteArray::fromBase64(newMessage.content().toUtf8());
+        QByteArray decryptedMessageData;
+        try {
+            decryptedMessageData = cryptoManager->symmetricDecrypt(encryptedMessageData, sessionKey);
+        } catch (const std::exception &e) {
+            logger->log(Logger::ERROR, "messagestorage.cpp::savePersonalMessageToFile", QString("Message decryption error: %1").arg(e.what()));
+            return false;
+        }
+        content = QString::fromUtf8(decryptedMessageData);
+    } else content = "";
+
+
+    newMessage.setContent(content);
 
     if (!QFile::exists(filePath)) {
         QFile file(filePath);

@@ -59,7 +59,7 @@ signals:
     void editUniqueError();
     void unknownError();
 
-    void startRecording();
+    void startRecording(const quint64& chat_id, const QString& type);
     void stopRecording();
 
     void clearMainListView();
@@ -69,7 +69,7 @@ signals:
 
     void changeActiveAccount(QString username);
     void voiceExists();
-    void getFile(const QString& fileUrl,const QString& flag);
+    void getFile(const QString& fileUrl,const QString& flag); // remove
     void sendNewAvatar(const QString& avatarPath, const QString &type, const int& id);
     void checkAndSendAvatarUpdate(const QString &avatar_url,const int &user_id,const QString& type);
 

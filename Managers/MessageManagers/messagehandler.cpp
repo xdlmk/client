@@ -94,18 +94,22 @@ void MessageHandler::processingPersonalMessage(const QByteArray &receivedMessage
         return;
     }
 
-    QByteArray encryptedMessageData = QByteArray::fromBase64(encryptedContentBase64.toUtf8());
-    QByteArray decryptedMessageData;
-    try {
-        decryptedMessageData = cryptoManager->symmetricDecrypt(encryptedMessageData, sessionKey);
-    } catch (const std::exception &e) {
-        logger->log(Logger::ERROR, "messagehandler.cpp::processingPersonalMessage", QString("Message decryption error: %1").arg(e.what()));
-        return;
-    }
-    QString decryptedContent = QString::fromUtf8(decryptedMessageData);
+    QString content;
+    qDebug() << protoMsg.specialType();
+    if(protoMsg.specialType() != "voice_message"){
+        QByteArray encryptedMessageData = QByteArray::fromBase64(encryptedContentBase64.toUtf8());
+        QByteArray decryptedMessageData;
+        try {
+            decryptedMessageData = cryptoManager->symmetricDecrypt(encryptedMessageData, sessionKey);
+        } catch (const std::exception &e) {
+            logger->log(Logger::ERROR, "messagehandler.cpp::processingPersonalMessage", QString("Message decryption error: %1").arg(e.what()));
+            return;
+        }
+        content = QString::fromUtf8(decryptedMessageData);
+    } else content == "";
 
-    messageToLoad["message"] = decryptedContent;
-    protoMsg.setContent(decryptedContent);
+    messageToLoad["message"] = content;
+    protoMsg.setContent(content);
 
     QString timestamp = protoMsg.timestamp();
     QDateTime dt = QDateTime::fromString(timestamp, Qt::ISODate);

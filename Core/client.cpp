@@ -8,10 +8,14 @@ Client::Client(QObject *parent)
     fileManager = new FileManager(this);
     cryptoManager = new CryptoManager(this);
     accountManager = new AccountManager(networkManager, this);
+
     messageHandler->setCryptoManager(cryptoManager);
     messageHandler->getMessageSender()->setCryptoManager(cryptoManager);
     messageHandler->getMessageStorage()->setCryptoManager(cryptoManager);
+
     accountManager->setCryptoManager(cryptoManager);
+    fileManager->setCryptoManager(cryptoManager);
+
     audioManager = new AudioManager(this);
 
     setupConnections();
@@ -119,7 +123,7 @@ void Client::setupFileConnections() {
     connect(networkManager->getFileNetwork(), &FileNetworkManager::uploadVoiceFile, fileManager, &FileManager::uploadVoiceFile);
     connect(networkManager->getFileNetwork(), &FileNetworkManager::uploadAvatar, fileManager, &FileManager::uploadAvatar);
 
-    connect(this, &Client::getFile, fileManager, &FileManager::getFile);
+    //connect(this, &Client::getFile, fileManager, &FileManager::getFile);// remove
     connect(fileManager, &FileManager::sendDataFile, networkManager->getFileNetwork(), &FileNetworkManager::sendData);
     connect(messageHandler, &MessageHandler::sendMessageFileData, networkManager->getFileNetwork(), &FileNetworkManager::sendData);
 

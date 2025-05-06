@@ -179,11 +179,12 @@ void AccountManager::createDialogKeys(const QByteArray &createDialogKeysData)
 
     QString baseDir = QCoreApplication::applicationDirPath()
                       + "/.tempData/"
-                      + QString::number(response.receiverId());
+                      + QString::number(response.receiverId()) + "/files/personal";
     QDir dir;
     if (!dir.exists(baseDir)) dir.mkpath(baseDir);
     QString filePath = baseDir + "/" + response.uniqMessageId() + ".txt";
     QString metaFilePath = baseDir + "/" + response.uniqMessageId() + ".meta";
+    QString metaVoiceFilePath = baseDir + "/" + response.uniqMessageId() + ".meta.v";
 
     QFile file(filePath);
     QString content;
@@ -195,11 +196,15 @@ void AccountManager::createDialogKeys(const QByteArray &createDialogKeysData)
     }
 
     bool withFile = QFile::exists(metaFilePath);
+    bool withVoiceFile = QFile::exists(metaVoiceFilePath);
 
     chats::FileData fileDataMsg;
-    if(withFile){
+    if(withFile || withVoiceFile){
         QString filePath;
-        QFile metaFile(metaFilePath);
+        QFile metaFile;
+        if(withFile) metaFile.setFileName(metaFilePath);
+        else if(withVoiceFile) metaFile.setFileName(metaVoiceFilePath);
+
         if (metaFile.open(QIODevice::ReadOnly)) {
             QTextStream in(&metaFile);
             filePath = in.readAll();
@@ -225,15 +230,17 @@ void AccountManager::createDialogKeys(const QByteArray &createDialogKeysData)
         fileDataMsg.setFileExtension(fileInfo.suffix());
         fileDataMsg.setFileData(encryptedFileData);
     }
-
-    QByteArray encryptedMessage;
-    try {
-        encryptedMessage = cryptoManager->symmetricEncrypt(content.toUtf8(), sessionKeyData);
-    } catch (const std::exception &e) {
-        logger->log(Logger::ERROR, "chatmanager.cpp::createDialogKeys", QString("Error encrypting message: ") + QString(e.what()));
-        return;
+    QString message;
+    if(!withVoiceFile) {
+        QByteArray encryptedMessage;
+        try {
+            encryptedMessage = cryptoManager->symmetricEncrypt(content.toUtf8(), sessionKeyData);
+        } catch (const std::exception &e) {
+            logger->log(Logger::ERROR, "chatmanager.cpp::createDialogKeys", QString("Error encrypting message: ") + QString(e.what()));
+            return;
+        }
+        message = QString::fromUtf8(encryptedMessage.toBase64());
     }
-    QString message = QString::fromUtf8(encryptedMessage.toBase64());
 
     chats::ChatMessage msg;
     msg.setSenderId(activeUserId);
@@ -241,9 +248,10 @@ void AccountManager::createDialogKeys(const QByteArray &createDialogKeysData)
     msg.setContent(message);
     msg.setSenderEncryptedSessionKey(encryptedSessionKeyForSender);
     msg.setReceiverEncryptedSessionKey(encryptedSessionKeyForReceiver);
-    if(withFile) {
+    if(withFile || withVoiceFile) {
         msg.setFile(fileDataMsg);
-        networkManager->getFileNetwork()->sendData("personal_file_message", msg.serialize(&serializer));
+        if(withVoiceFile) ;
+        if(withFile) networkManager->getFileNetwork()->sendData("personal_file_message", msg.serialize(&serializer));
     } else
         networkManager->getMessageNetwork()->sendData("personal_message", msg.serialize(&serializer));
 }

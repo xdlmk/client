@@ -104,7 +104,7 @@ void MessageSender::sendMessageWithFile(const QString &message, const int &recei
             QString uniqName = QUuid::createUuid().toString(QUuid::WithoutBraces);
             QString baseDir = QCoreApplication::applicationDirPath()
                               + "/.tempData/"
-                              + QString::number(receiver_id);
+                              + QString::number(receiver_id) + "/files/" + flag;
 
             QDir dir;
             if (!dir.exists(baseDir)) dir.mkpath(baseDir);
@@ -200,33 +200,102 @@ void MessageSender::sendVoiceMessage(const int &receiver_id, const QString &flag
 {
     logger->log(Logger::DEBUG,"messagesender.cpp::sendVoiceMessage", "sendVoiceMessage starts");
 
+    QString filePath = QCoreApplication::applicationDirPath() + "/.tempData/" + QString::number(activeUserId) + "/voice_messages/" + flag + "/" + QString::number(receiver_id) + "/voiceMessage.wav";
+
+    QProtobufSerializer serializer;
     chats::ChatMessage chatMsg;
     chatMsg.setSenderId(activeUserId);
 
     if(flag == "personal") {
+        QString dialogInfoPath = QCoreApplication::applicationDirPath() + "/.data/" + QString::number(activeUserId) + "/dialogsInfo" + "/" + QString::number(receiver_id) + ".pb";
+        if(!QFile::exists(dialogInfoPath)) {
+            logger->log(Logger::INFO, "messagesender.cpp::sendVoiceMessage", "dialogInfo not exists");
+            chats::CreateDialogRequest request;
+            request.setSenderId(activeUserId);
+            request.setReceiverId(receiver_id);
+
+            QString uniqName = QUuid::createUuid().toString(QUuid::WithoutBraces);
+            QString baseDir = QCoreApplication::applicationDirPath()
+                              + "/.tempData/"
+                              + QString::number(receiver_id);
+
+            QDir dir;
+            if (!dir.exists(baseDir)) dir.mkpath(baseDir);
+
+            QString filePath = baseDir + "/" + uniqName + ".txt";
+            QString metaVoiceFilePath = baseDir + "/" + uniqName + ".meta.v";
+
+            QFile file(filePath);
+            if (file.open(QIODevice::WriteOnly)) {
+                QTextStream out(&file);
+                out << QString();
+                file.close();
+            } else {
+                logger->log(Logger::ERROR, "messagesender.cpp::sendVoiceMessage", "File not open for save message");
+                return;
+            }
+            QFile metaFile(metaVoiceFilePath);
+            if (metaFile.open(QIODevice::WriteOnly)) {
+                QTextStream outMeta(&metaFile);
+                outMeta << filePath;
+                metaFile.close();
+            } else {
+                logger->log(Logger::ERROR, "messagesender.cpp::sendVoiceMessage", "File not open for saving file path");
+                return;
+            }
+
+            request.setUniqMessageId(uniqName);
+
+            emit sendMessageData("create_dialog", request.serialize(&serializer));
+            return;
+        }
+
+        chatMsg.setContent(QString());
         chatMsg.setReceiverId(receiver_id);
+
+        QFile file(filePath);
+        QFileInfo fileInfo(filePath);
+        if (!file.open(QIODevice::ReadOnly)) {
+            logger->log(Logger::WARN,"messagesender.cpp::sendVoiceMessage","Failed open file");
+        }
+        QByteArray encryptedFileData;
+        try {
+            encryptedFileData = cryptoManager->symmetricEncrypt(file.readAll(),cryptoManager->getDecryptedSessionKey(dialogInfoPath));
+        } catch (const std::exception &e) {
+            logger->log(Logger::ERROR, "messagesender.cpp::sendVoiceMessage", QString("Error encrypting message: ") + QString(e.what()));
+            return;
+        }
+        file.close();
+
+        chats::FileData fileDataMsg;
+        fileDataMsg.setFileName(fileInfo.baseName());
+        fileDataMsg.setFileExtension(fileInfo.suffix());
+        fileDataMsg.setFileData(encryptedFileData);
+
+        chatMsg.setFile(fileDataMsg);
+
+        emit sendMessageFileData(flag + "_voice_message", chatMsg.serialize(&serializer)); // personal_voice_message group_voice_message
     } else if(flag == "group"){
         chatMsg.setGroupId(receiver_id);
+
+        QFile file(filePath);
+        QFileInfo fileInfo(filePath);
+        if (!file.open(QIODevice::ReadOnly)) {
+            logger->log(Logger::WARN,"messagesender.cpp::sendVoiceMessage","Failed open file");
+        }
+        QByteArray voiceData = file.readAll();
+        file.close();
+
+        chats::FileData fileDataMsg;
+        fileDataMsg.setFileName(fileInfo.baseName());
+        fileDataMsg.setFileExtension(fileInfo.suffix());
+        fileDataMsg.setFileData(voiceData);
+
+        chatMsg.setFile(fileDataMsg);
+
+        emit sendMessageFileData(flag + "_voice_message", chatMsg.serialize(&serializer)); // personal_voice_message group_voice_message
     }
 
-    QString voicePath = QCoreApplication::applicationDirPath() + "/.tempData/" + QString::number(activeUserId) + "/voice_messages" + "/voiceMessage.wav";
-    QFile file(voicePath);
-    QFileInfo fileInfo(voicePath);
-    if (!file.open(QIODevice::ReadOnly)) {
-        logger->log(Logger::WARN,"messagesender.cpp::sendVoiceMessage","Failed open file");
-    }
-    QByteArray voiceData = file.readAll();
-    file.close();
-
-    chats::FileData fileDataMsg;
-    fileDataMsg.setFileName(fileInfo.baseName());
-    fileDataMsg.setFileExtension(fileInfo.suffix());
-    fileDataMsg.setFileData(voiceData);
-
-    chatMsg.setFile(fileDataMsg);
-
-    QProtobufSerializer serializer;
-    emit sendMessageFileData(flag + "_voice_message", chatMsg.serialize(&serializer)); // personal_voice_message group_voice_message
 }
 
 void MessageSender::sendRequestMessagesLoading(const int &chat_id, const QString &chat_name, const QString &flag, const int &offset)
