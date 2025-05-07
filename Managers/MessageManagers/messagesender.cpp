@@ -45,13 +45,7 @@ void MessageSender::sendMessage(const QString &message, const quint64 &receiver_
             if (!dir.exists(baseDir)) dir.mkpath(baseDir);
 
             QString filePath = baseDir + "/" + uniqName + ".txt";
-
-            QFile file(filePath);
-            if (file.open(QIODevice::WriteOnly)) {
-                QTextStream out(&file);
-                out << message;
-                file.close();
-            } else {
+            if(!writeContentToFile(filePath, message)) {
                 logger->log(Logger::ERROR, "messagesender.cpp::sendMessage", "File not open for save message");
                 return;
             }
@@ -109,25 +103,11 @@ void MessageSender::sendMessageWithFile(const QString &message, const int &recei
             QDir dir;
             if (!dir.exists(baseDir)) dir.mkpath(baseDir);
 
-            QString filePath = baseDir + "/" + uniqName + ".txt";
+            QString contentFilePath = baseDir + "/" + uniqName + ".txt";
             QString metaFilePath = baseDir + "/" + uniqName + ".meta";
 
-            QFile file(filePath);
-            if (file.open(QIODevice::WriteOnly)) {
-                QTextStream out(&file);
-                out << message;
-                file.close();
-            } else {
+            if(!writeContentToFile(contentFilePath, message) || !writeContentToFile(metaFilePath, filePath)) {
                 logger->log(Logger::ERROR, "messagesender.cpp::sendMessageWithFile", "File not open for save message");
-                return;
-            }
-            QFile metaFile(metaFilePath);
-            if (metaFile.open(QIODevice::WriteOnly)) {
-                QTextStream outMeta(&metaFile);
-                outMeta << filePath;
-                metaFile.close();
-            } else {
-                logger->log(Logger::ERROR, "messagesender.cpp::sendMessageWithFile", "File not open for saving file path");
                 return;
             }
 
@@ -222,25 +202,11 @@ void MessageSender::sendVoiceMessage(const int &receiver_id, const QString &flag
             QDir dir;
             if (!dir.exists(baseDir)) dir.mkpath(baseDir);
 
-            QString filePath = baseDir + "/" + uniqName + ".txt";
+            QString contentFilePath = baseDir + "/" + uniqName + ".txt";
             QString metaVoiceFilePath = baseDir + "/" + uniqName + ".meta.v";
 
-            QFile file(filePath);
-            if (file.open(QIODevice::WriteOnly)) {
-                QTextStream out(&file);
-                out << QString();
-                file.close();
-            } else {
+            if(!writeContentToFile(contentFilePath, QString()) || !writeContentToFile(metaVoiceFilePath, filePath)) {
                 logger->log(Logger::ERROR, "messagesender.cpp::sendVoiceMessage", "File not open for save message");
-                return;
-            }
-            QFile metaFile(metaVoiceFilePath);
-            if (metaFile.open(QIODevice::WriteOnly)) {
-                QTextStream outMeta(&metaFile);
-                outMeta << filePath;
-                metaFile.close();
-            } else {
-                logger->log(Logger::ERROR, "messagesender.cpp::sendVoiceMessage", "File not open for saving file path");
                 return;
             }
 
@@ -295,7 +261,6 @@ void MessageSender::sendVoiceMessage(const int &receiver_id, const QString &flag
 
         emit sendMessageFileData(flag + "_voice_message", chatMsg.serialize(&serializer)); // personal_voice_message group_voice_message
     }
-
 }
 
 void MessageSender::sendRequestMessagesLoading(const int &chat_id, const QString &chat_name, const QString &flag, const int &offset)
@@ -311,4 +276,19 @@ void MessageSender::sendRequestMessagesLoading(const int &chat_id, const QString
     }
     QProtobufSerializer serializer;
     emit sendMessageData("load_messages", request.serialize(&serializer));
+}
+
+bool MessageSender::writeContentToFile(const QString &filePath, const QString &content)
+{
+    QFile file(filePath);
+    if (file.open(QIODevice::WriteOnly)) {
+        QTextStream out(&file);
+        out << content;
+        file.close();
+        return true;
+    } else {
+        logger->log(Logger::ERROR, "messagesender.cpp::writeContentToFile",
+                    "File not open for saving content: " + filePath);
+        return false;
+    }
 }

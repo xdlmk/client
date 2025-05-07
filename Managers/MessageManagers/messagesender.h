@@ -39,6 +39,8 @@ signals:
     void sendMessageFileData(const QString &flag, const QByteArray &data);
 
 private:
+    bool writeContentToFile(const QString &filePath, const QString &content);
+
     QString activeUserLogin;
     int activeUserId;
 

@@ -123,7 +123,6 @@ void Client::setupFileConnections() {
     connect(networkManager->getFileNetwork(), &FileNetworkManager::uploadVoiceFile, fileManager, &FileManager::uploadVoiceFile);
     connect(networkManager->getFileNetwork(), &FileNetworkManager::uploadAvatar, fileManager, &FileManager::uploadAvatar);
 
-    //connect(this, &Client::getFile, fileManager, &FileManager::getFile);// remove
     connect(fileManager, &FileManager::sendDataFile, networkManager->getFileNetwork(), &FileNetworkManager::sendData);
     connect(messageHandler, &MessageHandler::sendMessageFileData, networkManager->getFileNetwork(), &FileNetworkManager::sendData);
 

@@ -67,6 +67,8 @@ signals:
     void removeAccountFromConfigManager();
 
 private:
+    QString encryptContentFromMessage(const chats::ChatMessage &protoMsg);
+
     void loadMessageToQml(QVariantMap& messageToDisplay);
 
     CryptoManager *cryptoManager;

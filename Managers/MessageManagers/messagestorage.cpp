@@ -46,8 +46,7 @@ bool MessageStorage::savePersonalMessageToFile(chats::ChatMessage &newMessage)
         return false;
     }
     QString content;
-    qDebug() << "ms " + newMessage.specialType();
-    if(newMessage.specialType() != "voice_message"){
+    if(newMessage.content() != ""){
         QByteArray encryptedMessageData = QByteArray::fromBase64(newMessage.content().toUtf8());
         QByteArray decryptedMessageData;
         try {
