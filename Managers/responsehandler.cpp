@@ -35,6 +35,24 @@ void ResponseHandler::processingLoginResults(const QByteArray &loginResultsData)
     int userId = response.userId();
     QString avatar_url = response.avatarUrl();
 
+    QByteArray nonce = response.nonce();
+    QByteArray salt = response.salt();
+    QByteArray encrypted_private_key = response.encryptedPrivateKey();
+
+    QByteArray public_key = response.publicKey();
+    QString fileUrl;
+    fileUrl = QCoreApplication::applicationDirPath() + "/.data/crypto/public_key.pem";
+    QFile file(fileUrl);
+
+    QDir dir = QFileInfo(file).absoluteDir();
+    if (!dir.exists()) dir.mkpath(".");
+
+    if (file.open(QIODevice::WriteOnly)) {
+        file.write(public_key);
+        file.close();
+    }
+
+
     if (success == "ok") {
         common::Identifiers identifiers;
         identifiers.setUserId(userId);
@@ -43,6 +61,7 @@ void ResponseHandler::processingLoginResults(const QByteArray &loginResultsData)
         emit loginSuccess(userlogin, userId);
         emit checkAndSendAvatarUpdate(avatar_url, userId, "personal");
         emit addAccount(userlogin, password, userId);
+        emit savePrivateKey(encrypted_private_key, salt, nonce);
         emit updatingChats();
     } else if (success == "poor") {
         emit loginFail();

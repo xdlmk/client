@@ -8,6 +8,7 @@
 #include "Managers/filemanager.h"
 #include "Managers/MessageManagers/messagehandler.h"
 #include "Network/networkmanager.h"
+#include "Managers/cryptomanager.h"
 #include "Utils/logger.h"
 
 class Client : public QObject
@@ -19,6 +20,7 @@ public:
 
     AccountManager* getAccountManager();
     FileManager *getFileManager();
+    CryptoManager *getCryptoManager();
 
 signals:
     void newMessage(QVariant message);
@@ -43,7 +45,7 @@ signals:
 
     void addAccount();
 
-    void sendMessage(const QString &message, const int &receiver_id, const QString &flag);
+    void sendMessage(const QString &message, const quint64 &receiver_id, const QString &flag);
     void sendMessageWithFile(const QString &message, const int &receiver_id,const QString& filePath, const QString &flag);
     void sendVoiceMessage(const int &receiver_id, const QString &flag);
     void sendSearchToServer(const QString &searchable);
@@ -57,7 +59,7 @@ signals:
     void editUniqueError();
     void unknownError();
 
-    void startRecording();
+    void startRecording(const quint64& chat_id, const QString& type);
     void stopRecording();
 
     void clearMainListView();
@@ -67,7 +69,6 @@ signals:
 
     void changeActiveAccount(QString username);
     void voiceExists();
-    void getFile(const QString& fileUrl,const QString& flag);
     void sendNewAvatar(const QString& avatarPath, const QString &type, const int& id);
     void checkAndSendAvatarUpdate(const QString &avatar_url,const int &user_id,const QString& type);
 
@@ -100,6 +101,7 @@ private:
     NetworkManager *networkManager;
     MessageHandler *messageHandler;
     AccountManager *accountManager;
+    CryptoManager *cryptoManager;
     FileManager *fileManager;
     AudioManager *audioManager;
 

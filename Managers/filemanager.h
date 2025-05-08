@@ -15,6 +15,7 @@
 #include <QCryptographicHash>
 
 #include "Utils/logger.h"
+#include "Managers/cryptomanager.h"
 
 #include "generated_protobuf/getAvatar.qpb.h"
 #include "generated_protobuf/chatsInfo.qpb.h"
@@ -29,6 +30,8 @@ public:
     explicit FileManager(QObject *parent = nullptr);
     void setActiveUser(const QString &userName, const int &userId);
 
+    void setCryptoManager(CryptoManager* cryptoManager);
+
     Q_INVOKABLE QString openFile(QString type);
 signals:
     void sendDataFile(const QString &flag, const QByteArray &data);
@@ -41,7 +44,7 @@ public slots:
     void uploadVoiceFile(const QByteArray &fileData);
     void uploadAvatar(const QByteArray &data);
 
-    void getFile(const QString &fileUrl,const QString &flag);
+    void getFile(const QString &fileUrl, const QString &flag, const quint64& user_id);
 
 private:
     QString replaceAfterUnderscore(const QString &url, const QString &newString);
@@ -60,6 +63,8 @@ private:
 
     QString activeUserName;
     int activeUserId;
+
+    CryptoManager* cryptoManager;
     Logger* logger;
 };
 

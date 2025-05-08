@@ -22,6 +22,21 @@ MessageHandler::MessageHandler(QObject *parent)
     connect(messageSender,&MessageSender::sendMessageFileData,this,&MessageHandler::sendMessageFileData);
 }
 
+MessageSender *MessageHandler::getMessageSender()
+{
+    return messageSender;
+}
+
+MessageStorage *MessageHandler::getMessageStorage()
+{
+    return messageStorage;
+}
+
+void MessageHandler::setCryptoManager(CryptoManager *cryptoManager)
+{
+    this->cryptoManager = cryptoManager;
+}
+
 void MessageHandler::setActiveUser(const QString &userLogin, const int &userId)
 {
     this->activeUserLogin = userLogin;
@@ -60,7 +75,8 @@ void MessageHandler::processingPersonalMessage(const QByteArray &receivedMessage
     }
     QVariantMap messageToLoad;
 
-    messageToLoad["message"] = protoMsg.content();
+    QString content = encryptContentFromMessage(protoMsg);
+    messageToLoad["message"] = content;
 
     QString timestamp = protoMsg.timestamp();
     QDateTime dt = QDateTime::fromString(timestamp, Qt::ISODate);
@@ -84,9 +100,6 @@ void MessageHandler::processingPersonalMessage(const QByteArray &receivedMessage
 
     logger->log(Logger::INFO,"messagehandler.cpp::processingPersonalMessage","Personal message received");
 
-    qDebug() << protoMsg.senderId();
-    qDebug() << activeUserId;
-    qDebug() << protoMsg.receiverId();
     messageToLoad["login"] = protoMsg.senderLogin();
     messageToLoad["id"] = protoMsg.senderId();
     messageToLoad["second_id"] = protoMsg.receiverId();
@@ -245,13 +258,11 @@ void MessageHandler::loadingNextMessages(const QByteArray &messagesData)
     int type = static_cast<int>(response.type());
     logger->log(Logger::INFO, "messagehandler.cpp::loadingNextMessages", "Start processing messages");
 
-    int count = response.messages().size();
-
     for (int i = response.messages().size() - 1; i >= 0; --i) {
         const chats::ChatMessage &protoMsg = response.messages().at(i);
         QVariantMap messageToLoad;
 
-        messageToLoad["message"] = protoMsg.content();
+        messageToLoad["message"] = encryptContentFromMessage(protoMsg);
 
         QString fullDate = protoMsg.timestamp();
         QDateTime dt = QDateTime::fromString(fullDate, Qt::ISODate);
@@ -296,4 +307,39 @@ void MessageHandler::loadingNextMessages(const QByteArray &messagesData)
         }
     }
     emit returnChatToPosition();
+}
+
+QString MessageHandler::encryptContentFromMessage(const chats::ChatMessage &protoMsg)
+{
+    QString encryptedContentBase64 = protoMsg.content();
+    QByteArray encryptedSessionKey;
+    if (protoMsg.senderId() == activeUserId) {
+        encryptedSessionKey = protoMsg.senderEncryptedSessionKey();
+    } else if (protoMsg.receiverId() == activeUserId) {
+        encryptedSessionKey = protoMsg.receiverEncryptedSessionKey();
+    } else {
+        logger->log(Logger::ERROR, "messagehandler.cpp::encryptContentFromMessage", "Active user id does not match sender or receiver");
+        return QString();
+    }
+
+    QByteArray sessionKey;
+    try {
+        sessionKey = cryptoManager->unsealData(encryptedSessionKey);
+    } catch (const std::exception &e) {
+        logger->log(Logger::ERROR, "messagehandler.cpp::encryptContentFromMessage", QString("Session key unsealing error: %1").arg(e.what()));
+        return QString();
+    }
+
+    QString content;
+    if(encryptedContentBase64 != ""){
+        QByteArray encryptedMessageData = QByteArray::fromBase64(encryptedContentBase64.toUtf8());
+        QByteArray decryptedMessageData;
+        try {
+            decryptedMessageData = cryptoManager->symmetricDecrypt(encryptedMessageData, sessionKey);
+        } catch (const std::exception &e) {
+            logger->log(Logger::ERROR, "messagehandler.cpp::encryptContentFromMessage", QString("Message decryption error: %1").arg(e.what()));
+            return QString();
+        }
+        return QString::fromUtf8(decryptedMessageData);
+    } else return QString();
 }

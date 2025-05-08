@@ -10,6 +10,11 @@ void FileManager::setActiveUser(const QString &userName, const int &userId)
     activeUserId = userId;
 }
 
+void FileManager::setCryptoManager(CryptoManager *cryptoManager)
+{
+    this->cryptoManager = cryptoManager;
+}
+
 QString FileManager::openFile(QString type)
 {
     if ( type == "Image") {
@@ -63,6 +68,12 @@ void FileManager::uploadFiles(const QByteArray &fileData)
     QByteArray newFileData = response.fileData();
     QString fileUrl = response.fileName();
 
+    if(response.userId() != 0) {
+        QString dialogInfoPath = QCoreApplication::applicationDirPath() + "/.data/" + QString::number(activeUserId) + "/dialogsInfo" + "/" + QString::number(response.userId()) + ".pb";
+        QByteArray sessionKey = cryptoManager->getDecryptedSessionKey(dialogInfoPath);
+        newFileData = cryptoManager->symmetricDecrypt(newFileData, sessionKey);
+    }
+
     files::FileChecker fileChecker = loadFileChecker();
 
     if (!checkProtoForMatches(fileChecker, newFileData, fileUrl)) {
@@ -100,6 +111,12 @@ void FileManager::uploadVoiceFile(const QByteArray &fileData)
     }
     QByteArray newFileData = response.fileData();
     QString fileUrl = response.fileName();
+
+    if(response.userId() != 0) {
+        QString dialogInfoPath = QCoreApplication::applicationDirPath() + "/.data/" + QString::number(activeUserId) + "/dialogsInfo" + "/" + QString::number(response.userId()) + ".pb";
+        QByteArray sessionKey = cryptoManager->getDecryptedSessionKey(dialogInfoPath);
+        newFileData = cryptoManager->symmetricDecrypt(newFileData, sessionKey);
+    }
 
     files::FileChecker fileChecker = loadFileChecker();
 
@@ -208,7 +225,7 @@ void FileManager::uploadAvatar(const QByteArray &data)
     avatar.close();
 }
 
-void FileManager::getFile(const QString &fileUrl, const QString &flag)
+void FileManager::getFile(const QString &fileUrl, const QString &flag, const quint64& user_id)
 {
     logger->log(Logger::INFO,"filemanager.cpp::getFile","getFile starts for flag: " + flag);
     QString filePath = "";
@@ -223,6 +240,7 @@ void FileManager::getFile(const QString &fileUrl, const QString &flag)
     if(!isFileDownloaded(fileUrl,filePath,filesDir)) {
         files::FileRequest request;
         request.setFileUrl(fileUrl);
+        request.setUserId(user_id);
         QProtobufSerializer serializer;
         emit sendDataFile(flag, request.serialize(&serializer));
     } else {

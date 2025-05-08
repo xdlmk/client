@@ -75,7 +75,7 @@ Rectangle {
                             width: 24
                             height: 24
                             textImage: username
-                            source: avatarSource + id + ".png?" + timestamp
+                            source: isSpecial ? "" : avatarSource + id + ".png?" + timestamp //add account icon
                             fillMode: Image.PreserveAspectFit
                         }
 
@@ -97,15 +97,11 @@ Rectangle {
                         hoverEnabled: true
 
                         onClicked: {
-                            if(!isSpecial)
-                            {
-                                if (username != userlogin)
-                                {
+                            if(!isSpecial) {
+                                if (username != userlogin) {
                                     client.changeActiveAccount(username);
                                 }
-                            }
-                            else
-                            {
+                            } else {
                                 client.addAccount();
                             }
                         }

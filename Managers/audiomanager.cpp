@@ -4,16 +4,16 @@ AudioManager::AudioManager(QObject *parent) : QObject(parent), captureSession(ne
     recorder(new QMediaRecorder(this)), audioInput(new QAudioInput(this))
 { }
 
-void AudioManager::startRecording() {
+void AudioManager::startRecording(const quint64& chat_id, const QString& type) {
     captureSession->setAudioInput(audioInput);
     captureSession->setRecorder(recorder);
     recorder->setQuality(QMediaRecorder::HighQuality);
     recorder->setMediaFormat(QMediaFormat(QMediaFormat::Wave));
-    QDir dir(QCoreApplication::applicationDirPath() + "/.tempData/" + QString::number(activeUserId) + "/voice_messages");
+    QDir dir(QCoreApplication::applicationDirPath() + "/.tempData/" + QString::number(activeUserId) + "/voice_messages/" + type + "/" + QString::number(chat_id));
     if (!dir.exists()) {
         dir.mkpath(".");
     }
-    QString filePath = QDir::cleanPath(QCoreApplication::applicationDirPath()) + "/.tempData/" + QString::number(activeUserId) + "/voice_messages" + "/voiceMessage.wav";
+    QString filePath = QDir::cleanPath(QCoreApplication::applicationDirPath()) + "/.tempData/" + QString::number(activeUserId) + "/voice_messages/" + type + "/" + QString::number(chat_id) + "/voiceMessage.wav";
     recorder->setOutputLocation(QUrl::fromLocalFile(filePath));
     recorder->record();
 }

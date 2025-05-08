@@ -11,6 +11,7 @@
 #include <QCoreApplication>
 
 #include "Utils/logger.h"
+#include "Managers/cryptomanager.h"
 #include "Managers/MessageManagers/messagestorage.h"
 #include "Managers/MessageManagers/messagesender.h"
 
@@ -22,6 +23,11 @@ class MessageHandler : public QObject
     Q_OBJECT
 public:
     explicit MessageHandler(QObject *parent = nullptr);
+
+    MessageSender *getMessageSender();
+    MessageStorage *getMessageStorage();
+
+    void setCryptoManager(CryptoManager* cryptoManager);
 
 public slots:
     void setActiveUser(const QString &userLogin, const int &userId);
@@ -52,7 +58,7 @@ signals:
 
     void updatingLatestMessagesFromServer(const QByteArray &latestMessages);
 
-    void sendMessage(const QString &message, const int &receiver_id, const QString &flag);
+    void sendMessage(const QString &message, const quint64 &receiver_id, const QString &flag);
     void sendMessageWithFile(const QString &message, const int &receiver_id,const QString& filePath, const QString &flag);
     void sendVoiceMessage(const int &receiver_id, const QString &flag);
 
@@ -61,8 +67,11 @@ signals:
     void removeAccountFromConfigManager();
 
 private:
+    QString encryptContentFromMessage(const chats::ChatMessage &protoMsg);
+
     void loadMessageToQml(QVariantMap& messageToDisplay);
 
+    CryptoManager *cryptoManager;
     MessageStorage *messageStorage;
     MessageSender *messageSender;
 

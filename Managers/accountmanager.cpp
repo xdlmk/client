@@ -11,12 +11,37 @@ AccountManager::AccountManager(NetworkManager* networkManager,QObject *parent)
 
 void AccountManager::login(const QString login, const QString password)
 {
-    sendAuthRequest("login",login,password);
+    QProtobufSerializer serializer;
+    QByteArray data;
+
+    auth::LoginRequest loginRequest;
+    loginRequest.setLogin(login);
+    loginRequest.setPassword(password);
+    cryptoManager->setLastEnteredPassword(password);
+
+    networkManager->getMessageNetwork()->sendData("login", loginRequest.serialize(&serializer));
 }
 
 void AccountManager::registerAccount(const QString login, const QString password)
 {
-    sendAuthRequest("reg",login,password);
+    QProtobufSerializer serializer;
+    QByteArray data;
+
+    auth::RegisterRequest regRequest;
+    regRequest.setLogin(login);
+    regRequest.setPassword(password);
+    try {
+        CryptoKeys keys = cryptoManager->generateKeys(password);
+        regRequest.setPublicKey(keys.publicKey);
+        regRequest.setEncryptedPrivateKey(keys.encryptedPrivateKey);
+        regRequest.setSalt(keys.salt);
+        regRequest.setNonce(keys.nonce);
+    } catch (const std::exception &e) {
+        logger->log(Logger::ERROR, "accountmanager.cpp::registerAccount", "Error generate keys: " + QString(e.what()));
+        return;
+    }
+
+    networkManager->getMessageNetwork()->sendData("reg", regRequest.serialize(&serializer));
 }
 
 void AccountManager::logout()
@@ -47,6 +72,11 @@ void AccountManager::sendEditProfileRequest(const QString editable, const QStrin
 void AccountManager::clientChangeAccount()
 {
     networkManager->getMessageNetwork()->sendData("logout",QByteArray());
+}
+
+void AccountManager::setCryptoManager(CryptoManager *cryptoManager)
+{
+    this->cryptoManager = cryptoManager;
 }
 
 void AccountManager::checkAndSendAvatarUpdate(const QString &avatar_url, const int &user_id,const QString& type)
@@ -118,6 +148,112 @@ void AccountManager::addGroupMembers(const int &group_id, const QVariantList &se
 
     QProtobufSerializer serializer;
     networkManager->getMessageNetwork()->sendData("add_group_members", request.serialize(&serializer));
+}
+
+void AccountManager::createDialogKeys(const QByteArray &createDialogKeysData)
+{
+    QProtobufSerializer serializer;
+    chats::CreateDialogResponse response;
+
+    if (!response.deserialize(&serializer, createDialogKeysData)) {
+        logger->log(Logger::INFO, "chatmanager.cpp::createDialogKeys", "Error deserialize request");
+        return;
+    }
+
+    QByteArray sender_public_key = response.senderPublicKey();
+    QByteArray receiver_public_key = response.receiverPublicKey();
+
+    unsigned char sessionKey[crypto_secretbox_KEYBYTES];
+    randombytes_buf(sessionKey, crypto_secretbox_KEYBYTES);
+    QByteArray sessionKeyData(reinterpret_cast<const char*>(sessionKey), crypto_secretbox_KEYBYTES);
+
+    QByteArray encryptedSessionKeyForSender;
+    QByteArray encryptedSessionKeyForReceiver;
+    try {
+        encryptedSessionKeyForSender = cryptoManager->sealData(sessionKeyData, sender_public_key);
+        encryptedSessionKeyForReceiver = cryptoManager->sealData(sessionKeyData, receiver_public_key);
+    } catch (const std::exception &e) {
+        logger->log(Logger::ERROR, "chatmanager.cpp::createDialogKeys", QString("Error encrypting session key: %1").arg(e.what()));
+        return;
+    }
+
+    QString baseDir = QCoreApplication::applicationDirPath()
+                      + "/.tempData/"
+                      + QString::number(response.receiverId()) + "/files/personal";
+    QDir dir;
+    if (!dir.exists(baseDir)) dir.mkpath(baseDir);
+    QString filePath = baseDir + "/" + response.uniqMessageId() + ".txt";
+    QString metaFilePath = baseDir + "/" + response.uniqMessageId() + ".meta";
+    QString metaVoiceFilePath = baseDir + "/" + response.uniqMessageId() + ".meta.v";
+
+    QFile file(filePath);
+    QString content;
+    if (file.open(QIODevice::ReadOnly)) {
+        QTextStream in(&file);
+        content = in.readAll();
+        file.remove();
+        file.close();
+    }
+
+    bool withFile = QFile::exists(metaFilePath);
+    bool withVoiceFile = QFile::exists(metaVoiceFilePath);
+
+    chats::FileData fileDataMsg;
+    if(withFile || withVoiceFile){
+        QString filePath;
+        QFile metaFile;
+        if(withFile) metaFile.setFileName(metaFilePath);
+        else if(withVoiceFile) metaFile.setFileName(metaVoiceFilePath);
+
+        if (metaFile.open(QIODevice::ReadOnly)) {
+            QTextStream in(&metaFile);
+            filePath = in.readAll();
+            file.remove();
+            file.close();
+        }
+
+        QFile file(filePath);
+        QFileInfo fileInfo(filePath);
+        if (!file.open(QIODevice::ReadOnly)) {
+            logger->log(Logger::WARN,"messagesender.cpp::createDialogKeys","Failed open file");
+        }
+        QByteArray encryptedFileData;
+        try {
+            encryptedFileData = cryptoManager->symmetricEncrypt(file.readAll(), sessionKeyData);
+        } catch (const std::exception &e) {
+            logger->log(Logger::ERROR, "messagesender.cpp::createDialogKeys", QString("Error encrypting message: ") + QString(e.what()));
+            return;
+        }
+        file.close();
+
+        fileDataMsg.setFileName(fileInfo.baseName());
+        fileDataMsg.setFileExtension(fileInfo.suffix());
+        fileDataMsg.setFileData(encryptedFileData);
+    }
+    QString message;
+    if(!withVoiceFile) {
+        QByteArray encryptedMessage;
+        try {
+            encryptedMessage = cryptoManager->symmetricEncrypt(content.toUtf8(), sessionKeyData);
+        } catch (const std::exception &e) {
+            logger->log(Logger::ERROR, "chatmanager.cpp::createDialogKeys", QString("Error encrypting message: ") + QString(e.what()));
+            return;
+        }
+        message = QString::fromUtf8(encryptedMessage.toBase64());
+    }
+
+    chats::ChatMessage msg;
+    msg.setSenderId(activeUserId);
+    msg.setReceiverId(response.receiverId());
+    msg.setContent(message);
+    msg.setSenderEncryptedSessionKey(encryptedSessionKeyForSender);
+    msg.setReceiverEncryptedSessionKey(encryptedSessionKeyForReceiver);
+    if(withFile || withVoiceFile) {
+        msg.setFile(fileDataMsg);
+        if(withVoiceFile) ;
+        if(withFile) networkManager->getFileNetwork()->sendData("personal_file_message", msg.serialize(&serializer));
+    } else
+        networkManager->getMessageNetwork()->sendData("personal_message", msg.serialize(&serializer));
 }
 
 void AccountManager::getGroupMembers(const int &group_id)
@@ -383,6 +519,16 @@ void AccountManager::setupResponseHandler()
 
     connect(&responseHandler,&ResponseHandler::sendData, [this](const QString &flag, const QByteArray& data) {
         networkManager->getMessageNetwork()->sendData(flag,data);
+    });
+    connect(&responseHandler, &ResponseHandler::savePrivateKey, [this](const QByteArray &encryptedPrivateKey, const QByteArray &salt, const QByteArray &nonce) {
+        QString fileUrl;
+        fileUrl = QCoreApplication::applicationDirPath() + "/.data/crypto/private_key.pem";
+        try {
+            cryptoManager->decryptAndSavePrivateKey(encryptedPrivateKey,salt,nonce,fileUrl);
+        } catch(const std::exception &e) {
+            logger->log(Logger::ERROR, "responseHandler.cpp::savePrivateKey", "Error save private key: " + QString(e.what()));
+            return;
+        }
     });
 
     connect(&responseHandler,&ResponseHandler::transferUserNameAndIdAfterLogin,this,&AccountManager::transferUserNameAndIdAfterLogin);
