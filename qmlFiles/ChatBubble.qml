@@ -6,7 +6,11 @@ Item {
     id: root
     width: Math.min(lblText.implicitWidth + 20, listView.width * 0.75)
     height: lblText.implicitHeight + lblTime.implicitHeight + nameText.implicitHeight + (fileText.visible ? fileText.implicitHeight + 10 : 0) + 10
-    property bool isWaitingForVoice: isWaitingForVoice
+    property bool isWaitingForVoice: false
+
+    property alias audioPlayer: audioPlayer
+
+    signal playRequested(string filePath, real startPosition)
 
     Rectangle {
         id: rectBubble
@@ -108,15 +112,17 @@ Item {
                     cursorShape: Qt.PointingHandCursor
                     onClicked: {
                         if(audioPlayer.playbackState === MediaPlayer.StoppedState){
-                            isWaitingForVoice = true;
-                            var receiver_id;
-                            if(upLine.currentState === "group") receiver_id = 0;
+                            /*root.isWaitingForVoice = true;
+                            var receiver_id;*/
+                            playRequested(fileUrl, 0);
+                            /*if(upLine.currentState === "group") receiver_id = 0;
                             else if(upLine.currentState === "personal") receiver_id = upLine.user_id;
-                            fileManager.getFile(fileUrl,"voiceFileUrl", receiver_id);
+                            fileManager.getFile(fileUrl, "voiceFileUrl", receiver_id);*/
                         } else if (audioPlayer.playbackState === MediaPlayer.PlayingState) {
                             audioPlayer.pause();
+                            globalMediaPlayer.pause();
                         } else if (audioPlayer.playbackState === MediaPlayer.PausedState) {
-                            audioPlayer.play();
+                            playRequested(fileUrl, audioPlayer.position);
                         }
                     }
                 }
@@ -229,6 +235,7 @@ Item {
 
     AudioOutput {
         id: audioOutput
+        muted: true
     }
 
     MediaPlayer {
@@ -270,7 +277,7 @@ Item {
         return Qt.rgba(r / 255, g / 255, b / 255, 1);
     }
 
-    function onVoiceExists(){
+    /*function onVoiceExists(){
         if(isWaitingForVoice) {
             audioPlayer.play();
             isWaitingForVoice = false;
@@ -280,5 +287,5 @@ Item {
 
     Component.onCompleted: {
         voiceExists.connect(onVoiceExists);
-    }
+    }*/
 }

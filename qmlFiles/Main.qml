@@ -1,6 +1,7 @@
 import QtQuick 2.15
 import QtQuick.Controls 2.15
 import QtQuick.Layouts
+import QtMultimedia
 
 Window {
     id: root
@@ -19,6 +20,7 @@ Window {
     property string activeChatTypeBeforeRequest: "default"
     property int activeChatIdBeforeRequest: 0
 
+    property var currentChatBubble: null
 
     Rectangle {
         id: leftLine
@@ -117,7 +119,10 @@ Window {
             property string fileUrl: model.fileUrl
             property string fileName: model.fileName
             property string special_type: model.special_type
-            isWaitingForVoice: false
+
+            onPlayRequested: {
+                handlePlayRequest(chatBubble, filePath, startPosition);
+            }
         }
 
         property int savedIndexFromEnd: 0
@@ -280,6 +285,37 @@ Window {
         id:selectContactsForm
     }
 
+    AudioOutput {
+        id: globalAudioOutput
+        volume: 1.0
+        muted: false
+    }
+
+    MediaPlayer {
+        id: globalMediaPlayer
+        property string voiceFileUrl: ""
+        audioOutput: globalAudioOutput
+        source: appPath + "/.data/" + activeUserId + "/.voiceFiles/" + voiceFileUrl
+        onPlaybackStateChanged: {
+            console.log("GlobalMediaPlayer state:", playbackState, ", duration:", duration, ", position:", position);
+            if (playbackState === MediaPlayer.StoppedState) {
+                source = "";
+                console.log("StoppedState");
+                console.log(source);
+            } else if (playbackState === MediaPlayer.PlayingState) {
+                console.log("PlayingState");
+                console.log(source);
+            } else if (playbackState === MediaPlayer.PausedState) {
+                console.log("PausedState");
+                console.log(source);
+            }
+        }
+
+        onErrorChanged: {
+            console.log("GlobalMediaPlayer error:", error, errorString)
+        }
+    }
+
     Timer {
         id: updateAvatarsTimer
         interval: 1000
@@ -288,6 +324,30 @@ Window {
         onTriggered: {
             timestamp = new Date().getTime();
         }
+    }
+
+    function onVoiceExists(){
+        console.log("start");
+        console.log(globalMediaPlayer.source);
+        globalMediaPlayer.play();
+        //currentChatBubble.audioPlayer.play();
+    }
+
+    function handlePlayRequest(chatBubble, filePath, startPosition) {
+        if (currentChatBubble && currentChatBubble !== chatBubble) {
+            currentChatBubble.audioPlayer.pause();
+            globalMediaPlayer.stop();
+        }
+
+        currentChatBubble = chatBubble;
+
+        globalMediaPlayer.voiceFileUrl = filePath;
+        globalMediaPlayer.position = startPosition;
+
+        var receiver_id;
+        if(upLine.currentState === "group") receiver_id = 0;
+        else if(upLine.currentState === "personal") receiver_id = upLine.user_id;
+        fileManager.getFile(filePath, "voiceFileUrl", receiver_id);
     }
 
     function onNewMessage(data) {
@@ -362,6 +422,7 @@ Window {
     }
 
     Component.onCompleted: {
+        voiceExists.connect(onVoiceExists);
         clearMainListView.connect(onClearMainListView);
         clearMessagesAfterDelete.connect(onClearMessagesAfterDelete);
         loadGroupMembers.connect(loadCountOfGroupMembers);
