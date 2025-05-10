@@ -4,7 +4,7 @@ project(clientDes VERSION 0.1 LANGUAGES CXX)
 
 set(CMAKE_CXX_STANDARD_REQUIRED ON)
 
-find_package(Qt6 6.4 REQUIRED COMPONENTS
+find_package(Qt6 6.7 REQUIRED COMPONENTS
     Quick Core Network Protobuf Gui
     QuickControls2 Widgets Multimedia
     ShaderTools
