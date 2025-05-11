@@ -16,6 +16,7 @@
 
 int main(int argc, char *argv[])
 {
+    qputenv("QT_MEDIA_BACKEND", "windows");
 
     QApplication app(argc, argv);
     QQuickStyle::setStyle("Basic");
@@ -43,6 +44,7 @@ int main(int argc, char *argv[])
     engine.rootContext()->setContextObject(&client);
     engine.rootContext()->setContextProperty("client",&client);
     engine.rootContext()->setContextProperty("fileManager",fileManager);
+    engine.rootContext()->setContextProperty("audioManager", client.getAudioManager());
     engine.rootContext()->setContextProperty("logger",&logger);
 
     QObject::connect(

@@ -21,6 +21,7 @@ public:
     AccountManager* getAccountManager();
     FileManager *getFileManager();
     CryptoManager *getCryptoManager();
+    AudioManager *getAudioManager();
 
 signals:
     void newMessage(QVariant message);

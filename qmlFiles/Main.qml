@@ -285,46 +285,6 @@ Window {
         id:selectContactsForm
     }
 
-    AudioOutput {
-        id: output
-    }
-
-    MediaPlayer {
-        id: globalMediaPlayer
-        audioOutput: output
-        //source: ""
-        source: "c:/c++/qt/chat/211e0ef5-56f6-4aa6-92a4-2fc4a0c4c094_voiceMessage.wav"
-
-        onPlaybackStateChanged: {
-            console.log("GlobalMediaPlayer state:", playbackState, ", duration:", duration, ", position:", position);
-            if (playbackState === MediaPlayer.StoppedState) {
-                //source = "";
-                console.log("StoppedState");
-                console.log(source);
-
-                //globalMediaPlayer.position = 0;
-                //currentChatBubble.voicePosition = 0;
-            } else if (playbackState === MediaPlayer.PlayingState) {
-                console.log("PlayingState");
-                console.log(source);
-
-                //currentChatBubble.playButtonText.text = "▶";
-            } else if (playbackState === MediaPlayer.PausedState) {
-                console.log("PausedState");
-                console.log(source);
-                //currentChatBubble.voicePosition = globalMediaPlayer.position;
-
-                //currentChatBubble.playButtonText.text = "⏸";
-            }
-        }
-        //onPositionChanged: currentChatBubble.voicePosition = globalMediaPlayer.position;
-       //onDurationChanged: currentChatBubble.voiceDuration = globalMediaPlayer.duration;
-
-        onErrorChanged: {
-            console.log("ERROR:", error, errorString)
-        }
-    }
-
     Timer {
         id: updateAvatarsTimer
         interval: 1000
@@ -335,33 +295,55 @@ Window {
         }
     }
 
+    function onMediaPlayerDurationChanged(duration) {
+        currentChatBubble.voiceDuration = duration;
+    }
+
+    function onMediaPlayerPositionChanged(position) {
+        currentChatBubble.voicePosition = position;
+    }
+
+    function onMediaPlayerStateChanged(state) {
+        console.log("GlobalMediaPlayer state:", state, ", duration:", audioManager.getMediaPlayerDuration(), ", position:", audioManager.getMediaPlayerPosition());
+        if (state === MediaPlayer.StoppedState) {
+            console.log("StoppedState");
+
+            audioManager.setPosition(0);
+            if(currentChatBubble.isActive) {
+                currentChatBubble.voicePosition = 0;
+            }
+        } else if (state === MediaPlayer.PlayingState) {
+            console.log("PlayingState");
+
+            currentChatBubble.playButtonText.text = "▶";
+        } else if (state === MediaPlayer.PausedState) {
+            console.log("PausedState");
+            currentChatBubble.voicePosition = audioManager.getMediaPlayerPosition();
+
+            currentChatBubble.playButtonText.text = "⏸";
+        }
+    }
+
     function onVoiceExists(){
         console.log("start");
-        console.log(globalMediaPlayer.source);
-        globalMediaPlayer.play();
-        //currentChatBubble.isActive = true;
+        audioManager.playVoice();
+        currentChatBubble.isActive = true;
     }
 
     function handlePlayRequest(chatBubble, filePath, startPosition) {
-        //if (currentChatBubble && currentChatBubble !== chatBubble) {
-            //currentChatBubble.isActive = false;
-            //globalMediaPlayer.stop();
-        //}
+        if (currentChatBubble && currentChatBubble !== chatBubble) {
+            currentChatBubble.isActive = false;
+        }
+        audioManager.stop();
 
-        //currentChatBubble = chatBubble;
-        //globalMediaPlayer.source = "file:///C:/c++/qt/chat/clientDes/build/Desktop_Qt_6_9_0_MinGW_64_bit-Debug/.data/9/.voiceFiles/211e0ef5-56f6-4aa6-92a4-2fc4a0c4c094_voiceMessage.wav";
-        //globalMediaPlayer.source = appPath + "/.data/" + activeUserId + "/.voiceFiles/" + filePath;
-        //globalMediaPlayer.position = startPosition;
-        onVoiceExists();
-        // var receiver_id;
-        // if(upLine.currentState === "group") receiver_id = 0;
-        // else if(upLine.currentState === "personal") receiver_id = upLine.user_id;
-        // fileManager.getFile(filePath, "voiceFileUrl", receiver_id);
-    }
+        currentChatBubble = chatBubble;
+        audioManager.setSource(filePath);
+        audioManager.setPosition(startPosition);
 
-    Button {
-        text:"Play"
-        onClicked: globalMediaPlayer.play()
+        var receiver_id;
+        if(upLine.currentState === "group") receiver_id = 0;
+        else if(upLine.currentState === "personal") receiver_id = upLine.user_id;
+        fileManager.getFile(filePath, "voiceFileUrl", receiver_id);
     }
 
     function onNewMessage(data) {
@@ -446,5 +428,9 @@ Window {
         connectionError.connect(connectError);
         connectionSuccess.connect(connectSuccess);
         returnChatToPosition.connect(returnPosition);
+
+        audioManager.durationChanged.connect(onMediaPlayerDurationChanged);
+        audioManager.positionChanged.connect(onMediaPlayerPositionChanged);
+        audioManager.stateChanged.connect(onMediaPlayerStateChanged);
     }
 }

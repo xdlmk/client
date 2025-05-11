@@ -113,16 +113,16 @@ Item {
                     anchors.fill: parent
                     cursorShape: Qt.PointingHandCursor
                     onClicked: {
-                        playRequested(fileUrl, voicePosition);
-                        /*if(globalMediaPlayer.playbackState === MediaPlayer.StoppedState){
-                            playRequested(fileUrl, 0);
-                        } else if (globalMediaPlayer.playbackState === MediaPlayer.PlayingState && isActive) {
-                            //globalMediaPlayer.pause();
-                        } else if (globalMediaPlayer.playbackState === MediaPlayer.PlayingState && !isActive) {
-                            playRequested(fileUrl, 0);
-                        } else if (globalMediaPlayer.playbackState === MediaPlayer.PausedState) {
+                        if(audioManager.getMediaPlayerPlaybackState() === MediaPlayer.StoppedState){
                             playRequested(fileUrl, voicePosition);
-                        }*/
+                        } else if (audioManager.getMediaPlayerPlaybackState() === MediaPlayer.PlayingState && isActive) {
+                            audioManager.pause();
+                        } else if (audioManager.getMediaPlayerPlaybackState() === MediaPlayer.PlayingState && !isActive) {
+                            playRequested(fileUrl, voicePosition);
+                        } else if (audioManager.getMediaPlayerPlaybackState() === MediaPlayer.PausedState) {
+                            console.log("Voice position: " + voicePosition);
+                            playRequested(fileUrl, voicePosition);
+                        }
                     }
                 }
 
@@ -162,7 +162,8 @@ Item {
                         if(isActive){
                             if (mouse.x > voiceLineTime.width - 5) {
                                 isDragging = true
-                                globalMediaPlayer.pause();
+                                audioManager.pause();
+                                //globalMediaPlayer.pause();
                             }
                         }
                     }
@@ -170,7 +171,8 @@ Item {
                         if (isDragging && isActive) {
                             let newWidth = Math.min(Math.max(mouse.x, 0), voiceLine.width)
                             voiceLineTime.width = newWidth
-                            globalMediaPlayer.position = globalMediaPlayer.duration * (newWidth / voiceLine.width)
+                            audioManager.setPosition(audioManager.getMediaPlayerDuration() * (newWidth / voiceLine.width));
+                            //globalMediaPlayer.position = globalMediaPlayer.duration * (newWidth / voiceLine.width)
                         }
                     }
 

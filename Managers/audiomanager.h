@@ -26,11 +26,22 @@ public slots:
     void setActiveUser(const QString &userName,const int &userId);
     void setLogger(Logger* logger);
 
+    void playVoice();
+    void pause();
+    void stop();
+    void seek(qint64 position);
+
+    QMediaPlayer::PlaybackState getMediaPlayerPlaybackState();
+    qint64 getMediaPlayerDuration();
+    qint64 getMediaPlayerPosition();
+
+    void setSource(QString source);
+    void setPosition(qint64 position);
+
 signals:
-    void recordingStarted();
-    void recordingStopped();
-    void playbackStarted();
-    void playbackFinished();
+    void durationChanged(qint64 duration);
+    void positionChanged(qint64 position);
+    void stateChanged(QMediaPlayer::PlaybackState state);
 
 private:
     QString activeUserLogin;
@@ -40,6 +51,9 @@ private:
     QMediaCaptureSession *captureSession;
     QMediaRecorder *recorder;
     QAudioInput *audioInput;
+
+    QMediaPlayer* player;
+    QAudioOutput* audioOutput;
 };
 
 #endif // AUDIOMANAGER_H
