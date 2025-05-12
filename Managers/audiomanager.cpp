@@ -1,4 +1,5 @@
 #include "audiomanager.h"
+#include <QTimer>
 
 AudioManager::AudioManager(QObject *parent) : QObject(parent), captureSession(new QMediaCaptureSession(this)),
     recorder(new QMediaRecorder(this)), audioInput(new QAudioInput(this)), player(new QMediaPlayer(this)), audioOutput(new QAudioOutput(this))
@@ -47,17 +48,12 @@ void AudioManager::setLogger(Logger *logger)
 
 void AudioManager::playVoice()
 {
+    QTimer::singleShot(100, [this]() {
+        player->setPosition(position);
+        player->play();
 
-    if (!player || !audioOutput) {
-        qDebug() << "❌ Player or output not initialized";
-        return;
-    }
-
-    //player->setSource(QUrl::fromLocalFile("C:/c++/qt/chat/clientDes/build/Desktop_Qt_6_9_0_MinGW_64_bit-Debug/.data/9/.voiceFiles/211e0ef5-56f6-4aa6-92a4-2fc4a0c4c094_voiceMessage.wav"));
-
-    player->play();
-
-    if (logger) logger->log(Logger::INFO, "audiomanager.cpp::playVoice", "Playing: " + player->source().toString());
+        if (logger) logger->log(Logger::INFO, "audiomanager.cpp::playVoice", "Playing: " + player->source().toString() + " with position: " + QString::number(player->position()));
+    });
 }
 
 void AudioManager::setSource(QString source)
@@ -68,6 +64,7 @@ void AudioManager::setSource(QString source)
 void AudioManager::setPosition(qint64 position)
 {
     player->setPosition(position);
+    this->position = position;
 }
 
 void AudioManager::pause()
@@ -80,7 +77,7 @@ void AudioManager::pause()
 void AudioManager::stop()
 {
     player->stop();
-    player->setSource(QUrl());
+    this->position = 0;
 }
 
 void AudioManager::seek(qint64 position)

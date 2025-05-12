@@ -118,76 +118,76 @@ Item {
                         } else if (audioManager.getMediaPlayerPlaybackState() === MediaPlayer.PlayingState && isActive) {
                             audioManager.pause();
                         } else if (audioManager.getMediaPlayerPlaybackState() === MediaPlayer.PlayingState && !isActive) {
+                            audioManager.pause();
                             playRequested(fileUrl, voicePosition);
                         } else if (audioManager.getMediaPlayerPlaybackState() === MediaPlayer.PausedState) {
-                            console.log("Voice position: " + voicePosition);
                             playRequested(fileUrl, voicePosition);
                         }
                     }
                 }
 
             }
-            Rectangle {
-                id:voiceLine
+
+            Slider {
+                id: voiceSlider
+                enabled: isActive
                 anchors {
                     left: playButton.right
                     leftMargin: 10
-                    top:playButton.top
+                    top: playButton.top
                     topMargin: 5
                 }
                 width: parent.width - 100
-                height: 5
-                color: "#488dd3"
-                radius: 2
-            }
-            Rectangle {
-                id:voiceLineTime
-                anchors {
-                    left: playButton.right
-                    leftMargin: 10
-                    top:playButton.top
-                    topMargin: 5
-                }
-                width: voiceLine.width * (voicePosition/voiceDuration)
-                height: 5
-                color: "#182533"
-                radius: 2
-                MouseArea {
-                    id: dragArea
-                    anchors.fill: parent
-                    hoverEnabled: true
-                    cursorShape: Qt.SizeHorCursor
-                    property bool isDragging: false
-                    onPressed: {
-                        if(isActive){
-                            if (mouse.x > voiceLineTime.width - 5) {
-                                isDragging = true
-                                audioManager.pause();
-                                //globalMediaPlayer.pause();
-                            }
-                        }
-                    }
-                    onPositionChanged: {
-                        if (isDragging && isActive) {
-                            let newWidth = Math.min(Math.max(mouse.x, 0), voiceLine.width)
-                            voiceLineTime.width = newWidth
-                            audioManager.setPosition(audioManager.getMediaPlayerDuration() * (newWidth / voiceLine.width));
-                            //globalMediaPlayer.position = globalMediaPlayer.duration * (newWidth / voiceLine.width)
-                        }
-                    }
 
-                    onReleased: {
-                        isDragging = false
+                from: 0
+                to: voiceDuration
+                value: voicePosition
+
+                onPressedChanged: {
+                    if(isActive){
+                        if (pressed) {
+                            audioManager.pause();
+                        } else {
+                            audioManager.setPosition(value);
+                            audioManager.playVoice();
+                        }
                     }
+                }
+
+                background: Rectangle {
+                    x: voiceSlider.leftPadding
+                    y: voiceSlider.topPadding + voiceSlider.availableHeight / 2 - height / 2
+                    implicitWidth: voiceSlider.availableWidth
+                    implicitHeight: 5
+                    width: voiceSlider.availableWidth
+                    height: implicitHeight
+                    radius: 2
+                    color: "#488dd3"
+
+                    Rectangle {
+                        width: voiceSlider.visualPosition * parent.width
+                        height: parent.height
+                        radius: 2
+                        color: "#182533"
+                    }
+                }
+
+                handle: Rectangle {
+                    x: voiceSlider.leftPadding + voiceSlider.visualPosition * (voiceSlider.availableWidth - width)
+                    y: voiceSlider.topPadding + voiceSlider.availableHeight / 2 - height / 2
+                    implicitWidth: 6
+                    implicitHeight: 6
+                    radius: 3
+                    color: "#182533"
                 }
             }
             Text {
                 id: lblCurrentTime
                 anchors {
-                    left: playButton.right
-                    leftMargin: 10
-                    top:voiceLine.bottom
-                    topMargin: 5
+                    right: voiceSlider.right
+                    rightMargin: 45
+                    top:voiceSlider.bottom
+                    topMargin: -2
                 }
                 text: formatTime(voicePosition)
                 color: "white"
@@ -198,8 +198,8 @@ Item {
                 anchors {
                     left: lblCurrentTime.right
                     leftMargin: 5
-                    top:voiceLine.bottom
-                    topMargin: 5
+                    top:voiceSlider.bottom
+                    topMargin: -2
                 }
                 text: "/"
                 color: "white"
@@ -211,8 +211,8 @@ Item {
                 anchors {
                     left: betweenLbls.right
                     leftMargin: 5
-                    top:voiceLine.bottom
-                    topMargin: 5
+                    top:voiceSlider.bottom
+                    topMargin: -2
                 }
                 text: formatTime(voiceDuration)
                 color: "white"

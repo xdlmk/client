@@ -296,36 +296,34 @@ Window {
     }
 
     function onMediaPlayerDurationChanged(duration) {
-        currentChatBubble.voiceDuration = duration;
+        if(currentChatBubble.isActive)
+            currentChatBubble.voiceDuration = duration;
     }
 
     function onMediaPlayerPositionChanged(position) {
-        currentChatBubble.voicePosition = position;
+        if(currentChatBubble.isActive)
+            currentChatBubble.voicePosition = position;
     }
 
     function onMediaPlayerStateChanged(state) {
         console.log("GlobalMediaPlayer state:", state, ", duration:", audioManager.getMediaPlayerDuration(), ", position:", audioManager.getMediaPlayerPosition());
         if (state === MediaPlayer.StoppedState) {
-            console.log("StoppedState");
-
-            audioManager.setPosition(0);
-            if(currentChatBubble.isActive) {
-                currentChatBubble.voicePosition = 0;
+            if (audioManager.getMediaPlayerPosition() >= audioManager.getMediaPlayerDuration()) {
+                audioManager.setPosition(0);
+                if (currentChatBubble.isActive) {
+                    currentChatBubble.playButtonText.text = "▶";
+                    currentChatBubble.voicePosition = 0;
+                }
             }
         } else if (state === MediaPlayer.PlayingState) {
-            console.log("PlayingState");
-
-            currentChatBubble.playButtonText.text = "▶";
-        } else if (state === MediaPlayer.PausedState) {
-            console.log("PausedState");
-            currentChatBubble.voicePosition = audioManager.getMediaPlayerPosition();
-
             currentChatBubble.playButtonText.text = "⏸";
+        } else if (state === MediaPlayer.PausedState) {
+            currentChatBubble.voicePosition = audioManager.getMediaPlayerPosition();
+            currentChatBubble.playButtonText.text = "▶";
         }
     }
 
     function onVoiceExists(){
-        console.log("start");
         audioManager.playVoice();
         currentChatBubble.isActive = true;
     }

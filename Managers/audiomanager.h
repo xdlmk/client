@@ -54,6 +54,8 @@ private:
 
     QMediaPlayer* player;
     QAudioOutput* audioOutput;
+
+    qint64 position;
 };
 
 #endif // AUDIOMANAGER_H
