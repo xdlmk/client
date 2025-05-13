@@ -162,6 +162,11 @@ CryptoManager *Client::getCryptoManager()
     return cryptoManager;
 }
 
+AudioManager *Client::getAudioManager()
+{
+    return audioManager;
+}
+
 void Client::setLogger(Logger *logger)
 {
     this->logger = logger;

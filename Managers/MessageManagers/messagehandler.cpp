@@ -52,18 +52,6 @@ void MessageHandler::setLogger(Logger *logger)
     messageSender->setLogger(logger);
 }
 
-void MessageHandler::loadMessageToQml(QVariantMap& messageToDisplay)
-{
-    QString fileUrl = messageToDisplay["fileUrl"].toString();
-    if(fileUrl != "") {
-        int underscoreIndex = fileUrl.indexOf('_');
-        if (underscoreIndex != -1 && underscoreIndex + 1 < fileUrl.length()) {
-            messageToDisplay["fileName"] = fileUrl.mid(underscoreIndex + 1);
-        }
-    } else messageToDisplay["fileName"] = "";
-
-    emit newMessage(messageToDisplay);
-}
 
 void MessageHandler::processingPersonalMessage(const QByteArray &receivedMessageData)
 {
@@ -97,6 +85,7 @@ void MessageHandler::processingPersonalMessage(const QByteArray &receivedMessage
 
     messageToLoad["FullDate"] = timestamp;
     messageToLoad["special_type"] = protoMsg.specialType();
+    messageToLoad["audio_duration"] = getAudioDuration(fileName);
 
     logger->log(Logger::INFO,"messagehandler.cpp::processingPersonalMessage","Personal message received");
 
@@ -153,7 +142,7 @@ void MessageHandler::processingGroupMessage(const QByteArray &receivedMessageDat
     if(protoMsg.specialType() == "create_group") {
         getChatsInfo();
     }
-
+    messageToLoad["audio_duration"] = getAudioDuration(fileName);
     messageToLoad["group_name"] = protoMsg.groupName();
     messageToLoad["group_id"] = protoMsg.groupId();
 
@@ -230,7 +219,17 @@ void MessageHandler::loadingChat(const quint64& id, const QString &flag)
 
             messageToDisplay["message"] = msg.content();
             messageToDisplay["message_id"] = msg.messageId();
-            messageToDisplay["fileUrl"] = msg.mediaUrl();
+            QString fileUrl = msg.mediaUrl();
+            messageToDisplay["fileUrl"] = fileUrl;
+
+            QString fileName;
+            if (!fileUrl.isEmpty()) {
+                int underscoreIndex = fileUrl.indexOf('_');
+                if (underscoreIndex != -1 && underscoreIndex + 1 < fileUrl.length()) {
+                    fileName = fileUrl.mid(underscoreIndex + 1);
+                }
+            }
+            messageToDisplay["fileName"] = fileName;
 
             QString fullDate = msg.timestamp();
             QDateTime dt = QDateTime::fromString(fullDate, Qt::ISODate);
@@ -238,8 +237,8 @@ void MessageHandler::loadingChat(const quint64& id, const QString &flag)
             messageToDisplay["time"] = time;
             messageToDisplay["timestamp"] = fullDate;
             messageToDisplay["special_type"] = msg.specialType();
-
-            loadMessageToQml(messageToDisplay);
+            messageToDisplay["audio_duration"] = getAudioDuration(fileName);
+            emit newMessage(messageToDisplay);
         }
     }
     file.close();
@@ -287,6 +286,8 @@ void MessageHandler::loadingNextMessages(const QByteArray &messagesData)
 
         messageToLoad["special_type"] = protoMsg.specialType();
 
+        messageToLoad["audio_duration"] = getAudioDuration(fileName);
+
         if (protoMsg.groupId() != 0) {
             messageToLoad["group_id"] = protoMsg.groupId();
             messageToLoad["group_name"] = protoMsg.groupName();
@@ -307,6 +308,18 @@ void MessageHandler::loadingNextMessages(const QByteArray &messagesData)
         }
     }
     emit returnChatToPosition();
+}
+
+qint64 MessageHandler::getAudioDuration(const QString &fullFileName)
+{
+    qint64 durationMs = 0;
+    int underscoreIndex = fullFileName.lastIndexOf("_");
+    int dotIndex = fullFileName.lastIndexOf(".");
+    if (underscoreIndex != -1 && dotIndex != -1 && underscoreIndex < dotIndex) {
+        QString durationString = fullFileName.mid(underscoreIndex + 1, dotIndex - underscoreIndex - 1);
+        durationMs = durationString.toLongLong();
+    }
+    return durationMs;
 }
 
 QString MessageHandler::encryptContentFromMessage(const chats::ChatMessage &protoMsg)

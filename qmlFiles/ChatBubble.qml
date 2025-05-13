@@ -6,9 +6,9 @@ Item {
     id: root
     width: Math.min(lblText.implicitWidth + 20, listView.width * 0.75)
     height: lblText.implicitHeight + lblTime.implicitHeight + nameText.implicitHeight + (fileText.visible ? fileText.implicitHeight + 10 : 0) + 10
-    property bool isWaitingForVoice: false
-
-    property alias audioPlayer: audioPlayer
+    property bool isActive: false
+    property real voicePosition: 0
+    property alias playButtonText: playButtonText
 
     signal playRequested(string filePath, real startPosition)
 
@@ -56,7 +56,7 @@ Item {
                     var receiver_id;
                     if(upLine.currentState === "group") receiver_id = 0;
                     else if(upLine.currentState === "personal") receiver_id = upLine.user_id;
-                    fileManager.getFile(fileUrl,"fileUrl", receiver_id); // client.
+                    fileManager.getFile(fileUrl,"fileUrl", receiver_id);
                 }
             }
         }
@@ -111,82 +111,83 @@ Item {
                     anchors.fill: parent
                     cursorShape: Qt.PointingHandCursor
                     onClicked: {
-                        if(audioPlayer.playbackState === MediaPlayer.StoppedState){
-                            /*root.isWaitingForVoice = true;
-                            var receiver_id;*/
-                            playRequested(fileUrl, 0);
-                            /*if(upLine.currentState === "group") receiver_id = 0;
-                            else if(upLine.currentState === "personal") receiver_id = upLine.user_id;
-                            fileManager.getFile(fileUrl, "voiceFileUrl", receiver_id);*/
-                        } else if (audioPlayer.playbackState === MediaPlayer.PlayingState) {
-                            audioPlayer.pause();
-                            globalMediaPlayer.pause();
-                        } else if (audioPlayer.playbackState === MediaPlayer.PausedState) {
-                            playRequested(fileUrl, audioPlayer.position);
+                        if(audioManager.getMediaPlayerPlaybackState() === MediaPlayer.StoppedState){
+                            playRequested(fileUrl, voicePosition);
+                        } else if (audioManager.getMediaPlayerPlaybackState() === MediaPlayer.PlayingState && isActive) {
+                            audioManager.pause();
+                        } else if (audioManager.getMediaPlayerPlaybackState() === MediaPlayer.PlayingState && !isActive) {
+                            audioManager.pause();
+                            playRequested(fileUrl, voicePosition);
+                        } else if (audioManager.getMediaPlayerPlaybackState() === MediaPlayer.PausedState) {
+                            playRequested(fileUrl, voicePosition);
                         }
                     }
                 }
 
             }
-            Rectangle {
-                id:voiceLine
+
+            Slider {
+                id: voiceSlider
+                enabled: isActive
                 anchors {
                     left: playButton.right
                     leftMargin: 10
-                    top:playButton.top
+                    top: playButton.top
                     topMargin: 5
                 }
                 width: parent.width - 100
-                height: 5
-                color: "#488dd3"
-                radius: 2
-            }
-            Rectangle {
-                id:voiceLineTime
-                anchors {
-                    left: playButton.right
-                    leftMargin: 10
-                    top:playButton.top
-                    topMargin: 5
-                }
-                width: voiceLine.width * (audioPlayer.position/audioPlayer.duration)
-                height: 5
-                color: "#182533"
-                radius: 2
-                MouseArea {
-                    id: dragArea
-                    anchors.fill: parent
-                    hoverEnabled: true
-                    cursorShape: Qt.SizeHorCursor
-                    property bool isDragging: false
-                    onPressed: {
-                        if (mouse.x > voiceLineTime.width - 5) {
-                            isDragging = true
-                            audioPlayer.pause();
-                        }
-                    }
-                    onPositionChanged: {
-                        if (isDragging) {
-                            let newWidth = Math.min(Math.max(mouse.x, 0), voiceLine.width)
-                            voiceLineTime.width = newWidth
-                            audioPlayer.position = audioPlayer.duration * (newWidth / voiceLine.width)
-                        }
-                    }
 
-                    onReleased: {
-                        isDragging = false
+                from: 0
+                to: voiceDuration
+                value: voicePosition
+
+                onPressedChanged: {
+                    if(isActive){
+                        if (pressed) {
+                            audioManager.pause();
+                        } else {
+                            audioManager.setPosition(value);
+                            audioManager.playVoice();
+                        }
                     }
+                }
+
+                background: Rectangle {
+                    x: voiceSlider.leftPadding
+                    y: voiceSlider.topPadding + voiceSlider.availableHeight / 2 - height / 2
+                    implicitWidth: voiceSlider.availableWidth
+                    implicitHeight: 5
+                    width: voiceSlider.availableWidth
+                    height: implicitHeight
+                    radius: 2
+                    color: "#488dd3"
+
+                    Rectangle {
+                        width: voiceSlider.visualPosition * parent.width
+                        height: parent.height
+                        radius: 2
+                        color: "#182533"
+                    }
+                }
+
+                handle: Rectangle {
+                    x: voiceSlider.leftPadding + voiceSlider.visualPosition * (voiceSlider.availableWidth - width)
+                    y: voiceSlider.topPadding + voiceSlider.availableHeight / 2 - height / 2
+                    implicitWidth: 6
+                    implicitHeight: 6
+                    radius: 3
+                    color: "#182533"
                 }
             }
             Text {
                 id: lblCurrentTime
                 anchors {
-                    left: playButton.right
-                    leftMargin: 10
-                    top:voiceLine.bottom
-                    topMargin: 5
+                    right: voiceSlider.right
+                    rightMargin: 45
+                    top:voiceSlider.bottom
+                    topMargin: -2
                 }
-                text: "00:00"
+                text: formatTime(voicePosition)
                 color: "white"
                 font.pointSize: 8
             }
@@ -195,8 +196,8 @@ Item {
                 anchors {
                     left: lblCurrentTime.right
                     leftMargin: 5
-                    top:voiceLine.bottom
-                    topMargin: 5
+                    top:voiceSlider.bottom
+                    topMargin: -2
                 }
                 text: "/"
                 color: "white"
@@ -208,10 +209,10 @@ Item {
                 anchors {
                     left: betweenLbls.right
                     leftMargin: 5
-                    top:voiceLine.bottom
-                    topMargin: 5
+                    top:voiceSlider.bottom
+                    topMargin: -2
                 }
-                text: "00:00"
+                text: formatTime(voiceDuration)
                 color: "white"
                 font.pointSize: 8
             }
@@ -233,32 +234,6 @@ Item {
         }
     }
 
-    AudioOutput {
-        id: audioOutput
-        muted: true
-    }
-
-    MediaPlayer {
-        id: audioPlayer
-        audioOutput: audioOutput
-        source: fileUrl == "" ? "" : appPath + "/.data/" + activeUserId + "/.voiceFiles/" + fileUrl
-        onDurationChanged: lblDuration.text = formatTime(audioPlayer.duration)
-        onPositionChanged: {
-            lblCurrentTime.text = formatTime(audioPlayer.position);
-            voiceLineTime.width = voiceLine.width * (audioPlayer.position/audioPlayer.duration);
-        }
-        onPlaybackStateChanged: {
-            if (playbackState === MediaPlayer.StoppedState) {
-                audioPlayer.position = 0;
-                lblCurrentTime.text = "00:00";
-            } else if (playbackState === MediaPlayer.PlayingState) {
-                playButtonText.text = "▶";
-            } else if (playbackState === MediaPlayer.PausedState) {
-                playButtonText.text = "⏸";
-            }
-        }
-    }
-
     function formatTime(ms) {
         var totalSeconds = Math.floor(ms / 1000);
         var minutes = Math.floor(totalSeconds / 60);
@@ -277,15 +252,4 @@ Item {
         return Qt.rgba(r / 255, g / 255, b / 255, 1);
     }
 
-    /*function onVoiceExists(){
-        if(isWaitingForVoice) {
-            audioPlayer.play();
-            isWaitingForVoice = false;
-        }
-        isWaitingForVoice = false;
-    }
-
-    Component.onCompleted: {
-        voiceExists.connect(onVoiceExists);
-    }*/
 }

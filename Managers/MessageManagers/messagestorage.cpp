@@ -173,6 +173,7 @@ bool MessageStorage::saveGroupMessageToFile(chats::ChatMessage &newMessage)
     QString message;
     if(newMessage.specialType() == "voice_message") {
         message = "Voice message";
+
     } else if(newMessage.specialType() == "file_message" && newMessage.content() == "") {
         message = newMessage.file().fileName();
     } else {

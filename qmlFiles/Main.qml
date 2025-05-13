@@ -119,10 +119,11 @@ Window {
             property string fileUrl: model.fileUrl
             property string fileName: model.fileName
             property string special_type: model.special_type
+            property real voiceDuration: model.voiceDuration
 
-            onPlayRequested: {
-                handlePlayRequest(chatBubble, filePath, startPosition);
-            }
+            onPlayRequested: (filePath, position) => {
+                                 handlePlayRequest(chatBubble, filePath, position);
+                             }
         }
 
         property int savedIndexFromEnd: 0
@@ -285,37 +286,6 @@ Window {
         id:selectContactsForm
     }
 
-    AudioOutput {
-        id: globalAudioOutput
-        volume: 1.0
-        muted: false
-    }
-
-    MediaPlayer {
-        id: globalMediaPlayer
-        property string voiceFileUrl: ""
-        audioOutput: globalAudioOutput
-        source: appPath + "/.data/" + activeUserId + "/.voiceFiles/" + voiceFileUrl
-        onPlaybackStateChanged: {
-            console.log("GlobalMediaPlayer state:", playbackState, ", duration:", duration, ", position:", position);
-            if (playbackState === MediaPlayer.StoppedState) {
-                source = "";
-                console.log("StoppedState");
-                console.log(source);
-            } else if (playbackState === MediaPlayer.PlayingState) {
-                console.log("PlayingState");
-                console.log(source);
-            } else if (playbackState === MediaPlayer.PausedState) {
-                console.log("PausedState");
-                console.log(source);
-            }
-        }
-
-        onErrorChanged: {
-            console.log("GlobalMediaPlayer error:", error, errorString)
-        }
-    }
-
     Timer {
         id: updateAvatarsTimer
         interval: 1000
@@ -326,23 +296,47 @@ Window {
         }
     }
 
+    function onMediaPlayerDurationChanged(duration) {
+        if(currentChatBubble.isActive)
+            currentChatBubble.voiceDuration = duration;
+    }
+
+    function onMediaPlayerPositionChanged(position) {
+        if(currentChatBubble.isActive)
+            currentChatBubble.voicePosition = position;
+    }
+
+    function onMediaPlayerStateChanged(state) {
+        if (state === MediaPlayer.StoppedState) {
+            if (audioManager.getMediaPlayerPosition() >= audioManager.getMediaPlayerDuration()) {
+                audioManager.setPosition(0);
+                if (currentChatBubble.isActive) {
+                    currentChatBubble.playButtonText.text = "▶";
+                    currentChatBubble.voicePosition = 0;
+                }
+            }
+        } else if (state === MediaPlayer.PlayingState) {
+            currentChatBubble.playButtonText.text = "⏸";
+        } else if (state === MediaPlayer.PausedState) {
+            currentChatBubble.voicePosition = audioManager.getMediaPlayerPosition();
+            currentChatBubble.playButtonText.text = "▶";
+        }
+    }
+
     function onVoiceExists(){
-        console.log("start");
-        console.log(globalMediaPlayer.source);
-        globalMediaPlayer.play();
-        //currentChatBubble.audioPlayer.play();
+        audioManager.playVoice();
+        currentChatBubble.isActive = true;
     }
 
     function handlePlayRequest(chatBubble, filePath, startPosition) {
         if (currentChatBubble && currentChatBubble !== chatBubble) {
-            currentChatBubble.audioPlayer.pause();
-            globalMediaPlayer.stop();
+            currentChatBubble.isActive = false;
         }
+        audioManager.stop();
 
         currentChatBubble = chatBubble;
-
-        globalMediaPlayer.voiceFileUrl = filePath;
-        globalMediaPlayer.position = startPosition;
+        audioManager.setSource(filePath);
+        audioManager.setPosition(startPosition);
 
         var receiver_id;
         if(upLine.currentState === "group") receiver_id = 0;
@@ -352,14 +346,14 @@ Window {
 
     function onNewMessage(data) {
         listModel.append({text: data.message, time: data.time, name: data.login, isOutgoing: data.Out === "out" ? true : false,
-                             fileName: data.fileName, fileUrl: data.fileUrl, special_type: data.special_type});
+                             fileName: data.fileName, fileUrl: data.fileUrl, special_type: data.special_type, voiceDuration: data.audio_duration});
         listView.positionViewAtIndex(listModel.count - 1, ListView.End);
     }
 
     function addMessageToTop(data,isOutgoing) {
         if(activeChatIdBeforeRequest === upLine.user_id && activeChatTypeBeforeRequest === upLine.currentState) {
             listModel.insert(0, {text: data.message, time: data.time, name: data.login, isOutgoing: isOutgoing,
-                                 fileName: data.fileName, fileUrl: data.fileUrl, special_type: data.special_type});
+                                 fileName: data.fileName, fileUrl: data.fileUrl, special_type: data.special_type, voiceDuration: data.audio_duration});
         }
     }
 
@@ -432,5 +426,9 @@ Window {
         connectionError.connect(connectError);
         connectionSuccess.connect(connectSuccess);
         returnChatToPosition.connect(returnPosition);
+
+        audioManager.durationChanged.connect(onMediaPlayerDurationChanged);
+        audioManager.positionChanged.connect(onMediaPlayerPositionChanged);
+        audioManager.stateChanged.connect(onMediaPlayerStateChanged);
     }
 }
