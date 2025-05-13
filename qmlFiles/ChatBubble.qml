@@ -8,8 +8,6 @@ Item {
     height: lblText.implicitHeight + lblTime.implicitHeight + nameText.implicitHeight + (fileText.visible ? fileText.implicitHeight + 10 : 0) + 10
     property bool isActive: false
     property real voicePosition: 0
-    property real voiceDuration: 0
-
     property alias playButtonText: playButtonText
 
     signal playRequested(string filePath, real startPosition)

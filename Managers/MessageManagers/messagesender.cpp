@@ -180,7 +180,16 @@ void MessageSender::sendVoiceMessage(const int &receiver_id, const QString &flag
 {
     logger->log(Logger::DEBUG,"messagesender.cpp::sendVoiceMessage", "sendVoiceMessage starts");
 
-    QString filePath = QCoreApplication::applicationDirPath() + "/.tempData/" + QString::number(activeUserId) + "/voice_messages/" + flag + "/" + QString::number(receiver_id) + "/voiceMessage.wav";
+    QString directoryPath = QCoreApplication::applicationDirPath() + "/.tempData/" + QString::number(activeUserId) + "/voice_messages/" + flag + "/" + QString::number(receiver_id);
+    QDir dir(directoryPath);
+    QStringList filters;
+    filters << "voiceMessage_*.wav";
+
+    QString filePath;
+    QStringList matchingFiles = dir.entryList(filters, QDir::Files);
+    if (!matchingFiles.isEmpty()) {
+        filePath = dir.absoluteFilePath(matchingFiles.first());
+    }
 
     QProtobufSerializer serializer;
     chats::ChatMessage chatMsg;
@@ -227,7 +236,7 @@ void MessageSender::sendVoiceMessage(const int &receiver_id, const QString &flag
         QByteArray encryptedFileData;
         try {
             encryptedFileData = cryptoManager->symmetricEncrypt(file.readAll(),cryptoManager->getDecryptedSessionKey(dialogInfoPath));
-        } catch (const std::exception &e) {
+            } catch (const std::exception &e) {
             logger->log(Logger::ERROR, "messagesender.cpp::sendVoiceMessage", QString("Error encrypting message: ") + QString(e.what()));
             return;
         }

@@ -119,6 +119,7 @@ Window {
             property string fileUrl: model.fileUrl
             property string fileName: model.fileName
             property string special_type: model.special_type
+            property real voiceDuration: model.voiceDuration
 
             onPlayRequested: (filePath, position) => {
                                  handlePlayRequest(chatBubble, filePath, position);
@@ -306,7 +307,6 @@ Window {
     }
 
     function onMediaPlayerStateChanged(state) {
-        console.log("GlobalMediaPlayer state:", state, ", duration:", audioManager.getMediaPlayerDuration(), ", position:", audioManager.getMediaPlayerPosition());
         if (state === MediaPlayer.StoppedState) {
             if (audioManager.getMediaPlayerPosition() >= audioManager.getMediaPlayerDuration()) {
                 audioManager.setPosition(0);
@@ -346,14 +346,14 @@ Window {
 
     function onNewMessage(data) {
         listModel.append({text: data.message, time: data.time, name: data.login, isOutgoing: data.Out === "out" ? true : false,
-                             fileName: data.fileName, fileUrl: data.fileUrl, special_type: data.special_type});
+                             fileName: data.fileName, fileUrl: data.fileUrl, special_type: data.special_type, voiceDuration: data.audio_duration});
         listView.positionViewAtIndex(listModel.count - 1, ListView.End);
     }
 
     function addMessageToTop(data,isOutgoing) {
         if(activeChatIdBeforeRequest === upLine.user_id && activeChatTypeBeforeRequest === upLine.currentState) {
             listModel.insert(0, {text: data.message, time: data.time, name: data.login, isOutgoing: isOutgoing,
-                                 fileName: data.fileName, fileUrl: data.fileUrl, special_type: data.special_type});
+                                 fileName: data.fileName, fileUrl: data.fileUrl, special_type: data.special_type, voiceDuration: data.audio_duration});
         }
     }
 

@@ -52,6 +52,9 @@ private:
     QMediaRecorder *recorder;
     QAudioInput *audioInput;
 
+    QString recordingFilePath;
+    qint64 recordingStartTime = 0;
+
     QMediaPlayer* player;
     QAudioOutput* audioOutput;
 

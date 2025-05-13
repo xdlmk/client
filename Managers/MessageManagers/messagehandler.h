@@ -67,9 +67,8 @@ signals:
     void removeAccountFromConfigManager();
 
 private:
+    qint64 getAudioDuration(const QString &fullFileName);
     QString encryptContentFromMessage(const chats::ChatMessage &protoMsg);
-
-    void loadMessageToQml(QVariantMap& messageToDisplay);
 
     CryptoManager *cryptoManager;
     MessageStorage *messageStorage;

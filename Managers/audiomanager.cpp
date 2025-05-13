@@ -27,12 +27,31 @@ void AudioManager::startRecording(const quint64& chat_id, const QString& type) {
         dir.mkpath(".");
     }
     QString filePath = QDir::cleanPath(QCoreApplication::applicationDirPath()) + "/.tempData/" + QString::number(activeUserId) + "/voice_messages/" + type + "/" + QString::number(chat_id) + "/voiceMessage.wav";
+
+    recordingFilePath = filePath;
+    recordingStartTime = QDateTime::currentMSecsSinceEpoch();
+
     recorder->setOutputLocation(QUrl::fromLocalFile(filePath));
     recorder->record();
 }
 
 void AudioManager::stopRecording() {
     recorder->stop();
+
+    qint64 durationMs = QDateTime::currentMSecsSinceEpoch() - recordingStartTime;
+
+    QFile file(recordingFilePath);
+    if (file.exists()) {
+        QString newFilePath;
+        int dotIndex = recordingFilePath.lastIndexOf(".");
+        if (dotIndex != -1) {
+            newFilePath = recordingFilePath.left(dotIndex) + "_" + QString::number(durationMs) +
+                          recordingFilePath.mid(dotIndex);
+        } else {
+            newFilePath = recordingFilePath + "_" + QString::number(durationMs);
+        }
+        QFile::rename(recordingFilePath, newFilePath);
+    }
 }
 
 void AudioManager::setActiveUser(const QString &userName, const int &userId)
