@@ -258,5 +258,6 @@ const std::unordered_map<std::string_view, uint> MessageNetworkManager::flagMap 
     {"add_group_members", 6}, {"chats_info", 7},
     {"search", 8}, {"updating_chats", 9},
     {"load_messages", 10}, {"edit", 11},
-    {"avatars_update", 12}, {"create_dialog", 13}
+    {"avatars_update", 12}, {"create_dialog", 13},
+    {"mark_message", 14}
 };

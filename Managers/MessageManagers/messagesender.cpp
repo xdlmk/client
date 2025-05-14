@@ -272,6 +272,15 @@ void MessageSender::sendVoiceMessage(const int &receiver_id, const QString &flag
     }
 }
 
+void MessageSender::markMessageAsRead(const quint64 &message_id)
+{
+    chats::MarkMessageRequest request;
+    request.setMessageId(message_id);
+    request.setReaderId(activeUserId);
+    QProtobufSerializer serializer;
+    emit sendMessageData("mark_message", request.serialize(&serializer));
+}
+
 void MessageSender::sendRequestMessagesLoading(const int &chat_id, const QString &chat_name, const QString &flag, const int &offset)
 {
     chats::LoadMessagesRequest request;

@@ -234,6 +234,15 @@ Item {
         }
     }
 
+
+    function markAsRead() {
+        if (!isRead) {
+            isRead = true;
+            console.log("Message " + message_id + " is now marked as read.");
+            client.markMessageAsRead(message_id);
+        }
+    }
+
     function formatTime(ms) {
         var totalSeconds = Math.floor(ms / 1000);
         var minutes = Math.floor(totalSeconds / 60);
@@ -251,5 +260,4 @@ Item {
         const b = hash & 0xFF;
         return Qt.rgba(r / 255, g / 255, b / 255, 1);
     }
-
 }

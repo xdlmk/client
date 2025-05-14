@@ -17,6 +17,7 @@
 #include "generated_protobuf/loadMessages.qpb.h"
 #include "generated_protobuf/createDialog.qpb.h"
 #include "generated_protobuf/chatsInfo.qpb.h"
+#include "generated_protobuf/markMessage.qpb.h"
 #include <QProtobufSerializer>
 class MessageSender : public QObject
 {
@@ -31,6 +32,8 @@ public slots:
     void sendMessage(const QString &message, const quint64 &receiver_id, const QString &flag);
     void sendMessageWithFile(const QString &message, const int &receiver_id,const QString& filePath, const QString &flag);
     void sendVoiceMessage(const int &receiver_id, const QString &flag);
+
+    void markMessageAsRead(const quint64& message_id);
 
     void sendRequestMessagesLoading(const int &chat_id, const QString &chat_name, const QString& flag, const int& offset);
 

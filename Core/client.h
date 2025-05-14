@@ -54,6 +54,8 @@ signals:
     void sendRegisterRequest(const QString login, const QString password);
     void sendEditProfileRequest(const QString editable,const QString editInformation);
 
+    void markMessageAsRead(const quint64& message_id);
+
     void editUserlogin(QString editInformation);
     void editPhoneNumber(QString editInformation);
     void editName(QString editInformation);

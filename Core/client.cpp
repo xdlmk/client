@@ -94,6 +94,7 @@ void Client::setupMessageConnections() {
     connect(this, &Client::sendMessage, messageHandler, &MessageHandler::sendMessage);
     connect(this, &Client::requestMessageDownload, messageHandler, &MessageHandler::sendRequestMessagesLoading);
     connect(this, &Client::sendMessageWithFile, messageHandler, &MessageHandler::sendMessageWithFile);
+    connect(this, &Client::markMessageAsRead, messageHandler->getMessageSender(), &MessageSender::markMessageAsRead);
 
     connect(messageHandler,&MessageHandler::sendMessageData, networkManager->getMessageNetwork(), &MessageNetworkManager::sendData);
     connect(messageHandler,&MessageHandler::checkAndSendAvatarUpdate,accountManager,&AccountManager::checkAndSendAvatarUpdate);

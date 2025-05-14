@@ -39,6 +39,7 @@ public slots:
     void loadingChat(const quint64& id, const QString &flag);
 
     void loadingNextMessages(const QByteArray &messagesData);
+
 signals:
     void newMessage(QVariant message);
     void clearMainListView();

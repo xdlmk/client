@@ -104,6 +104,7 @@ Window {
 
         highlightFollowsCurrentItem: false
         focus: false
+        cacheBuffer: 10000
 
         boundsBehavior: Flickable.StopAtBounds
         model: listModel
@@ -113,6 +114,7 @@ Window {
             anchors.margins: 20
             width: Math.min(root.width, listView.width * 0.45)
             property string message: model.text
+            property var message_id: model.message_id
             property string time: model.time
             property string name: model.name
             property bool isOutgoing: model.isOutgoing
@@ -120,10 +122,35 @@ Window {
             property string fileName: model.fileName
             property string special_type: model.special_type
             property real voiceDuration: model.voiceDuration
+            property bool isRead: model.isRead !== undefined ? model.isRead : false
+
+            MouseArea {
+                anchors.fill: parent
+                onClicked: {
+                    console.log(message_id);
+                }
+            }
 
             onPlayRequested: (filePath, position) => {
                                  handlePlayRequest(chatBubble, filePath, position);
                              }
+        }
+
+        onContentYChanged: {
+            let viewTop = listView.contentY;
+            let viewBottom = viewTop + listView.height;
+
+            for (let i = 0; i < listModel.count; i++) {
+                let item = listView.itemAtIndex(i);
+                if (item && !item.isRead) {
+                    let itemTop = item.y;
+                    let itemBottom = itemTop + item.height;
+
+                    if (itemBottom > viewTop && itemTop < viewBottom) {
+                        item.markAsRead();
+                    }
+                }
+            }
         }
 
         property int savedIndexFromEnd: 0
@@ -345,15 +372,15 @@ Window {
     }
 
     function onNewMessage(data) {
-        listModel.append({text: data.message, time: data.time, name: data.login, isOutgoing: data.Out === "out" ? true : false,
-                             fileName: data.fileName, fileUrl: data.fileUrl, special_type: data.special_type, voiceDuration: data.audio_duration});
+        listModel.append({text: data.message, message_id: data.message_id, time: data.time, name: data.login, isOutgoing: data.Out === "out" ? true : false,
+                             fileName: data.fileName, fileUrl: data.fileUrl, special_type: data.special_type, voiceDuration: data.audio_duration, isRead: data.isRead});
         listView.positionViewAtIndex(listModel.count - 1, ListView.End);
     }
 
     function addMessageToTop(data,isOutgoing) {
         if(activeChatIdBeforeRequest === upLine.user_id && activeChatTypeBeforeRequest === upLine.currentState) {
-            listModel.insert(0, {text: data.message, time: data.time, name: data.login, isOutgoing: isOutgoing,
-                                 fileName: data.fileName, fileUrl: data.fileUrl, special_type: data.special_type, voiceDuration: data.audio_duration});
+            listModel.insert(0, {text: data.message, message_id: data.message_id, time: data.time, name: data.login, isOutgoing: isOutgoing,
+                                 fileName: data.fileName, fileUrl: data.fileUrl, special_type: data.special_type, voiceDuration: data.audio_duration, isRead: data.isRead});
         }
     }
 
