@@ -199,6 +199,9 @@ void MessageNetworkManager::onDataReceived()
         case 13:
             emit createDialogReceived(payload);
             break;
+        case 14:
+            emit markMessageReceived(payload);
+            break;
         default:
             logger->log(Logger::WARN, "messagenetworkmanager.cpp::onDataReceived", "Unknown flag received: " + flag);
             break;

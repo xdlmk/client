@@ -41,6 +41,7 @@ signals:
 
     void showPersonalChat(QString login,QString message, int id, QString out, QString type);
     void checkActiveDialog(QVariant message,const QString& type);
+    void setReadStatusToMessage(const quint64 &message_id, const quint64 &chat_id, const QString &chat_type);
 
     void newSearchUser(QString userlogin,int id);
 

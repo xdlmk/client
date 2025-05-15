@@ -217,3 +217,63 @@ void MessageStorage::updatingLatestMessagesFromServer(const QByteArray &latestMe
 
     emit sendAvatarsUpdate();
 }
+
+void MessageStorage::updateMessageStatus(const QByteArray &data)
+{
+    chats::MarkMessageResponse response;
+    QProtobufSerializer serializer;
+    response.deserialize(&serializer, data);
+    quint64 message_id = response.messageId();
+    quint64 reader_id = response.readerId();
+    quint64 sender_id = response.chatId();
+
+    QString basePath = QCoreApplication::applicationDirPath() + "/.data/" +
+                       QString::number(activeUserId) + "/messages/personal";
+    QDir dir(basePath);
+    if (!dir.exists()) {
+        dir.mkpath(".");
+    }
+
+    quint64 chatId;
+    if (activeUserId == reader_id) chatId = sender_id;
+    else chatId = reader_id;
+
+    QString filePath = basePath + "/message_" + QString::number(chatId) + ".pb";
+    if (!QFile::exists(filePath)) {
+        logger->log(Logger::WARN, "messagestorage.cpp::updateMessageStatus", "Message file not exists");
+        return;
+    }
+
+    QFile file(filePath);
+    if (!file.open(QIODevice::ReadWrite)) {
+        logger->log(Logger::WARN, "messagestorage.cpp::updateMessageStatus", "Failed to open file: " + file.errorString());
+        return;
+    }
+
+    QByteArray fileData = file.readAll();
+    chats::MessageHistory history;
+    if (!fileData.isEmpty()) {
+        history.deserialize(&serializer, fileData);
+    }
+
+    QList<chats::ChatMessage> messages = history.messages();
+    bool updated = false;
+    for (int i = 0; i < messages.size(); i++) {
+        if (messages[i].messageId() == message_id) {
+            messages[i].setIsRead(true);
+            updated = true;
+            break;
+        }
+    }
+
+    if (updated) {
+        history.setMessages(messages);
+        file.resize(0);
+        QByteArray outData = history.serialize(&serializer);
+        file.write(outData);
+        emit setReadStatusToMessage(message_id, chatId, "personal");
+    } else {
+        logger->log(Logger::WARN, "messagestorage.cpp::updateMessageStatus", "Message with id " + QString::number(message_id) + " not found in history file");
+    }
+    file.close();
+}

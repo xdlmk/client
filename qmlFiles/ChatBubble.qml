@@ -236,9 +236,10 @@ Item {
 
 
     function markAsRead() {
+        console.log("Message " + message_id + " is now marked as read status: " + isRead);
+
         if (!isRead) {
             isRead = true;
-            console.log("Message " + message_id + " is now marked as read.");
             client.markMessageAsRead(message_id);
         }
     }

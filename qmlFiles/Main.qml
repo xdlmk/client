@@ -127,7 +127,7 @@ Window {
             MouseArea {
                 anchors.fill: parent
                 onClicked: {
-                    console.log(message_id);
+                    markAsRead();
                 }
             }
 
@@ -136,7 +136,7 @@ Window {
                              }
         }
 
-        onContentYChanged: {
+        /*onContentYChanged: {
             let viewTop = listView.contentY;
             let viewBottom = viewTop + listView.height;
 
@@ -151,7 +151,7 @@ Window {
                     }
                 }
             }
-        }
+        }*/
 
         property int savedIndexFromEnd: 0
 
@@ -372,15 +372,43 @@ Window {
     }
 
     function onNewMessage(data) {
-        listModel.append({text: data.message, message_id: data.message_id, time: data.time, name: data.login, isOutgoing: data.Out === "out" ? true : false,
-                             fileName: data.fileName, fileUrl: data.fileUrl, special_type: data.special_type, voiceDuration: data.audio_duration, isRead: data.isRead});
+        listModel.append({text: data.message, message_id: data.message_id, time: data.time,
+                             name: data.login, isOutgoing: data.Out === "out" ? true : false,
+                             fileName: data.fileName, fileUrl: data.fileUrl, special_type: data.special_type,
+                             voiceDuration: data.audio_duration, isRead: data.isRead});
         listView.positionViewAtIndex(listModel.count - 1, ListView.End);
     }
 
     function addMessageToTop(data,isOutgoing) {
         if(activeChatIdBeforeRequest === upLine.user_id && activeChatTypeBeforeRequest === upLine.currentState) {
-            listModel.insert(0, {text: data.message, message_id: data.message_id, time: data.time, name: data.login, isOutgoing: isOutgoing,
-                                 fileName: data.fileName, fileUrl: data.fileUrl, special_type: data.special_type, voiceDuration: data.audio_duration, isRead: data.isRead});
+            listModel.insert(0, {text: data.message, message_id: data.message_id, time: data.time,
+                                 name: data.login, isOutgoing: isOutgoing,
+                                 fileName: data.fileName, fileUrl: data.fileUrl, special_type: data.special_type,
+                                 voiceDuration: data.audio_duration, isRead: data.isRead});
+        }
+    }
+
+    function setReadStatus(message_id, chatId, type) {
+        if ((upLine.user_id === chatId) && (upLine.currentState === type)) {
+            var index = -1;
+            for (var i = 0; i < listModel.count; i++) {
+                if (listModel.get(i).message_id === message_id) {
+                    index = i;
+                    break;
+                }
+            }
+
+            if (index === -1) {
+                console.log("Message with id " + message_id + " not found in model");
+                return;
+            }
+
+            if (!listModel.get(index).isRead) {
+                console.log("Before setProperty: " + listModel.get(index).isRead);
+                listModel.setProperty(index, "isRead", true);
+                console.log("After setProperty: " + listModel.get(index).isRead);
+                console.log("Marked messageId " + message_id + " as read");
+            }
         }
     }
 
@@ -447,12 +475,15 @@ Window {
         clearMainListView.connect(onClearMainListView);
         clearMessagesAfterDelete.connect(onClearMessagesAfterDelete);
         loadGroupMembers.connect(loadCountOfGroupMembers);
+
         newMessage.connect(onNewMessage);
         insertMessage.connect(addMessageToTop);
+        setReadStatusToMessage.connect(setReadStatus);
         checkActiveDialog.connect(onCheckActiveDialog);
+        returnChatToPosition.connect(returnPosition);
+
         connectionError.connect(connectError);
         connectionSuccess.connect(connectSuccess);
-        returnChatToPosition.connect(returnPosition);
 
         audioManager.durationChanged.connect(onMediaPlayerDurationChanged);
         audioManager.positionChanged.connect(onMediaPlayerPositionChanged);
