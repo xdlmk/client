@@ -81,6 +81,7 @@ void MessageHandler::processingPersonalMessage(const QByteArray &receivedMessage
 
     messageToLoad["FullDate"] = timestamp;
     messageToLoad["special_type"] = protoMsg.specialType();
+    messageToLoad["isRead"] = false;
     messageToLoad["audio_duration"] = getAudioDuration(fileName);
 
     logger->log(Logger::INFO,"messagehandler.cpp::processingPersonalMessage","Personal message received");
@@ -120,6 +121,8 @@ void MessageHandler::processingGroupMessage(const QByteArray &receivedMessageDat
     messageToLoad["time"] = timeStr;
 
     messageToLoad["message_id"] = protoMsg.messageId();
+    messageToLoad["isRead"] = false;
+
     messageToLoad["fileUrl"] = protoMsg.mediaUrl();
     QString fileUrl = messageToLoad["fileUrl"].toString();
 
@@ -215,6 +218,7 @@ void MessageHandler::loadingChat(const quint64& id, const QString &flag)
 
             messageToDisplay["message"] = msg.content();
             messageToDisplay["message_id"] = msg.messageId();
+            messageToDisplay["isRead"] = msg.isRead();
             QString fileUrl = msg.mediaUrl();
             messageToDisplay["fileUrl"] = fileUrl;
 
@@ -281,6 +285,7 @@ void MessageHandler::loadingNextMessages(const QByteArray &messagesData)
         messageToLoad["fileName"] = fileName;
 
         messageToLoad["special_type"] = protoMsg.specialType();
+        messageToLoad["isRead"] = protoMsg.isRead();
 
         messageToLoad["audio_duration"] = getAudioDuration(fileName);
 
