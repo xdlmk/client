@@ -39,7 +39,7 @@ void MessageSender::sendMessage(const QString &message, const quint64 &receiver_
             QString uniqName = QUuid::createUuid().toString(QUuid::WithoutBraces);
             QString baseDir = QCoreApplication::applicationDirPath()
                               + "/.tempData/"
-                              + QString::number(receiver_id);
+                              + QString::number(receiver_id) + "/files/" + flag;
 
             QDir dir;
             if (!dir.exists(baseDir)) dir.mkpath(baseDir);
@@ -206,7 +206,7 @@ void MessageSender::sendVoiceMessage(const int &receiver_id, const QString &flag
             QString uniqName = QUuid::createUuid().toString(QUuid::WithoutBraces);
             QString baseDir = QCoreApplication::applicationDirPath()
                               + "/.tempData/"
-                              + QString::number(receiver_id);
+                              + QString::number(receiver_id) + "/files/" + flag;
 
             QDir dir;
             if (!dir.exists(baseDir)) dir.mkpath(baseDir);

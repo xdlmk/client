@@ -124,19 +124,19 @@ Window {
             property real voiceDuration: model.voiceDuration
             property bool isRead: model.isRead !== undefined ? model.isRead : false
 
-            MouseArea {
+            /*MouseArea {
                 anchors.fill: parent
                 onClicked: {
                     markAsRead();
                 }
-            }
+            }*/
 
             onPlayRequested: (filePath, position) => {
                                  handlePlayRequest(chatBubble, filePath, position);
                              }
         }
 
-        /*onContentYChanged: {
+        onContentYChanged: {
             let viewTop = listView.contentY;
             let viewBottom = viewTop + listView.height;
 
@@ -151,7 +151,7 @@ Window {
                     }
                 }
             }
-        }*/
+        }
 
         property int savedIndexFromEnd: 0
 
@@ -406,6 +406,12 @@ Window {
             if (!listModel.get(index).isRead) {
                 console.log("Before setProperty: " + listModel.get(index).isRead);
                 listModel.setProperty(index, "isRead", true);
+
+                var delegate = listView.itemAtIndex(index);
+                if (delegate) {
+                    delegate.isRead = true;
+                }
+
                 console.log("After setProperty: " + listModel.get(index).isRead);
                 console.log("Marked messageId " + message_id + " as read");
             }

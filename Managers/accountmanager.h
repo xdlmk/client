@@ -55,7 +55,8 @@ public slots:
     void createGroup(const QString& groupName, const QString& avatarPath, const QVariantList &selectedContacts);
     void addGroupMembers(const int& group_id, const QVariantList &selectedContacts);
 
-    void createDialogKeys(const QByteArray &createDialogKeysData);
+    void generateEncryptedSessionKeys(const QByteArray &createDialogKeysData);
+    void createDialogProcessing(const QByteArray &createDialogData);
 
     void getGroupMembers(const int& group_id);
     void deleteMemberFromGroup(const int& user_id, const int &group_id);

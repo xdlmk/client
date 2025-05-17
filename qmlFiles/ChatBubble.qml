@@ -221,7 +221,7 @@ Item {
         Text {
             id: lblTime
             anchors{
-                right: parent.right
+                right: isOutgoing ? lblReadStatus.left : parent.right
                 bottom: parent.bottom
                 rightMargin: 5
                 bottomMargin: 5
@@ -232,13 +232,27 @@ Item {
             color: isOutgoing ? "#488dd3" : "#6d7f8f"
             horizontalAlignment: Text.AlignRight
         }
+
+        Text {
+            id: lblReadStatus
+            visible: isOutgoing
+            anchors{
+                right: parent.right
+                bottom: parent.bottom
+                rightMargin: 5
+                bottomMargin: 5
+            }
+            text: isRead ? "✓✓" : "✓"
+            font.pointSize: 8
+            color: isRead ? "#488dd3" : "#6d7f8f"
+            horizontalAlignment: Text.AlignRight
+        }
     }
 
 
     function markAsRead() {
-        console.log("Message " + message_id + " is now marked as read status: " + isRead);
-
-        if (!isRead) {
+        if (!isRead && !isOutgoing) {
+            console.log("Message " + message_id + " is now marked as read status: " + isRead);
             isRead = true;
             client.markMessageAsRead(message_id);
         }

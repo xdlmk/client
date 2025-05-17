@@ -202,6 +202,9 @@ void MessageNetworkManager::onDataReceived()
         case 14:
             emit markMessageReceived(payload);
             break;
+        case 15:
+            emit createDialogWithKeysReceived(payload);
+            break;
         default:
             logger->log(Logger::WARN, "messagenetworkmanager.cpp::onDataReceived", "Unknown flag received: " + flag);
             break;
@@ -262,5 +265,5 @@ const std::unordered_map<std::string_view, uint> MessageNetworkManager::flagMap 
     {"search", 8}, {"updating_chats", 9},
     {"load_messages", 10}, {"edit", 11},
     {"avatars_update", 12}, {"create_dialog", 13},
-    {"mark_message", 14}
+    {"mark_message", 14}, {"create_dialog_with_keys", 15}
 };

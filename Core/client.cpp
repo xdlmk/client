@@ -50,7 +50,8 @@ void Client::setupNetworkConnections() {
     connect(networkManager->getMessageNetwork(), &MessageNetworkManager::deleteGroupMemberReceived, accountManager, &AccountManager::processingDeleteGroupMember);
     connect(networkManager->getMessageNetwork(), &MessageNetworkManager::addGroupMemberReceived, accountManager, &AccountManager::processingAddGroupMember);
 
-    connect(networkManager->getMessageNetwork(), &MessageNetworkManager::createDialogReceived, accountManager, &AccountManager::createDialogKeys);
+    connect(networkManager->getMessageNetwork(), &MessageNetworkManager::createDialogReceived, accountManager, &AccountManager::generateEncryptedSessionKeys);
+    connect(networkManager->getMessageNetwork(), &MessageNetworkManager::createDialogWithKeysReceived, accountManager, &AccountManager::createDialogProcessing);
 
     connect(networkManager->getMessageNetwork(), &MessageNetworkManager::removeAccountFromConfigManager, accountManager, &AccountManager::removeAccountFromConfigManager);
 }
