@@ -32,7 +32,7 @@ public slots:
     void updatingLatestMessagesFromServer(const QByteArray &latestMessagesData);
     void updateMessageStatus(const QByteArray &data);
 signals:
-    void showPersonalChat(const QString& login, const QString& message, const int& id, const QString& out, const QString& type);
+    void showPersonalChat(const QString& login, const QString& message, const int& id, const QString& out, const QString& type, const QString& timestamp, const int& unreadCount);
 
     void sendAvatarsUpdate();
 

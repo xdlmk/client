@@ -22,6 +22,8 @@ Rectangle {
             height: 60
             property int user_id: id
             property string chatType: currentChatType
+            property string timestamp: messageTimestamp
+            property int unreadMessagesCount: unreadCount
 
             Item {
                 anchors.fill: parent
@@ -53,6 +55,8 @@ Rectangle {
                         topMargin: 5
                         leftMargin: 10
                     }
+                    elide: Text.ElideRight
+                    width: personalChat.width - (personalChatAvatar.width + personalChatAvatar.anchors.leftMargin + 20 + lblTime.width + lblTime.anchors.rightMargin)
                 }
 
                 Text {
@@ -71,6 +75,35 @@ Rectangle {
 
                     font.pointSize: 10
                     color: "white"
+                }
+
+                Text {
+                    id: lblTime
+                    anchors{
+                        right: parent.right
+                        top: parent.top
+                        rightMargin: 5
+                        topMargin: 5
+                    }
+                    text: extractTimeFromTimestamp(timestamp)
+                    font.pointSize: 8
+                    color: "#6d7f8f"
+                    horizontalAlignment: Text.AlignRight
+                }
+
+                Text {
+                    id: lblUnreadCount
+                    visible: unreadMessagesCount != 0
+                    anchors {
+                        right: lblTime.right
+                        top: lblTime.bottom
+                        rightMargin: 5
+                        bottomMargin: 5
+                    }
+                    text: unreadMessagesCount
+                    font.pointSize: 8
+                    color: visible ? "#488dd3" : "#6d7f8f"
+                    horizontalAlignment: Text.AlignRight
                 }
             }
             MouseArea {
@@ -96,5 +129,29 @@ Rectangle {
             }
 
         }
+    }
+
+    function countUnreadMessages() {
+        var unreadCount = 0;
+        for (var i = listModel.count - 1; i >= 0; i--) {
+            var message = listModel.get(i);
+            if (message.isOutgoing === true)
+                break;
+            if (message.isRead === true)
+                break;
+            unreadCount++;
+        }
+        unreadMessagesCount = unreadCount;
+    }
+
+    function extractTimeFromTimestamp(timestamp) {
+        var date = new Date(timestamp);
+        var hours = date.getUTCHours();
+        var minutes = date.getUTCMinutes();
+        if (hours < 10)
+            hours = "0" + hours;
+        if (minutes < 10)
+            minutes = "0" + minutes;
+        return hours + ":" + minutes;
     }
 }

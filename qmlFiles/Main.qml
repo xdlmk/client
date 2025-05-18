@@ -83,6 +83,10 @@ Window {
         id: centerLine
         height: root.height
         width: root.width - (root.width / 2 + root.width / 4) - 54
+
+        ListModel {
+            id:personalChatsListModel
+        }
     }
 
     ListView {
@@ -124,13 +128,6 @@ Window {
             property real voiceDuration: model.voiceDuration
             property bool isRead: model.isRead !== undefined ? model.isRead : false
 
-            /*MouseArea {
-                anchors.fill: parent
-                onClicked: {
-                    markAsRead();
-                }
-            }*/
-
             onPlayRequested: (filePath, position) => {
                                  handlePlayRequest(chatBubble, filePath, position);
                              }
@@ -139,6 +136,7 @@ Window {
         onContentYChanged: {
             let viewTop = listView.contentY;
             let viewBottom = viewTop + listView.height;
+            updateUnreadCountForUser();
 
             for (let i = 0; i < listModel.count; i++) {
                 let item = listView.itemAtIndex(i);
@@ -429,6 +427,23 @@ Window {
         } else if (type === "personal") {
             logger.qmlLog("INFO","Main.qml::onCheckActiveDialog","Dialog active: " + ((upLine.user_id === data.id || upLine.user_id === data.second_id) && upLine.currentState === type));
             if ((upLine.user_id === data.id || upLine.user_id === data.second_id) && upLine.currentState === type) onNewMessage(data);
+        }
+    }
+
+    function updateUnreadCountForUser() {
+        var targetIndex = -1;
+        for (var i = 0; i < personalChatsListModel.count; i++) {
+            if (personalChatsListModel.get(i).user_id === upLine.user_id) {
+                targetIndex = i;
+                break;
+            }
+        }
+
+        if (targetIndex !== -1) {
+            var delegateItem = chatListView.itemAt(targetIndex);
+            if (delegateItem !== null) {
+                delegateItem.countUnreadMessages();
+            }
         }
     }
 

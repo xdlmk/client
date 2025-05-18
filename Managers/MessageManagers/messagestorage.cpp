@@ -109,11 +109,25 @@ bool MessageStorage::savePersonalMessageToFile(chats::ChatMessage &newMessage)
         message = newMessage.content();
     }
 
+    int unreadCount = 0;
+    QList<chats::ChatMessage> messagesRead = history.messages();
+
+    for (int i = messagesRead.size() - 1; i >= 0; i--) {
+        const chats::ChatMessage &msg = messagesRead.at(i);
+        if (msg.senderId() == activeUserId) {
+            break;
+        }
+        if (msg.isRead()) {
+            break;
+        }
+        unreadCount++;
+    }
+    qDebug() << unreadCount;
     if (newMessage.senderId() == activeUserId) {
         out = "out";
-        emit showPersonalChat(newMessage.receiverLogin(), message, newMessage.receiverId(), out, "personal");
+        emit showPersonalChat(newMessage.receiverLogin(), message, newMessage.receiverId(), out, "personal", newMessage.timestamp(), unreadCount);
     } else if (newMessage.receiverId() == activeUserId) {
-        emit showPersonalChat(newMessage.senderLogin(), message, newMessage.senderId(), out, "personal");
+        emit showPersonalChat(newMessage.senderLogin(), message, newMessage.senderId(), out, "personal", newMessage.timestamp(), unreadCount);
     }
 
     return true;
@@ -179,7 +193,22 @@ bool MessageStorage::saveGroupMessageToFile(chats::ChatMessage &newMessage)
     } else {
         message = newMessage.content();
     }
-    emit showPersonalChat(newMessage.groupName(), message, newMessage.groupId(), out, "group");
+
+    int unreadCount = 0;
+    QList<chats::ChatMessage> messagesRead = history.messages();
+
+    for (int i = messagesRead.size() - 1; i >= 0; i--) {
+        const chats::ChatMessage &msg = messagesRead.at(i);
+        if (msg.senderId() == activeUserId) {
+            break;
+        }
+        if (msg.isRead()) {
+            break;
+        }
+        unreadCount++;
+    }
+    qDebug() << unreadCount;
+    emit showPersonalChat(newMessage.groupName(), message, newMessage.groupId(), out, "group", newMessage.timestamp(), unreadCount);
 
     return true;
 }

@@ -1,6 +1,7 @@
 import QtQuick
 import QtQuick.Controls
 import QtQuick.Layouts
+import Qt.labs.qmlmodels
 
 Rectangle {
     id: centerLine
@@ -74,11 +75,31 @@ Rectangle {
         }
     }
 
-    ListModel {
-        id:personalChatsListModel
+    function sortModel() {
+        var items = [];
+        for (var i = 0; i < personalChatsListModel.count; i++) {
+            var element = personalChatsListModel.get(i);
+            var newObj = {
+                userlogin: element.userlogin || "",
+                currentChatType: element.currentChatType || "",
+                currentStateText: element.currentStateText || "",
+                message: element.message || "",
+                id: element.id || "",
+                messageTimestamp: element.messageTimestamp || "",
+                unreadCount: Number(element.unreadCount) || 0
+            };
+            items.push(newObj);
+        }
+        items.sort(function(a, b) {
+            return Date.parse(b.messageTimestamp) - Date.parse(a.messageTimestamp);
+        });
+        personalChatsListModel.clear();
+        for (var j = 0; j < items.length; j++) {
+            personalChatsListModel.append(items[j]);
+        }
     }
 
-    function onShowPersonalChat(userlogin,message,id,out,type) {
+    function onShowPersonalChat(userlogin,message,id,out,type, timestamp, unreadCount) {
         var exists = false;
         for (var i = 0; i < personalChatsListModel.count; i++) {
             var item = personalChatsListModel.get(i);
@@ -90,12 +111,13 @@ Rectangle {
         }
         var newPersChat;
         if(out === "out") {
-            newPersChat = {"userlogin":userlogin, "currentChatType":type, "currentStateText": "static", "message": "You: " + message , "id":id};
+            newPersChat = {"userlogin":userlogin, "currentChatType":type, "currentStateText": "static", "message": "You: " + message, "id":id, "messageTimestamp": timestamp, "unreadCount": unreadCount};
         }
         else {
-            newPersChat = {"userlogin":userlogin, "currentChatType":type, "currentStateText": "static", "message": message , "id":id};
+            newPersChat = {"userlogin":userlogin, "currentChatType":type, "currentStateText": "static", "message": message , "id":id,  "messageTimestamp": timestamp, "unreadCount": unreadCount};
         }
         personalChatsListModel.insert(0,newPersChat);
+        sortModel();
     }
 
     function removeChatAfterDelete(group_id) {

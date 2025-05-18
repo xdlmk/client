@@ -375,7 +375,6 @@ QString MessageHandler::encryptContentFromMessage(const chats::ChatMessage &prot
             logger->log(Logger::ERROR, "messagehandler.cpp::encryptContentFromMessage", QString("Message decryption error: %1").arg(e.what()));
             return QString();
         }
-        logger->log(Logger::INFO, "messagehandler.cpp::encryptContentFromMessage", "Returning: " + QString::fromUtf8(decryptedMessageData));
         return QString::fromUtf8(decryptedMessageData);
     } else {
         logger->log(Logger::INFO, "messagehandler.cpp::encryptContentFromMessage", "encryptedContentBase64 empty");
