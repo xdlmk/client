@@ -282,7 +282,8 @@ void MessageHandler::loadingNextMessages(const QByteArray &messagesData)
         const chats::ChatMessage &protoMsg = response.messages().at(i);
         QVariantMap messageToLoad;
 
-        messageToLoad["message"] = encryptContentFromMessage(protoMsg);
+        if(response.type() == chats::ChatTypeGadget::ChatType::GROUP) messageToLoad["message"] = protoMsg.content();
+        else if(response.type() == chats::ChatTypeGadget::ChatType::PERSONAL) messageToLoad["message"] = encryptContentFromMessage(protoMsg);
 
         QString fullDate = protoMsg.timestamp();
         QDateTime dt = QDateTime::fromString(fullDate, Qt::ISODate);

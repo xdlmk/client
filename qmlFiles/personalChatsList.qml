@@ -4,6 +4,7 @@ import QtQuick.Layouts
 
 Rectangle {
     color: "#17212b"
+    property alias personalChatsListView: personalChatsListView
 
     ListView {
         id: personalChatsListView
@@ -68,7 +69,7 @@ Rectangle {
                         topMargin: 10
                     }
                     elide: Text.ElideRight
-                    width: personalChat.width - (personalChatAvatar.width + personalChatAvatar.anchors.leftMargin + 20)
+                    width: personalChat.width - (personalChatAvatar.width + personalChatAvatar.anchors.leftMargin + lblUnreadCount.width + lblUnreadCount.anchors.rightMargin + 20)
                     text: message.indexOf('\n') !== -1
                           ? message.substring(0, message.indexOf('\n')) + "..."
                           : message;
@@ -91,19 +92,27 @@ Rectangle {
                     horizontalAlignment: Text.AlignRight
                 }
 
-                Text {
+                Rectangle {
                     id: lblUnreadCount
-                    visible: unreadMessagesCount != 0
+                    visible: unreadMessagesCount !== 0
+                    color: "#488dd3"
+                    width: textItem.implicitWidth + 10
+                    height: width
+                    radius: width / 2
                     anchors {
                         right: lblTime.right
-                        top: lblTime.bottom
                         rightMargin: 5
-                        bottomMargin: 5
+                        verticalCenter: messageText.verticalCenter
                     }
-                    text: unreadMessagesCount
-                    font.pointSize: 8
-                    color: visible ? "#488dd3" : "#6d7f8f"
-                    horizontalAlignment: Text.AlignRight
+
+                    Text {
+                        id: textItem
+                        anchors.centerIn: parent
+                        text: unreadMessagesCount > 99 ? "99+" : unreadMessagesCount
+                        font.pointSize: 8
+                        font.bold: true
+                        color: "white"
+                    }
                 }
             }
             MouseArea {
@@ -128,21 +137,22 @@ Rectangle {
                 }
             }
 
+            function countUnreadMessages() {
+                var unreadCount = 0;
+                for (var i = listModel.count - 1; i >= 0; i--) {
+                    var message = listModel.get(i);
+                    if (message.isOutgoing === true)
+                        break;
+                    if (message.isRead === true)
+                        break;
+                    unreadCount++;
+                }
+                unreadMessagesCount = unreadCount;
+            }
         }
     }
 
-    function countUnreadMessages() {
-        var unreadCount = 0;
-        for (var i = listModel.count - 1; i >= 0; i--) {
-            var message = listModel.get(i);
-            if (message.isOutgoing === true)
-                break;
-            if (message.isRead === true)
-                break;
-            unreadCount++;
-        }
-        unreadMessagesCount = unreadCount;
-    }
+
 
     function extractTimeFromTimestamp(timestamp) {
         var date = new Date(timestamp);

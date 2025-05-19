@@ -140,6 +140,7 @@ Window {
 
             for (let i = 0; i < listModel.count; i++) {
                 let item = listView.itemAtIndex(i);
+
                 if (item && !item.isRead) {
                     let itemTop = item.y;
                     let itemBottom = itemTop + item.height;
@@ -396,22 +397,18 @@ Window {
                 }
             }
 
-            if (index === -1) {
-                console.log("Message with id " + message_id + " not found in model");
-                return;
-            }
+            console.log("Index message: ", index);
+            if (index === -1) return;
 
             if (!listModel.get(index).isRead) {
-                console.log("Before setProperty: " + listModel.get(index).isRead);
+                console.log("Before setProperty");
                 listModel.setProperty(index, "isRead", true);
 
                 var delegate = listView.itemAtIndex(index);
                 if (delegate) {
+                    console.log("Message with id: ", message_id, " setting status true");
                     delegate.isRead = true;
                 }
-
-                console.log("After setProperty: " + listModel.get(index).isRead);
-                console.log("Marked messageId " + message_id + " as read");
             }
         }
     }
@@ -433,14 +430,13 @@ Window {
     function updateUnreadCountForUser() {
         var targetIndex = -1;
         for (var i = 0; i < personalChatsListModel.count; i++) {
-            if (personalChatsListModel.get(i).user_id === upLine.user_id) {
+            if ((personalChatsListModel.get(i).id === upLine.user_id) && (personalChatsListModel.get(i).currentChatType === upLine.currentState)) {
                 targetIndex = i;
                 break;
             }
         }
-
         if (targetIndex !== -1) {
-            var delegateItem = chatListView.itemAt(targetIndex);
+            var delegateItem = centerLine.chatsListView.itemAtIndex(targetIndex);
             if (delegateItem !== null) {
                 delegateItem.countUnreadMessages();
             }

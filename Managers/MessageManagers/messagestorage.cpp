@@ -122,7 +122,6 @@ bool MessageStorage::savePersonalMessageToFile(chats::ChatMessage &newMessage)
         }
         unreadCount++;
     }
-    qDebug() << unreadCount;
     if (newMessage.senderId() == activeUserId) {
         out = "out";
         emit showPersonalChat(newMessage.receiverLogin(), message, newMessage.receiverId(), out, "personal", newMessage.timestamp(), unreadCount);
@@ -207,7 +206,6 @@ bool MessageStorage::saveGroupMessageToFile(chats::ChatMessage &newMessage)
         }
         unreadCount++;
     }
-    qDebug() << unreadCount;
     emit showPersonalChat(newMessage.groupName(), message, newMessage.groupId(), out, "group", newMessage.timestamp(), unreadCount);
 
     return true;
@@ -256,8 +254,15 @@ void MessageStorage::updateMessageStatus(const QByteArray &data)
     quint64 reader_id = response.readerId();
     quint64 sender_id = response.chatId();
 
+    QString type;
+    if(response.type() == chats::ChatTypeGadget::ChatType::PERSONAL){
+        type = "personal";
+    } else if(response.type() == chats::ChatTypeGadget::ChatType::GROUP) {
+        type = "group";
+    }
+
     QString basePath = QCoreApplication::applicationDirPath() + "/.data/" +
-                       QString::number(activeUserId) + "/messages/personal";
+                       QString::number(activeUserId) + "/messages/" + type;
     QDir dir(basePath);
     if (!dir.exists()) {
         dir.mkpath(".");
@@ -300,7 +305,7 @@ void MessageStorage::updateMessageStatus(const QByteArray &data)
         file.resize(0);
         QByteArray outData = history.serialize(&serializer);
         file.write(outData);
-        emit setReadStatusToMessage(message_id, chatId, "personal");
+        emit setReadStatusToMessage(message_id, chatId, type);
     } else {
         logger->log(Logger::WARN, "messagestorage.cpp::updateMessageStatus", "Message with id " + QString::number(message_id) + " not found in history file");
     }

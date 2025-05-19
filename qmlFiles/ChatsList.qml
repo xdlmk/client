@@ -5,6 +5,7 @@ import Qt.labs.qmlmodels
 
 Rectangle {
     id: centerLine
+    property alias chatsListView: personalChatsContainer.personalChatsListView
     color: "#17212b"
     anchors{
         left:  leftLine.right
