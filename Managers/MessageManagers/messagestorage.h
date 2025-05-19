@@ -14,6 +14,7 @@
 
 #include "generated_protobuf/updatingChats.qpb.h"
 #include "generated_protobuf/chatMessage.qpb.h"
+#include "generated_protobuf/markMessage.qpb.h"
 #include "QProtobufSerializer"
 
 class MessageStorage : public QObject
@@ -29,12 +30,15 @@ public:
     bool saveGroupMessageToFile(chats::ChatMessage &newMessage);
 public slots:
     void updatingLatestMessagesFromServer(const QByteArray &latestMessagesData);
+    void updateMessageStatus(const QByteArray &data);
 signals:
-    void showPersonalChat(const QString& login, const QString& message, const int& id, const QString& out, const QString& type);
+    void showPersonalChat(const QString& login, const QString& message, const int& id, const QString& out, const QString& type, const QString& timestamp, const int& unreadCount);
 
     void sendAvatarsUpdate();
 
     void removeAccountFromConfigManager();
+
+    void setReadStatusToMessage(const quint64 &message_id, const quint64 &chat_id, const QString &chat_type);
 private:
     QString activeUserLogin;
     int activeUserId;

@@ -109,11 +109,24 @@ bool MessageStorage::savePersonalMessageToFile(chats::ChatMessage &newMessage)
         message = newMessage.content();
     }
 
+    int unreadCount = 0;
+    QList<chats::ChatMessage> messagesRead = history.messages();
+
+    for (int i = messagesRead.size() - 1; i >= 0; i--) {
+        const chats::ChatMessage &msg = messagesRead.at(i);
+        if (msg.senderId() == activeUserId) {
+            break;
+        }
+        if (msg.isRead()) {
+            break;
+        }
+        unreadCount++;
+    }
     if (newMessage.senderId() == activeUserId) {
         out = "out";
-        emit showPersonalChat(newMessage.receiverLogin(), message, newMessage.receiverId(), out, "personal");
+        emit showPersonalChat(newMessage.receiverLogin(), message, newMessage.receiverId(), out, "personal", newMessage.timestamp(), unreadCount);
     } else if (newMessage.receiverId() == activeUserId) {
-        emit showPersonalChat(newMessage.senderLogin(), message, newMessage.senderId(), out, "personal");
+        emit showPersonalChat(newMessage.senderLogin(), message, newMessage.senderId(), out, "personal", newMessage.timestamp(), unreadCount);
     }
 
     return true;
@@ -179,7 +192,21 @@ bool MessageStorage::saveGroupMessageToFile(chats::ChatMessage &newMessage)
     } else {
         message = newMessage.content();
     }
-    emit showPersonalChat(newMessage.groupName(), message, newMessage.groupId(), out, "group");
+
+    int unreadCount = 0;
+    QList<chats::ChatMessage> messagesRead = history.messages();
+
+    for (int i = messagesRead.size() - 1; i >= 0; i--) {
+        const chats::ChatMessage &msg = messagesRead.at(i);
+        if (msg.senderId() == activeUserId) {
+            break;
+        }
+        if (msg.isRead()) {
+            break;
+        }
+        unreadCount++;
+    }
+    emit showPersonalChat(newMessage.groupName(), message, newMessage.groupId(), out, "group", newMessage.timestamp(), unreadCount);
 
     return true;
 }
@@ -216,4 +243,71 @@ void MessageStorage::updatingLatestMessagesFromServer(const QByteArray &latestMe
     }
 
     emit sendAvatarsUpdate();
+}
+
+void MessageStorage::updateMessageStatus(const QByteArray &data)
+{
+    chats::MarkMessageResponse response;
+    QProtobufSerializer serializer;
+    response.deserialize(&serializer, data);
+    quint64 message_id = response.messageId();
+    quint64 reader_id = response.readerId();
+    quint64 sender_id = response.chatId();
+
+    QString type;
+    if(response.type() == chats::ChatTypeGadget::ChatType::PERSONAL){
+        type = "personal";
+    } else if(response.type() == chats::ChatTypeGadget::ChatType::GROUP) {
+        type = "group";
+    }
+
+    QString basePath = QCoreApplication::applicationDirPath() + "/.data/" +
+                       QString::number(activeUserId) + "/messages/" + type;
+    QDir dir(basePath);
+    if (!dir.exists()) {
+        dir.mkpath(".");
+    }
+
+    quint64 chatId;
+    if (activeUserId == reader_id) chatId = sender_id;
+    else chatId = reader_id;
+
+    QString filePath = basePath + "/message_" + QString::number(chatId) + ".pb";
+    if (!QFile::exists(filePath)) {
+        logger->log(Logger::WARN, "messagestorage.cpp::updateMessageStatus", "Message file not exists");
+        return;
+    }
+
+    QFile file(filePath);
+    if (!file.open(QIODevice::ReadWrite)) {
+        logger->log(Logger::WARN, "messagestorage.cpp::updateMessageStatus", "Failed to open file: " + file.errorString());
+        return;
+    }
+
+    QByteArray fileData = file.readAll();
+    chats::MessageHistory history;
+    if (!fileData.isEmpty()) {
+        history.deserialize(&serializer, fileData);
+    }
+
+    QList<chats::ChatMessage> messages = history.messages();
+    bool updated = false;
+    for (int i = 0; i < messages.size(); i++) {
+        if (messages[i].messageId() == message_id) {
+            messages[i].setIsRead(true);
+            updated = true;
+            break;
+        }
+    }
+
+    if (updated) {
+        history.setMessages(messages);
+        file.resize(0);
+        QByteArray outData = history.serialize(&serializer);
+        file.write(outData);
+        emit setReadStatusToMessage(message_id, chatId, type);
+    } else {
+        logger->log(Logger::WARN, "messagestorage.cpp::updateMessageStatus", "Message with id " + QString::number(message_id) + " not found in history file");
+    }
+    file.close();
 }

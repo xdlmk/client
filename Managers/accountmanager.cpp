@@ -150,13 +150,13 @@ void AccountManager::addGroupMembers(const int &group_id, const QVariantList &se
     networkManager->getMessageNetwork()->sendData("add_group_members", request.serialize(&serializer));
 }
 
-void AccountManager::createDialogKeys(const QByteArray &createDialogKeysData)
+void AccountManager::generateEncryptedSessionKeys(const QByteArray &createDialogKeysData)
 {
     QProtobufSerializer serializer;
     chats::CreateDialogResponse response;
 
     if (!response.deserialize(&serializer, createDialogKeysData)) {
-        logger->log(Logger::INFO, "chatmanager.cpp::createDialogKeys", "Error deserialize request");
+        logger->log(Logger::INFO, "chatmanager.cpp::generateEncryptedSessionKeys", "Error deserialize request");
         return;
     }
 
@@ -173,7 +173,40 @@ void AccountManager::createDialogKeys(const QByteArray &createDialogKeysData)
         encryptedSessionKeyForSender = cryptoManager->sealData(sessionKeyData, sender_public_key);
         encryptedSessionKeyForReceiver = cryptoManager->sealData(sessionKeyData, receiver_public_key);
     } catch (const std::exception &e) {
-        logger->log(Logger::ERROR, "chatmanager.cpp::createDialogKeys", QString("Error encrypting session key: %1").arg(e.what()));
+        logger->log(Logger::ERROR, "chatmanager.cpp::generateEncryptedSessionKeys",
+                    QString("Error encrypting session key: %1").arg(e.what()));
+        return;
+    }
+
+    chats::CreateDialogWithKeysRequest request;
+    request.setUniqMessageId(response.uniqMessageId());
+    request.setSenderId(activeUserId);
+    request.setReceiverId(response.receiverId());
+    request.setSenderEncryptedSessionKey(encryptedSessionKeyForSender);
+    request.setReceiverEncryptedSessionKey(encryptedSessionKeyForReceiver);
+
+    networkManager->getMessageNetwork()->sendData("create_dialog_with_keys", request.serialize(&serializer));
+}
+
+void AccountManager::createDialogProcessing(const QByteArray &createDialogData)
+{
+    getChatsInfo();
+    QProtobufSerializer serializer;
+    chats::CreateDialogWithKeysResponse response;
+
+    if (!response.deserialize(&serializer, createDialogData)) {
+        logger->log(Logger::INFO, "chatmanager.cpp::createDialogProcessing", "Error deserialize request");
+        return;
+    }
+
+    QByteArray encryptedSessionKeyForSender = response.senderEncryptedSessionKey();
+    QByteArray encryptedSessionKeyForReceiver = response.receiverEncryptedSessionKey();
+    QByteArray sessionKeyData;
+    try {
+        sessionKeyData = cryptoManager->unsealData(encryptedSessionKeyForSender);
+    } catch (const std::exception &e) {
+        logger->log(Logger::ERROR, "chatmanager.cpp::createDialogProcessing",
+                    QString("Error decrypting session key: %1").arg(e.what()));
         return;
     }
 
@@ -193,6 +226,9 @@ void AccountManager::createDialogKeys(const QByteArray &createDialogKeysData)
         content = in.readAll();
         file.remove();
         file.close();
+    } else {
+        logger->log(Logger::ERROR, "chatmanager.cpp::createDialogProcessing",
+                    "File not open: " + file.errorString());
     }
 
     bool withFile = QFile::exists(metaFilePath);
@@ -215,13 +251,13 @@ void AccountManager::createDialogKeys(const QByteArray &createDialogKeysData)
         QFile file(filePath);
         QFileInfo fileInfo(filePath);
         if (!file.open(QIODevice::ReadOnly)) {
-            logger->log(Logger::WARN,"messagesender.cpp::createDialogKeys","Failed open file");
+            logger->log(Logger::WARN,"messagesender.cpp::createDialogProcessing","Failed open file");
         }
         QByteArray encryptedFileData;
         try {
             encryptedFileData = cryptoManager->symmetricEncrypt(file.readAll(), sessionKeyData);
         } catch (const std::exception &e) {
-            logger->log(Logger::ERROR, "messagesender.cpp::createDialogKeys", QString("Error encrypting message: ") + QString(e.what()));
+            logger->log(Logger::ERROR, "messagesender.cpp::createDialogProcessing", QString("Error encrypting message: ") + QString(e.what()));
             return;
         }
         file.close();
@@ -236,7 +272,7 @@ void AccountManager::createDialogKeys(const QByteArray &createDialogKeysData)
         try {
             encryptedMessage = cryptoManager->symmetricEncrypt(content.toUtf8(), sessionKeyData);
         } catch (const std::exception &e) {
-            logger->log(Logger::ERROR, "chatmanager.cpp::createDialogKeys", QString("Error encrypting message: ") + QString(e.what()));
+            logger->log(Logger::ERROR, "chatmanager.cpp::createDialogProcessing", QString("Error encrypting message: ") + QString(e.what()));
             return;
         }
         message = QString::fromUtf8(encryptedMessage.toBase64());
@@ -248,12 +284,14 @@ void AccountManager::createDialogKeys(const QByteArray &createDialogKeysData)
     msg.setContent(message);
     msg.setSenderEncryptedSessionKey(encryptedSessionKeyForSender);
     msg.setReceiverEncryptedSessionKey(encryptedSessionKeyForReceiver);
+
     if(withFile || withVoiceFile) {
         msg.setFile(fileDataMsg);
-        if(withVoiceFile) ;
+        if(withVoiceFile) networkManager->getFileNetwork()->sendData("personal_voice_message", msg.serialize(&serializer));;
         if(withFile) networkManager->getFileNetwork()->sendData("personal_file_message", msg.serialize(&serializer));
-    } else
+    } else {
         networkManager->getMessageNetwork()->sendData("personal_message", msg.serialize(&serializer));
+    }
 }
 
 void AccountManager::getGroupMembers(const int &group_id)
@@ -264,6 +302,7 @@ void AccountManager::getGroupMembers(const int &group_id)
 
     if (!QFile::exists(filePath)) {
         logger->log(Logger::WARN, "accountmanager.cpp::getGroupMembers", "Group info file not exists: " + filePath);
+        getChatsInfo();
         return;
     }
 

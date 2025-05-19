@@ -39,15 +39,14 @@ public slots:
     void loadingChat(const quint64& id, const QString &flag);
 
     void loadingNextMessages(const QByteArray &messagesData);
+
 signals:
     void newMessage(QVariant message);
     void clearMainListView();
 
     void checkAndSendAvatarUpdate(const QString &avatar_url,const int &user_id,const QString& type);
     void checkActiveDialog(QVariant message, const QString& type);
-    void showPersonalChat(QString login, QString message, int id, QString out, QString type);
 
-    void sendAvatarsUpdate();
     void getChatsInfo();
 
     void sendMessageData(const QString &flag, const QByteArray &data);
@@ -63,8 +62,6 @@ signals:
     void sendVoiceMessage(const int &receiver_id, const QString &flag);
 
     void sendRequestMessagesLoading(const int &chat_id, const QString &chat_name, const QString& flag, const int& offset);
-
-    void removeAccountFromConfigManager();
 
 private:
     qint64 getAudioDuration(const QString &fullFileName);

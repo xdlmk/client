@@ -36,10 +36,14 @@ public slots:
 signals:
     void loginResultsReceived(const QByteArray &loginResultsData);
     void registrationResultsReceived(const QByteArray &registrationResultsData);
+
     void messageReceived(const QByteArray &receivedMessageData);
     void groupMessageReceived(const QByteArray &receivedMessageData);
+    void markMessageReceived(const QByteArray &receivedData);
+
     void deleteGroupMemberReceived(const QByteArray &receivedDeleteMemberFromGroupData);
     void addGroupMemberReceived(const QByteArray &receivedAddMemberFromGroupData);
+
     void dialogsInfoReceived(const QList<chats::DialogInfoItem> &receivedDialogInfo);
     void groupInfoReceived(const QList<chats::GroupInfoItem> &receivedGroupInfo);
 
@@ -51,6 +55,7 @@ signals:
     void avatarsUpdateReceived(const QByteArray &avatarsUpdateData);
 
     void createDialogReceived(const QByteArray &createDialogData);
+    void createDialogWithKeysReceived(const QByteArray &createDialogWithKeyData);
 
     void removeAccountFromConfigManager();
 

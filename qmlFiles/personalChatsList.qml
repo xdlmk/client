@@ -4,6 +4,7 @@ import QtQuick.Layouts
 
 Rectangle {
     color: "#17212b"
+    property alias personalChatsListView: personalChatsListView
 
     ListView {
         id: personalChatsListView
@@ -22,6 +23,8 @@ Rectangle {
             height: 60
             property int user_id: id
             property string chatType: currentChatType
+            property string timestamp: messageTimestamp
+            property int unreadMessagesCount: unreadCount
 
             Item {
                 anchors.fill: parent
@@ -53,6 +56,8 @@ Rectangle {
                         topMargin: 5
                         leftMargin: 10
                     }
+                    elide: Text.ElideRight
+                    width: personalChat.width - (personalChatAvatar.width + personalChatAvatar.anchors.leftMargin + 20 + lblTime.width + lblTime.anchors.rightMargin)
                 }
 
                 Text {
@@ -64,13 +69,50 @@ Rectangle {
                         topMargin: 10
                     }
                     elide: Text.ElideRight
-                    width: personalChat.width - (personalChatAvatar.width + personalChatAvatar.anchors.leftMargin + 20)
+                    width: personalChat.width - (personalChatAvatar.width + personalChatAvatar.anchors.leftMargin + lblUnreadCount.width + lblUnreadCount.anchors.rightMargin + 20)
                     text: message.indexOf('\n') !== -1
                           ? message.substring(0, message.indexOf('\n')) + "..."
                           : message;
 
                     font.pointSize: 10
                     color: "white"
+                }
+
+                Text {
+                    id: lblTime
+                    anchors{
+                        right: parent.right
+                        top: parent.top
+                        rightMargin: 5
+                        topMargin: 5
+                    }
+                    text: extractTimeFromTimestamp(timestamp)
+                    font.pointSize: 8
+                    color: "#6d7f8f"
+                    horizontalAlignment: Text.AlignRight
+                }
+
+                Rectangle {
+                    id: lblUnreadCount
+                    visible: unreadMessagesCount !== 0
+                    color: "#488dd3"
+                    width: textItem.implicitWidth + 10
+                    height: width
+                    radius: width / 2
+                    anchors {
+                        right: lblTime.right
+                        rightMargin: 5
+                        verticalCenter: messageText.verticalCenter
+                    }
+
+                    Text {
+                        id: textItem
+                        anchors.centerIn: parent
+                        text: unreadMessagesCount > 99 ? "99+" : unreadMessagesCount
+                        font.pointSize: 8
+                        font.bold: true
+                        color: "white"
+                    }
                 }
             }
             MouseArea {
@@ -95,6 +137,31 @@ Rectangle {
                 }
             }
 
+            function countUnreadMessages() {
+                var unreadCount = 0;
+                for (var i = listModel.count - 1; i >= 0; i--) {
+                    var message = listModel.get(i);
+                    if (message.isOutgoing === true)
+                        break;
+                    if (message.isRead === true)
+                        break;
+                    unreadCount++;
+                }
+                unreadMessagesCount = unreadCount;
+            }
         }
+    }
+
+
+
+    function extractTimeFromTimestamp(timestamp) {
+        var date = new Date(timestamp);
+        var hours = date.getUTCHours();
+        var minutes = date.getUTCMinutes();
+        if (hours < 10)
+            hours = "0" + hours;
+        if (minutes < 10)
+            minutes = "0" + minutes;
+        return hours + ":" + minutes;
     }
 }

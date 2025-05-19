@@ -221,7 +221,7 @@ Item {
         Text {
             id: lblTime
             anchors{
-                right: parent.right
+                right: isOutgoing ? lblReadStatus.left : parent.right
                 bottom: parent.bottom
                 rightMargin: 5
                 bottomMargin: 5
@@ -231,6 +231,29 @@ Item {
             font.pointSize: 8
             color: isOutgoing ? "#488dd3" : "#6d7f8f"
             horizontalAlignment: Text.AlignRight
+        }
+
+        Text {
+            id: lblReadStatus
+            visible: isOutgoing
+            anchors{
+                right: parent.right
+                bottom: parent.bottom
+                rightMargin: 5
+                bottomMargin: 5
+            }
+            text: isRead ? "✓✓" : "✓"
+            font.pointSize: 8
+            color: isRead ? "#488dd3" : "#6d7f8f"
+            horizontalAlignment: Text.AlignRight
+        }
+    }
+
+
+    function markAsRead() {
+        if (!isRead && !isOutgoing) {
+            isRead = true;
+            client.markMessageAsRead(message_id);
         }
     }
 
@@ -251,5 +274,4 @@ Item {
         const b = hash & 0xFF;
         return Qt.rgba(r / 255, g / 255, b / 255, 1);
     }
-
 }

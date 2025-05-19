@@ -38,6 +38,7 @@ void Client::setupNetworkConnections() {
     connect(networkManager->getMessageNetwork(), &MessageNetworkManager::loginResultsReceived, accountManager, &AccountManager::processingLoginResultsFromServer);
     connect(networkManager->getMessageNetwork(), &MessageNetworkManager::registrationResultsReceived, accountManager, &AccountManager::processingRegistrationResultsFromServer);
     connect(networkManager->getMessageNetwork(), &MessageNetworkManager::messageReceived, messageHandler, &MessageHandler::processingPersonalMessage);
+    connect(networkManager->getMessageNetwork(), &MessageNetworkManager::markMessageReceived, messageHandler->getMessageStorage(), &MessageStorage::updateMessageStatus);
     connect(networkManager->getMessageNetwork(), &MessageNetworkManager::groupMessageReceived, messageHandler, &MessageHandler::processingGroupMessage);
     connect(networkManager->getMessageNetwork(), &MessageNetworkManager::searchDataReceived, accountManager, &AccountManager::processingSearchDataFromServer);
     connect(networkManager->getMessageNetwork(), &MessageNetworkManager::chatsUpdateDataReceived, messageHandler, &MessageHandler::updatingLatestMessagesFromServer);
@@ -49,7 +50,8 @@ void Client::setupNetworkConnections() {
     connect(networkManager->getMessageNetwork(), &MessageNetworkManager::deleteGroupMemberReceived, accountManager, &AccountManager::processingDeleteGroupMember);
     connect(networkManager->getMessageNetwork(), &MessageNetworkManager::addGroupMemberReceived, accountManager, &AccountManager::processingAddGroupMember);
 
-    connect(networkManager->getMessageNetwork(), &MessageNetworkManager::createDialogReceived, accountManager, &AccountManager::createDialogKeys);
+    connect(networkManager->getMessageNetwork(), &MessageNetworkManager::createDialogReceived, accountManager, &AccountManager::generateEncryptedSessionKeys);
+    connect(networkManager->getMessageNetwork(), &MessageNetworkManager::createDialogWithKeysReceived, accountManager, &AccountManager::createDialogProcessing);
 
     connect(networkManager->getMessageNetwork(), &MessageNetworkManager::removeAccountFromConfigManager, accountManager, &AccountManager::removeAccountFromConfigManager);
 }
@@ -94,14 +96,16 @@ void Client::setupMessageConnections() {
     connect(this, &Client::sendMessage, messageHandler, &MessageHandler::sendMessage);
     connect(this, &Client::requestMessageDownload, messageHandler, &MessageHandler::sendRequestMessagesLoading);
     connect(this, &Client::sendMessageWithFile, messageHandler, &MessageHandler::sendMessageWithFile);
+    connect(this, &Client::markMessageAsRead, messageHandler->getMessageSender(), &MessageSender::markMessageAsRead);
 
     connect(messageHandler,&MessageHandler::sendMessageData, networkManager->getMessageNetwork(), &MessageNetworkManager::sendData);
     connect(messageHandler,&MessageHandler::checkAndSendAvatarUpdate,accountManager,&AccountManager::checkAndSendAvatarUpdate);
     connect(messageHandler,&MessageHandler::getChatsInfo,accountManager,&AccountManager::getChatsInfo);
 
-    connect(messageHandler,&MessageHandler::removeAccountFromConfigManager,accountManager,&AccountManager::removeAccountFromConfigManager);
+    connect(messageHandler->getMessageStorage(),&MessageStorage::removeAccountFromConfigManager,accountManager,&AccountManager::removeAccountFromConfigManager);
 
-    connect(messageHandler, &MessageHandler::showPersonalChat, this, &Client::showPersonalChat);
+    connect(messageHandler->getMessageStorage(), &MessageStorage::showPersonalChat, this, &Client::showPersonalChat);
+    connect(messageHandler->getMessageStorage(), &MessageStorage::setReadStatusToMessage, this, &Client::setReadStatusToMessage);
 
     connect(accountManager, &AccountManager::transferUserNameAndIdAfterLogin, messageHandler, &MessageHandler::setActiveUser);
     connect(accountManager, &AccountManager::transferUserNameAndIdAfterLogin, accountManager, &AccountManager::setActiveUser);
@@ -126,7 +130,7 @@ void Client::setupFileConnections() {
     connect(fileManager, &FileManager::sendDataFile, networkManager->getFileNetwork(), &FileNetworkManager::sendData);
     connect(messageHandler, &MessageHandler::sendMessageFileData, networkManager->getFileNetwork(), &FileNetworkManager::sendData);
 
-    connect(messageHandler, &MessageHandler::sendAvatarsUpdate, accountManager, &AccountManager::sendAvatarsUpdate);
+    connect(messageHandler->getMessageStorage(), &MessageStorage::sendAvatarsUpdate, accountManager, &AccountManager::sendAvatarsUpdate);
     connect(accountManager, &AccountManager::sendAvatarUrl, fileManager, &FileManager::sendAvatarUrl);
     connect(networkManager->getFileNetwork(), &FileNetworkManager::sendAvatarUrl, fileManager, &FileManager::sendAvatarUrl);
     connect(this, &Client::sendNewAvatar, networkManager->getFileNetwork(), &FileNetworkManager::sendAvatar);

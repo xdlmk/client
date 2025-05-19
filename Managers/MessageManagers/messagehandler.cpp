@@ -8,10 +8,6 @@ MessageHandler::MessageHandler(QObject *parent)
 
     connect(this,&MessageHandler::updatingLatestMessagesFromServer,messageStorage,&MessageStorage::updatingLatestMessagesFromServer);
 
-    connect(messageStorage,&MessageStorage::sendAvatarsUpdate,this,&MessageHandler::sendAvatarsUpdate);
-    connect(messageStorage,&MessageStorage::showPersonalChat,this,&MessageHandler::showPersonalChat);
-    connect(messageStorage,&MessageStorage::removeAccountFromConfigManager,this,&MessageHandler::removeAccountFromConfigManager);
-
     connect(this,&MessageHandler::sendMessage,messageSender,&MessageSender::sendMessage);
     connect(this,&MessageHandler::sendMessageWithFile,messageSender,&MessageSender::sendMessageWithFile);
     connect(this,&MessageHandler::sendVoiceMessage,messageSender,&MessageSender::sendVoiceMessage);
@@ -85,6 +81,7 @@ void MessageHandler::processingPersonalMessage(const QByteArray &receivedMessage
 
     messageToLoad["FullDate"] = timestamp;
     messageToLoad["special_type"] = protoMsg.specialType();
+    messageToLoad["isRead"] = false;
     messageToLoad["audio_duration"] = getAudioDuration(fileName);
 
     logger->log(Logger::INFO,"messagehandler.cpp::processingPersonalMessage","Personal message received");
@@ -93,13 +90,25 @@ void MessageHandler::processingPersonalMessage(const QByteArray &receivedMessage
     messageToLoad["id"] = protoMsg.senderId();
     messageToLoad["second_id"] = protoMsg.receiverId();
 
+    QString filePath;
     if(protoMsg.senderId() == activeUserId) {
+        filePath = QCoreApplication::applicationDirPath() + "/.data/" +
+                   QString::number(activeUserId) + "/dialogsInfo/" +
+                   QString::number(protoMsg.receiverId()) + ".pb";
         messageToLoad["Out"] = "out";
         emit checkAndSendAvatarUpdate(protoMsg.receiverAvatarUrl(), protoMsg.receiverId(), "personal");
     } else if (protoMsg.receiverId() == activeUserId) {
+        filePath = QCoreApplication::applicationDirPath() + "/.data/" +
+                   QString::number(activeUserId) + "/dialogsInfo/" +
+                   QString::number(protoMsg.senderId()) + ".pb";
         messageToLoad["Out"] = "";
         emit checkAndSendAvatarUpdate(protoMsg.senderAvatarUrl(), protoMsg.senderId(), "personal");
     }
+
+    if (!QFile::exists(filePath)) {
+        emit getChatsInfo();
+    }
+
     messageStorage->savePersonalMessageToFile(protoMsg);
     logger->log(Logger::INFO,"messagehandler.cpp::processingPersonalMessage","Message: " + messageToLoad["message"].toString() +" from: " + messageToLoad["login"].toString());
 
@@ -124,6 +133,8 @@ void MessageHandler::processingGroupMessage(const QByteArray &receivedMessageDat
     messageToLoad["time"] = timeStr;
 
     messageToLoad["message_id"] = protoMsg.messageId();
+    messageToLoad["isRead"] = false;
+
     messageToLoad["fileUrl"] = protoMsg.mediaUrl();
     QString fileUrl = messageToLoad["fileUrl"].toString();
 
@@ -139,8 +150,17 @@ void MessageHandler::processingGroupMessage(const QByteArray &receivedMessageDat
     messageToLoad["FullDate"] = timestamp;
 
     messageToLoad["special_type"] = protoMsg.specialType();
+
+    QString filePath = QCoreApplication::applicationDirPath() + "/.data/" +
+                       QString::number(activeUserId) + "/groupsInfo/" +
+                       QString::number(protoMsg.groupId()) + ".pb";
+
     if(protoMsg.specialType() == "create_group") {
-        getChatsInfo();
+        emit getChatsInfo();
+    } else if (!QFile::exists(filePath)) {
+        logger->log(Logger::WARN, "accountmanager.cpp::processingGroupMessage", "Group info file not exists: " + filePath);
+        emit getChatsInfo();
+        return;
     }
     messageToLoad["audio_duration"] = getAudioDuration(fileName);
     messageToLoad["group_name"] = protoMsg.groupName();
@@ -219,6 +239,7 @@ void MessageHandler::loadingChat(const quint64& id, const QString &flag)
 
             messageToDisplay["message"] = msg.content();
             messageToDisplay["message_id"] = msg.messageId();
+            messageToDisplay["isRead"] = msg.isRead();
             QString fileUrl = msg.mediaUrl();
             messageToDisplay["fileUrl"] = fileUrl;
 
@@ -261,7 +282,8 @@ void MessageHandler::loadingNextMessages(const QByteArray &messagesData)
         const chats::ChatMessage &protoMsg = response.messages().at(i);
         QVariantMap messageToLoad;
 
-        messageToLoad["message"] = encryptContentFromMessage(protoMsg);
+        if(response.type() == chats::ChatTypeGadget::ChatType::GROUP) messageToLoad["message"] = protoMsg.content();
+        else if(response.type() == chats::ChatTypeGadget::ChatType::PERSONAL) messageToLoad["message"] = encryptContentFromMessage(protoMsg);
 
         QString fullDate = protoMsg.timestamp();
         QDateTime dt = QDateTime::fromString(fullDate, Qt::ISODate);
@@ -285,6 +307,7 @@ void MessageHandler::loadingNextMessages(const QByteArray &messagesData)
         messageToLoad["fileName"] = fileName;
 
         messageToLoad["special_type"] = protoMsg.specialType();
+        messageToLoad["isRead"] = protoMsg.isRead();
 
         messageToLoad["audio_duration"] = getAudioDuration(fileName);
 
@@ -344,7 +367,7 @@ QString MessageHandler::encryptContentFromMessage(const chats::ChatMessage &prot
     }
 
     QString content;
-    if(encryptedContentBase64 != ""){
+    if(encryptedContentBase64 != "") {
         QByteArray encryptedMessageData = QByteArray::fromBase64(encryptedContentBase64.toUtf8());
         QByteArray decryptedMessageData;
         try {
@@ -354,5 +377,8 @@ QString MessageHandler::encryptContentFromMessage(const chats::ChatMessage &prot
             return QString();
         }
         return QString::fromUtf8(decryptedMessageData);
-    } else return QString();
+    } else {
+        logger->log(Logger::INFO, "messagehandler.cpp::encryptContentFromMessage", "encryptedContentBase64 empty");
+        return QString();
+    }
 }

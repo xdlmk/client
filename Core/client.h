@@ -39,8 +39,9 @@ signals:
 
     void loadingChat(const quint64& id, const QString &flag);
 
-    void showPersonalChat(QString login,QString message, int id, QString out, QString type);
+    void showPersonalChat(QString login,QString message, int id, QString out, QString type, const QString& timestamp, const int& unreadCount);
     void checkActiveDialog(QVariant message,const QString& type);
+    void setReadStatusToMessage(const quint64 &message_id, const quint64 &chat_id, const QString &chat_type);
 
     void newSearchUser(QString userlogin,int id);
 
@@ -53,6 +54,8 @@ signals:
     void sendLoginRequest(QString userlogin,QString password);
     void sendRegisterRequest(const QString login, const QString password);
     void sendEditProfileRequest(const QString editable,const QString editInformation);
+
+    void markMessageAsRead(const quint64& message_id);
 
     void editUserlogin(QString editInformation);
     void editPhoneNumber(QString editInformation);

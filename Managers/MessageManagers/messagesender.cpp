@@ -39,7 +39,7 @@ void MessageSender::sendMessage(const QString &message, const quint64 &receiver_
             QString uniqName = QUuid::createUuid().toString(QUuid::WithoutBraces);
             QString baseDir = QCoreApplication::applicationDirPath()
                               + "/.tempData/"
-                              + QString::number(receiver_id);
+                              + QString::number(receiver_id) + "/files/" + flag;
 
             QDir dir;
             if (!dir.exists(baseDir)) dir.mkpath(baseDir);
@@ -206,7 +206,7 @@ void MessageSender::sendVoiceMessage(const int &receiver_id, const QString &flag
             QString uniqName = QUuid::createUuid().toString(QUuid::WithoutBraces);
             QString baseDir = QCoreApplication::applicationDirPath()
                               + "/.tempData/"
-                              + QString::number(receiver_id);
+                              + QString::number(receiver_id) + "/files/" + flag;
 
             QDir dir;
             if (!dir.exists(baseDir)) dir.mkpath(baseDir);
@@ -270,6 +270,15 @@ void MessageSender::sendVoiceMessage(const int &receiver_id, const QString &flag
 
         emit sendMessageFileData(flag + "_voice_message", chatMsg.serialize(&serializer)); // personal_voice_message group_voice_message
     }
+}
+
+void MessageSender::markMessageAsRead(const quint64 &message_id)
+{
+    chats::MarkMessageRequest request;
+    request.setMessageId(message_id);
+    request.setReaderId(activeUserId);
+    QProtobufSerializer serializer;
+    emit sendMessageData("mark_message", request.serialize(&serializer));
 }
 
 void MessageSender::sendRequestMessagesLoading(const int &chat_id, const QString &chat_name, const QString &flag, const int &offset)
