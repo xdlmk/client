@@ -4,7 +4,7 @@ import QtQuick.Layouts
 import QtMultimedia
 
 Window {
-    id: root
+    id: rootWindow
     width: 1000
     height: 500
     visible: true
@@ -25,7 +25,7 @@ Window {
     Rectangle {
         id: leftLine
         color: "#0e1621"
-        height: root.height
+        height: rootWindow.height
         width: 54
         anchors{
             left:  parent.left
@@ -81,8 +81,8 @@ Window {
 
     ChatsList {
         id: centerLine
-        height: root.height
-        width: root.width - (root.width / 2 + root.width / 4) - 54
+        height: rootWindow.height
+        width: rootWindow.width - (rootWindow.width / 2 + rootWindow.width / 4) - 54
 
         ListModel {
             id:personalChatsListModel
@@ -102,7 +102,7 @@ Window {
         }
         ScrollBar.vertical: ScrollBar {
             visible: upLine.currentState === "default" ? false : true
-            background: Rectangle { implicitWidth: 10; color: root.color }
+            background: Rectangle { implicitWidth: 10; color: rootWindow.color }
             contentItem: Rectangle { implicitWidth: 10; color: "gray"; radius: 5 }
         }
 
@@ -116,7 +116,7 @@ Window {
         delegate: ChatBubble {
             id:chatBubble
             anchors.margins: 20
-            width: Math.min(root.width, listView.width * 0.45)
+            width: Math.min(rootWindow.width, listView.width * 0.45)
             property string message: model.text
             property var message_id: model.message_id
             property string time: model.time
@@ -310,6 +310,10 @@ Window {
 
     SelectContactsForm {
         id:selectContactsForm
+    }
+
+    ThemeSettings {
+        id:themeSettings
     }
 
     Timer {

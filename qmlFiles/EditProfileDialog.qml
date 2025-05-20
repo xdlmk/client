@@ -145,7 +145,7 @@ Dialog {
 
 
 
-    TextField{
+    TextField {
         id:aboutMe
         width:parent.width
         selectByMouse: true
@@ -154,7 +154,7 @@ Dialog {
         anchors.top: userSourceContainer.bottom
         font.pointSize: 10
         color: "white"
-        background: Rectangle { color: root.color }
+        background: Rectangle { color: rootWindow.color }
     }
 
     EditFiledInformation{ id:editInformation }

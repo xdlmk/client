@@ -88,6 +88,8 @@ qt_add_qml_module(regagram
     qmlFiles/GroupInfoForm.qml
     qmlFiles/SmartImage.qml
     qmlFiles/FallbackImage.qml
+    qmlFiles/ThemeSettings.qml
+    qmlFiles/ExampleChatBubble.qml
     SOURCES
     Core/client.h Core/client.cpp
     Core/configmanager.h Core/configmanager.cpp

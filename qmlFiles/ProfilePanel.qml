@@ -270,7 +270,11 @@ Rectangle {
             Button{
                 id:setti3
                 anchors.top:openGroupCreateButton.bottom
-                text:"Settings3"
+                text:"Design"
+                onClicked: {
+                    overlay.visible = true
+                    themeSettings.open()
+                }
             }
             Button{
                 id:setti4
