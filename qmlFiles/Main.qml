@@ -8,7 +8,7 @@ Window {
     width: 1000
     height: 500
     visible: true
-    color: "#0e1621"
+    color: themeManager.chatBackground // "#0e1621"
     title: qsTr("Regagram")
 
     property bool isProfileExtended: false

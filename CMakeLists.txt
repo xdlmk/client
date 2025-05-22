@@ -95,6 +95,7 @@ qt_add_qml_module(regagram
     Core/configmanager.h Core/configmanager.cpp
     Utils/logger.h Utils/logger.cpp
     Utils/avatargenerator.h Utils/avatargenerator.cpp
+    Utils/apptheme.h Utils/apptheme.cpp
     Network/networkmanager.h Network/networkmanager.cpp
     Network/filenetworkmanager.h Network/filenetworkmanager.cpp
     Network/messagenetworkmanager.h Network/messagenetworkmanager.cpp
