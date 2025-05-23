@@ -24,7 +24,7 @@ Window {
 
     Rectangle {
         id: leftLine
-        color: "#0e1621"
+        color: themeManager.chatBackground
         height: rootWindow.height
         width: 54
         anchors{
@@ -35,7 +35,7 @@ Window {
 
         Rectangle {
             id: profile
-            color: "#0e1621"
+            color: themeManager.chatBackground
             height: 54
             anchors{
                 left:  parent.left

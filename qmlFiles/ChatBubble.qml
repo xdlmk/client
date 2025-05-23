@@ -14,7 +14,7 @@ Item {
 
     Rectangle {
         id: rectBubble
-        color: isOutgoing ? "#2b5278" : "#182533"
+        color: isOutgoing ? themeManager.outgoingColor : themeManager.incomingColor
         radius: 10
         anchors.fill: parent
 
@@ -47,7 +47,7 @@ Item {
                 topMargin: fileText.visible ? 5 : 0
             }
             font.pointSize: 10
-            color: isOutgoing ? "white" : "#e4ecf2"
+            color: "white"
             font.bold: true
             MouseArea {
                 anchors.fill: parent
@@ -75,7 +75,7 @@ Item {
             font.pointSize: 10
             enabled: lblText.text !== ""
             visible: lblText.text !== ""
-            color: isOutgoing ? "white" : "#e4ecf2"
+            color: "white"
             wrapMode: Text.WrapAnywhere
         }
 
@@ -99,13 +99,13 @@ Item {
                 width: 30
                 height: 30
                 radius: 15
-                color: "#2b5278"
+                color: themeManager.outgoingColor
                 Text {
                     id:playButtonText
                     text: "▶"
                     font.pointSize: 15
                     anchors.centerIn: parent
-                    color:"#ffffff"
+                    color: "white"
                 }
                 MouseArea {
                     anchors.fill: parent
@@ -160,13 +160,13 @@ Item {
                     width: voiceSlider.availableWidth
                     height: implicitHeight
                     radius: 2
-                    color: "#488dd3"
+                    color: Qt.lighter(themeManager.outgoingColor)
 
                     Rectangle {
                         width: voiceSlider.visualPosition * parent.width
                         height: parent.height
                         radius: 2
-                        color: "#182533"
+                        color: themeManager.incomingColor
                     }
                 }
 
@@ -176,7 +176,7 @@ Item {
                     implicitWidth: 6
                     implicitHeight: 6
                     radius: 3
-                    color: "#182533"
+                    color: themeManager.incomingColor
                 }
             }
             Text {
@@ -229,7 +229,7 @@ Item {
             text: time
             width: parent.width - 20
             font.pointSize: 8
-            color: isOutgoing ? "#488dd3" : "#6d7f8f"
+            color: isOutgoing ? Qt.lighter(themeManager.outgoingColor) : Qt.lighter(themeManager.incomingColor, 30)
             horizontalAlignment: Text.AlignRight
         }
 
@@ -244,7 +244,7 @@ Item {
             }
             text: isRead ? "✓✓" : "✓"
             font.pointSize: 8
-            color: isRead ? "#488dd3" : "#6d7f8f"
+            color: isRead ? Qt.lighter(themeManager.outgoingColor) : Qt.lighter(themeManager.incomingColor, 30)
             horizontalAlignment: Text.AlignRight
         }
     }

@@ -11,15 +11,13 @@ Dialog {
     height: Math.min(550 + chatExample.height, rootWindow.height * 0.9)
 
     background: Rectangle {
-        color: "#1e2a36"
+        color: Qt.lighter(themeManager.chatBackground)
         radius: 6
-        border.color: "#626a72"
-        border.width: 1/2
     }
 
-    property color chatBackground: "#0e1621"
-    property color incomingColor: "#182533"
-    property color outgoingColor: "#2b5278"
+    property color chatBackground: themeManager.chatBackground
+    property color incomingColor: themeManager.incomingColor
+    property color outgoingColor: themeManager.outgoingColor
 
     Flickable {
         id: flickable
@@ -213,5 +211,28 @@ Dialog {
     onClosed: {
         overlay.opacity = 0
         root.opacity = 0
+    }
+
+    Text {
+        id:confirmButton
+        anchors {
+            bottom: parent.bottom
+            bottomMargin: 10
+            right: parent.right
+            rightMargin: 10
+        }
+
+        text: "Confirm"
+        font.pointSize: 14
+        color: outgoingColor
+        MouseArea {
+            anchors.fill: parent
+            onClicked: {
+                themeManager.setChatBackground = chatBackground;
+                themeManager.setIncomingColor = incomingColor;
+                themeManager.setOutgoingColor = outgoingColor;
+            }
+        }
+
     }
 }
