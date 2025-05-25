@@ -9,10 +9,8 @@ Dialog {
     opacity: 0
 
     background: Rectangle {
-        color: "#1e2a36"
+        color: Qt.lighter(themeManager.chatBackground)
         radius: 6
-        border.color: "#626a72"
-        border.width: 1/2
     }
     width: 400
     height: 500
@@ -84,11 +82,11 @@ Dialog {
             right: groupAvatar.right
             bottom: groupAvatar.bottom
         }
-        color: "#2b5278"
-        border.color: "#182533"
+        color: Qt.lighter(themeManager.chatBackground, 1.5)
+        border.color: Qt.darker(themeManager.chatBackground, 1.8)
         Text {
             text: "\u270E"
-            color:"#182533"
+            color: Qt.darker(themeManager.chatBackground, 1.8)
             font.pointSize: 12
             font.bold: true
             anchors.centerIn: parent
@@ -121,7 +119,7 @@ Dialog {
         id:defLine
         height: 6
         width:parent.width + 22
-        color:"#626a72"
+        color: Qt.lighter(themeManager.chatBackground, 1.8)
         anchors.left: parent.left
         anchors.leftMargin: -11
         anchors.top: groupAvatar.bottom
@@ -157,7 +155,7 @@ Dialog {
                 selectContactsForm.setParams("add");
                 selectContactsForm.open();
             }
-            onEntered: {addMembersButton.color = "#626a72"}
+            onEntered: {addMembersButton.color = Qt.lighter(themeManager.chatBackground, 1.75)}
             onExited: {addMembersButton.color = "transparent"}
         }
 
@@ -180,7 +178,7 @@ Dialog {
         Rectangle {
             width: membersListView.width
             height: 40
-            color: "#626a72"
+            color: Qt.lighter(themeManager.chatBackground, 1.75);
             SmartImage {
                 id:profileImage
                 width: 30

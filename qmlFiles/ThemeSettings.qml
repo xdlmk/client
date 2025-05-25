@@ -8,7 +8,7 @@ Dialog {
     x: (parent.width - width) / 2
     y: (parent.height - height) / 2
     width: Math.min(600, rootWindow.width * 0.9)
-    height: Math.min(550 + chatExample.height, rootWindow.height * 0.9)
+    height: Math.min(chatExample.height + chatBgButton.implicitHeight + chatOutgCButton.implicitHeight + chatIncCButton.implicitHeight + confirmButton.implicitHeight + 200, rootWindow.height * 0.9)
 
     background: Rectangle {
         color: Qt.lighter(themeManager.chatBackground)
@@ -30,7 +30,7 @@ Dialog {
         Rectangle {
             id: container
             width: flickable.width
-            height: 550 + chatExample.height
+            height: chatExample.height + chatBgButton.implicitHeight + chatOutgCButton.implicitHeight + chatIncCButton.implicitHeight + confirmButton.implicitHeight + 200
             color: "transparent"
 
             Rectangle {
@@ -101,8 +101,11 @@ Dialog {
                     right: parent.right
                 }
                 MouseArea {
+                    cursorShape: Qt.PointingHandCursor
                     anchors.fill: parent
                     onClicked: chatBgColorDialog.open()
+                    onEntered: chatBgButton.color = Qt.lighter(themeManager.chatBackground, 1.75);
+                    onExited: chatBgButton.color = "transparent";
                 }
 
                 Text {
@@ -129,8 +132,11 @@ Dialog {
                     right: parent.right
                 }
                 MouseArea {
+                    cursorShape: Qt.PointingHandCursor
                     anchors.fill: parent
                     onClicked: chatOutgColorDialog.open()
+                    onEntered: chatOutgCButton.color = Qt.lighter(themeManager.chatBackground, 1.75);
+                    onExited: chatOutgCButton.color = "transparent";
                 }
 
                 Text {
@@ -157,8 +163,11 @@ Dialog {
                     right: parent.right
                 }
                 MouseArea {
+                    cursorShape: Qt.PointingHandCursor
                     anchors.fill: parent
                     onClicked: chatIncColorDialog.open()
+                    onEntered: chatIncCButton.color = Qt.lighter(themeManager.chatBackground, 1.75);
+                    onExited: chatIncCButton.color = "transparent";
                 }
 
                 Text {
@@ -170,6 +179,28 @@ Dialog {
                         verticalCenter: parent.verticalCenter
                         left: parent.left
                         leftMargin: 20
+                    }
+                }
+            }
+
+            Text {
+                id:confirmButton
+                anchors {
+                    top: chatIncCButton.bottom
+                    bottomMargin: 10
+                    right: parent.right
+                    rightMargin: 10
+                }
+
+                text: "Confirm"
+                font.pointSize: 14
+                color: outgoingColor
+                MouseArea {
+                    anchors.fill: parent
+                    onClicked: {
+                        themeManager.chatBackground = chatBackground;
+                        themeManager.incomingColor = incomingColor;
+                        themeManager.outgoingColor = outgoingColor;
                     }
                 }
             }
@@ -211,28 +242,5 @@ Dialog {
     onClosed: {
         overlay.opacity = 0
         root.opacity = 0
-    }
-
-    Text {
-        id:confirmButton
-        anchors {
-            bottom: parent.bottom
-            bottomMargin: 10
-            right: parent.right
-            rightMargin: 10
-        }
-
-        text: "Confirm"
-        font.pointSize: 14
-        color: outgoingColor
-        MouseArea {
-            anchors.fill: parent
-            onClicked: {
-                themeManager.setChatBackground = chatBackground;
-                themeManager.setIncomingColor = incomingColor;
-                themeManager.setOutgoingColor = outgoingColor;
-            }
-        }
-
     }
 }

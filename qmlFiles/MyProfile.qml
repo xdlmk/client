@@ -9,10 +9,8 @@ Dialog {
     opacity: 0
 
     background: Rectangle {
-        color: "#1e2a36"
+        color: Qt.lighter(themeManager.chatBackground)
         radius: 6
-        border.color: "#626a72"
-        border.width: 1/2
     }
     width: 400
     height: 500
@@ -111,7 +109,7 @@ Dialog {
         id:defLine
         height: 6
         width:parent.width + 22
-        color:"#626a72"
+        color: Qt.lighter(themeManager.chatBackground, 2.25)
         anchors.left: parent.left
         anchors.leftMargin: -11
         anchors.top: userAvatar.bottom
@@ -150,7 +148,7 @@ Dialog {
                 cursorShape: Qt.PointingHandCursor
 
                 onClicked: {
-
+                    //copy
                 }
             }
         }

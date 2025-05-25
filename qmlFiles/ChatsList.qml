@@ -6,7 +6,7 @@ import Qt.labs.qmlmodels
 Rectangle {
     id: centerLine
     property alias chatsListView: personalChatsContainer.personalChatsListView
-    color: "#17212b"
+    color:  Qt.lighter(themeManager.chatBackground, 1.50)
     anchors{
         left:  leftLine.right
         bottom: parent.bottom
@@ -28,7 +28,7 @@ Rectangle {
         color: "white"
         verticalAlignment: Text.AlignVCenter
         background: Rectangle {
-            color: "#242f3d"
+            color: Qt.lighter(themeManager.chatBackground, 1.70)
             radius: searchField.height / 2
         }
         Keys.onReturnPressed: {

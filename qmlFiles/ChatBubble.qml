@@ -229,7 +229,7 @@ Item {
             text: time
             width: parent.width - 20
             font.pointSize: 8
-            color: isOutgoing ? Qt.lighter(themeManager.outgoingColor) : Qt.lighter(themeManager.incomingColor, 30)
+            color: isOutgoing ? Qt.lighter(themeManager.outgoingColor) : Qt.lighter(themeManager.incomingColor, 7)
             horizontalAlignment: Text.AlignRight
         }
 
@@ -244,7 +244,7 @@ Item {
             }
             text: isRead ? "✓✓" : "✓"
             font.pointSize: 8
-            color: isRead ? Qt.lighter(themeManager.outgoingColor) : Qt.lighter(themeManager.incomingColor, 30)
+            color: isRead ? Qt.lighter(themeManager.outgoingColor) : Qt.lighter(themeManager.incomingColor, 5)
             horizontalAlignment: Text.AlignRight
         }
     }

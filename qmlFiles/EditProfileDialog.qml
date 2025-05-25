@@ -9,10 +9,8 @@ Dialog {
     y: (parent.height - height) / 2
     opacity: 0
     background: Rectangle {
-        color: "#1e2a36"
+        color: Qt.lighter(themeManager.chatBackground)
         radius: 6
-        border.color: "#626a72"
-        border.width: 0.3
     }
     width: 400
     height: 500
@@ -108,11 +106,11 @@ Dialog {
                 right: userAvatar.right
                 bottom: userAvatar.bottom
             }
-            color: "#2b5278"
-            border.color: "#182533"
+            color: Qt.lighter(themeManager.chatBackground, 1.5)
+            border.color: Qt.darker(themeManager.chatBackground, 1.8)
             Text {
                 text: "\u270E"
-                color:"#182533"
+                color: Qt.darker(themeManager.chatBackground, 1.8)
                 font.pointSize: 15
                 font.bold: true
                 anchors.centerIn: parent
@@ -154,7 +152,7 @@ Dialog {
         anchors.top: userSourceContainer.bottom
         font.pointSize: 10
         color: "white"
-        background: Rectangle { color: rootWindow.color }
+        background: Rectangle { color: themeManager.chatBackground }
     }
 
     EditFiledInformation{ id:editInformation }
@@ -163,7 +161,7 @@ Dialog {
         id:defLine
         height: 6
         width:parent.width + 22
-        color:"#626a72"
+        color:Qt.lighter(themeManager.chatBackground, 1.8)
         anchors{
             left: parent.left
             leftMargin: -11
@@ -184,7 +182,7 @@ Dialog {
         delegate: Rectangle {
             id: informationField
             width: informationListView.width
-            color: "#1e2a36"
+            color: Qt.lighter(themeManager.chatBackground)
             height: 40
             property string iconSource: model.iconSource
             property string informationName: model.informationName
@@ -202,7 +200,6 @@ Dialog {
                     height: 24
                     radius: 12
                     color: "transparent"
-                    border.color: "lightblue"
                     clip: true
                     anchors{
                         top: parent.top
@@ -248,8 +245,8 @@ Dialog {
                     editInformation.infoType = informationName;
                     editInformation.open();
                 }
-                onEntered: { informationField.color = "#626a72"; }
-                onExited: { informationField.color = "#1e2a36"; }
+                onEntered: { informationField.color = Qt.lighter(themeManager.chatBackground, 1.75); }
+                onExited: { informationField.color = Qt.lighter(themeManager.chatBackground); }
             }
         }
     }

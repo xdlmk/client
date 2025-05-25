@@ -6,7 +6,7 @@ import QtQuick.Layouts
 Rectangle{
     readonly property int defMargin: 10
     property int maxHeight: 150
-    color: "#17212b"
+    color: Qt.lighter(themeManager.chatBackground, 1.50)
     height: Math.max(Math.min(edtText.implicitHeight,maxHeight),54) + file.height + (file.visible ? 10 : 0)
     width: parent.width/2 + parent.width/4
 
@@ -26,7 +26,7 @@ Rectangle{
         enabled: visible
         height: visible ? 60 : 0
         width: visible ? 150 : 0
-        color: "#2b5278"
+        color: themeManager.outgoingColor
         radius: 15
         anchors{
             top:parent.top
@@ -38,7 +38,7 @@ Rectangle{
             id: fileIcon
             width: 40
             height: parent.height - 20
-            color: "#1e3a5f"
+            color: Qt.darker(themeManager.outgoingColor)
             radius: 5
             anchors {
                 left: parent.left

@@ -57,7 +57,7 @@ Rectangle {
         text: time
         width: parent.width - 20
         font.pointSize: 8
-        color: isOutgoing ? Qt.lighter(outgoingColor) : Qt.lighter(incomingColor, 30)
+        color: isOutgoing ? Qt.lighter(outgoingColor) : Qt.lighter(incomingColor, 7)
         horizontalAlignment: Text.AlignRight
     }
 
@@ -72,7 +72,7 @@ Rectangle {
         }
         text: isRead ? "✓✓" : "✓"
         font.pointSize: 8
-        color: isRead ? Qt.lighter(outgoingColor) : Qt.lighter(outgoingColor, 30)
+        color: isRead ? Qt.lighter(outgoingColor) : Qt.lighter(incomingColor, 5)
         horizontalAlignment: Text.AlignRight
     }
 

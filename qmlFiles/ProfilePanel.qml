@@ -7,10 +7,10 @@ Rectangle {
     id: profileWindow
     width: 250
     height: parent.height
-    color: "#1e2a36"
-    border.color: "black"
+    color: themeManager.chatBackground
     anchors.top: parent.top
     anchors.bottom: parent.bottom
+    border.color: "black"
 
     Column {
         anchors.top: parent.top
@@ -48,7 +48,7 @@ Rectangle {
             id: usersListContainer
             width: parent.width
             height: Math.min(userListModel.count, 3) * 35 + 10
-            color: "#1e2a36"
+            color: themeManager.chatBackground
 
             ListView {
                 id: userListView
@@ -63,7 +63,7 @@ Rectangle {
                 delegate: Rectangle {
                     id:userChange
                     width: userListView.width
-                    color: "#1e2a36"
+                    color: themeManager.chatBackground
                     height: 30
 
                     Item {
@@ -107,11 +107,11 @@ Rectangle {
                         }
 
                         onEntered: {
-                            userChange.color = "#626a72";
+                            userChange.color = Qt.lighter(themeManager.chatBackground, 1.75);
                         }
 
                         onExited: {
-                            userChange.color = "#1e2a36";
+                            userChange.color = themeManager.chatBackground;
                         }
                     }
                 }
@@ -147,12 +147,12 @@ Rectangle {
             anchors.right: parent.right
             height:100
             y:100
-            color: "#1e2a36"
+            color: themeManager.chatBackground
 
             Rectangle {
                 id:openMyProfileButton
                 width: parent.width
-                color: "#1e2a36"
+                color: themeManager.chatBackground
                 height: 30
 
                 Item {
@@ -200,11 +200,11 @@ Rectangle {
                     }
 
                     onEntered: {
-                        openMyProfileButton.color = "#626a72";
+                        openMyProfileButton.color = Qt.lighter(themeManager.chatBackground, 1.75);
                     }
 
                     onExited: {
-                        openMyProfileButton.color = "#1e2a36";
+                        openMyProfileButton.color = themeManager.chatBackground;
                     }
                 }
             }
@@ -212,7 +212,7 @@ Rectangle {
                 id:openGroupCreateButton
                 width: parent.width
                 anchors.top:openMyProfileButton.bottom
-                color: "#1e2a36"
+                color: themeManager.chatBackground
                 height: 30
 
                 Item {
@@ -259,11 +259,11 @@ Rectangle {
                     }
 
                     onEntered: {
-                        openGroupCreateButton.color = "#626a72";
+                        openGroupCreateButton.color = Qt.lighter(themeManager.chatBackground, 1.75);
                     }
 
                     onExited: {
-                        openGroupCreateButton.color = "#1e2a36";
+                        openGroupCreateButton.color = themeManager.chatBackground;
                     }
                 }
             }
@@ -285,7 +285,7 @@ Rectangle {
 
         Rectangle {
             id: buttonLeave
-            color: "#1e2a36"
+            color: themeManager.chatBackground
             height: 40
             anchors.left:  parent.left
             anchors.right: parent.right
@@ -314,11 +314,11 @@ Rectangle {
                 }
 
                 onEntered: {
-                    buttonLeave.color = "#626a72";
+                    buttonLeave.color = Qt.lighter(themeManager.chatBackground, 1.75);
                 }
 
                 onExited: {
-                    buttonLeave.color = "#1e2a36";
+                    buttonLeave.color = themeManager.chatBackground;
                 }
             }
         }

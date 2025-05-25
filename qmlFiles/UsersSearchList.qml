@@ -3,7 +3,7 @@ import QtQuick.Controls
 import QtQuick.Layouts
 
 Rectangle {
-    color: "#17212b"
+    color: Qt.lighter(themeManager.chatBackground, 1.50)
 
     ListView {
         id: userSearchListView
@@ -17,7 +17,7 @@ Rectangle {
         delegate: Rectangle {
             id:searchUser
             width: userSearchListView.width
-            color: userSearchMouseArea.containsMouse ? "#626a72" : "#1e2a36"
+            color: userSearchMouseArea.containsMouse ? Qt.lighter(themeManager.chatBackground, 1.75) : themeManager.incomingColor
             height: 60
             property int user_id: id
             Item {

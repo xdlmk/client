@@ -9,10 +9,8 @@ Dialog {
     opacity: 0
 
     background: Rectangle {
-        color: "#1e2a36"
+        color: Qt.lighter(themeManager.chatBackground)
         radius: 6
-        border.color: "#626a72"
-        border.width: 1/2
     }
     width: 400
     height: 350
@@ -54,7 +52,7 @@ Dialog {
     Rectangle
     {
         id:recGroupName
-        color: "#2f6ea5"
+        color: Qt.lighter(themeManager.chatBackground, 1.8)
         width: parent.width
         height: 2
         anchors{
@@ -91,7 +89,7 @@ Dialog {
     Rectangle
     {
         id:recavatarPath
-        color: "#2f6ea5"
+        color: Qt.lighter(themeManager.chatBackground, 1.8)
         width: parent.width
         height: 2
         anchors{

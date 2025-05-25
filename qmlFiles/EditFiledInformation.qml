@@ -9,10 +9,8 @@ Dialog {
     y: (parent.height - height) / 2
     opacity: 0
     background: Rectangle {
-        color: "#1e2a36"
+        color: Qt.lighter(themeManager.chatBackground)
         radius: 6
-        border.color: "#626a72"
-        border.width: 0.3
     }
     width: 300
     height: 200
@@ -58,7 +56,7 @@ Dialog {
     Rectangle
     {
         id:recEditField
-        color: "#2f6ea5"
+        color: Qt.lighter(themeManager.chatBackground, 1.8)
         width: parent.width
         height: 2
         anchors{
@@ -77,7 +75,7 @@ Dialog {
             topMargin: 10
             left: recEditField.left
         }
-        color: "#2f6ea5"
+        color: Qt.lighter(themeManager.chatBackground, 1.8)
         opacity: 0
         Behavior on opacity { NumberAnimation { duration: 200 } }
     }
@@ -132,8 +130,8 @@ Dialog {
     onClosed: {
         editableFiled.clear()
         editInformation.opacity = 0
-        recEditField.color = "#2f6ea5"
-        errorMessage.color = "#2f6ea5"
+        recEditField.color = Qt.lighter(themeManager.chatBackground, 1.8)
+        errorMessage.color = Qt.lighter(themeManager.chatBackground, 1.8)
         errorMessage.opacity = 0
     }
 
@@ -142,8 +140,8 @@ Dialog {
         interval: 5000
         repeat: false
         onTriggered: {
-            recEditField.color = "#2f6ea5"
-            errorMessage.color = "#2f6ea5"
+            recEditField.color = Qt.lighter(themeManager.chatBackground, 1.8)
+            errorMessage.color = Qt.lighter(themeManager.chatBackground, 1.8)
         }
     }
 

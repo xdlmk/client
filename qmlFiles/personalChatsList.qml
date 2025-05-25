@@ -3,7 +3,7 @@ import QtQuick.Controls
 import QtQuick.Layouts
 
 Rectangle {
-    color: "#17212b"
+    color: Qt.lighter(themeManager.chatBackground, 1.50)
     property alias personalChatsListView: personalChatsListView
 
     ListView {
@@ -19,7 +19,7 @@ Rectangle {
         delegate: Rectangle {
             id:personalChat
             width: personalChatsListView.width
-            color: upLine.user_id === user_id ? "#2b5278" : (personalChatMouseArea.containsMouse ? "#626a72" : "#1e2a36")
+            color: upLine.user_id === user_id ? themeManager.outgoingColor : (personalChatMouseArea.containsMouse ? Qt.lighter(themeManager.chatBackground, 1.75) : themeManager.incomingColor)
             height: 60
             property int user_id: id
             property string chatType: currentChatType
@@ -95,7 +95,7 @@ Rectangle {
                 Rectangle {
                     id: lblUnreadCount
                     visible: unreadMessagesCount !== 0
-                    color: "#488dd3"
+                    color: themeManager.outgoingColor
                     width: textItem.implicitWidth + 10
                     height: width
                     radius: width / 2

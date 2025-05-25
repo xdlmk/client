@@ -10,10 +10,8 @@ Dialog {
     opacity: 0
 
     background: Rectangle {
-        color: "#1e2a36"
+        color: Qt.lighter(themeManager.chatBackground, 1.8)
         radius: 6
-        border.color: "#626a72"
-        border.width: 1/2
     }
     width: 300
     height: 400
@@ -51,7 +49,7 @@ Dialog {
         Rectangle {
             width: contactsListView.width
             height: 40
-            color: model.selected ? "#626a72" : "transparent"
+            color: model.selected ? themeManager.incomingColor : "transparent"
             SmartImage {
                 id:profileImage
                 width: 30

@@ -47,7 +47,7 @@ Window {
                 id: colorOverlayProfile
                 anchors.fill: parent
                 anchors.margins: 1
-                color: "#262d37"
+                color: Qt.darker(themeManager.chatBackground)
                 opacity: 0
                 visible: false
                 Behavior on opacity { NumberAnimation { duration: 300; easing.type: Easing.OutQuad } }
@@ -170,7 +170,7 @@ Window {
 
     Rectangle {
         id: upLine
-        color: "#17212b"
+        color: Qt.lighter(themeManager.chatBackground, 1.50)
         height: 55
         anchors{
             left:  centerLine.right
