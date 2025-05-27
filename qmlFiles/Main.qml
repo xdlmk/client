@@ -155,7 +155,7 @@ Window {
         property int savedIndexFromEnd: 0
 
         onAtYBeginningChanged: {
-            if (atYBeginning && upLine.currentState !== "default" && listModel.count !== 0) {
+            if (atYBeginning && upLine.currentState !== "default" && listModel.count !== 0 && !(upLine.currentState == "group" && listModel.count === 1)) {
                 listView.savedIndexFromEnd = listModel.count;
                 client.requestMessageDownload(upLine.user_id, nameText.text, upLine.currentState, listModel.count);
                 activeChatIdBeforeRequest = upLine.user_id;

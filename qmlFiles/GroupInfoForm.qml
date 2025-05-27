@@ -83,10 +83,11 @@ Dialog {
             bottom: groupAvatar.bottom
         }
         color: Qt.lighter(themeManager.chatBackground, 1.5)
-        border.color: Qt.darker(themeManager.chatBackground, 1.8)
+        border.color: themeManager.outgoingColor
+        border.width: 1/2
         Text {
             text: "\u270E"
-            color: Qt.darker(themeManager.chatBackground, 1.8)
+            color: themeManager.outgoingColor
             font.pointSize: 12
             font.bold: true
             anchors.centerIn: parent

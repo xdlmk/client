@@ -226,7 +226,7 @@ void MessageHandler::loadingChat(const quint64& id, const QString &flag)
 
         emit clearMainListView();
 
-        logger->log(Logger::INFO,"messagehandler.cpp::loadingChat","Loading personal chat from json");
+        logger->log(Logger::INFO,"messagehandler.cpp::loadingChat","Loading " + flag + " chat from json");
         for (const auto &msg : messages) {
             QVariantMap messageToDisplay;
 

@@ -192,7 +192,7 @@ Rectangle{
 
             Rectangle {
                 id:showRecord
-                color: "#2b5278"
+                color: themeManager.outgoingColor
                 visible: isRecording
                 anchors.centerIn: buttonVoice
                 width: isRecording ? 30 : 0

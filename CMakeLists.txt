@@ -111,6 +111,9 @@ qt_add_qml_module(regagram
     images/logo.png
     images/logo2.png
     images/profile.png
+    images/myProfileIcon.svg
+    images/createGroupIcon.svg
+    images/changeDesignIcon.svg
 )
 
 qt6_add_shaders(regagram "Shaders"

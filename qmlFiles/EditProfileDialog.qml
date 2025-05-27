@@ -107,10 +107,11 @@ Dialog {
                 bottom: userAvatar.bottom
             }
             color: Qt.lighter(themeManager.chatBackground, 1.5)
-            border.color: Qt.darker(themeManager.chatBackground, 1.8)
+            border.color: themeManager.outgoingColor
+            border.width: 1/2
             Text {
                 text: "\u270E"
-                color: Qt.darker(themeManager.chatBackground, 1.8)
+                color: themeManager.outgoingColor
                 font.pointSize: 15
                 font.bold: true
                 anchors.centerIn: parent
@@ -141,20 +142,6 @@ Dialog {
         }
     }
 
-
-
-    TextField {
-        id:aboutMe
-        width:parent.width
-        selectByMouse: true
-        placeholderText: "About me"
-        placeholderTextColor: "grey"
-        anchors.top: userSourceContainer.bottom
-        font.pointSize: 10
-        color: "white"
-        background: Rectangle { color: themeManager.chatBackground }
-    }
-
     EditFiledInformation{ id:editInformation }
 
     Rectangle{
@@ -165,7 +152,7 @@ Dialog {
         anchors{
             left: parent.left
             leftMargin: -11
-            top: aboutMe.bottom
+            top: userSourceContainer.bottom
             topMargin: 24
         }
     }
@@ -207,8 +194,9 @@ Dialog {
                         left: parent.left
                         leftMargin: 3
                     }
-                    Image {
+                    SmartImage {
                         anchors.fill: parent
+                        textImage: informationName
                         source: iconSource
                         fillMode: Image.PreserveAspectFit
                     }
@@ -257,8 +245,8 @@ Dialog {
         myProfileWindow.opacity = 0
         myProfileEdit.opacity = 1
         informationListModel.clear();
-        informationListModel.append({ iconSource: "", informationName: "Name", information: "name" });
-        informationListModel.append({ iconSource: "", informationName: "Phone number", information: "+810128919" });
+        //informationListModel.append({ iconSource: "", informationName: "Name", information: "name" });
+        //informationListModel.append({ iconSource: "", informationName: "Phone number", information: "+810128919" });
         informationListModel.append({ iconSource: "", informationName: "Username", information: login });
     }
     onClosed: {

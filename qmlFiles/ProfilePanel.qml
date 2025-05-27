@@ -72,11 +72,30 @@ Rectangle {
                         anchors.topMargin: 3
                         SmartImage {
                             id: userAvatar
+                            visible: !isSpecial
                             width: 24
                             height: 24
                             textImage: username
-                            source: isSpecial ? "" : avatarSource + id + ".png?" + timestamp //add account icon
+                            source: isSpecial ? "" : avatarSource + id + ".png?" + timestamp
                             fillMode: Image.PreserveAspectFit
+                        }
+                        Rectangle {
+                            id:addAccountIcon
+                            visible: isSpecial
+                            width: 24
+                            height: 24
+                            radius: 12
+                            color: themeManager.outgoingColor
+                            Text {
+                                anchors {
+                                    verticalCenter: parent.verticalCenter
+                                    horizontalCenter: parent.horizontalCenter
+                                }
+                                font.bold: true
+                                text: "+"
+                                font.pointSize: 14
+                                color: "white"
+                            }
                         }
 
                         Text {
@@ -165,12 +184,13 @@ Rectangle {
                         width: 24
                         height: 24
                         radius: 12
-                        color: "transparent"
-                        border.color: "lightblue"
+                        color: themeManager.outgoingColor
                         clip: true
                         Image {
-                            anchors.fill: parent
-                            //source: myProfileButtonImage
+                            width: 20
+                            height: 20
+                            anchors.centerIn: parent
+                            source: "../images/myProfileIcon.svg"
                             fillMode: Image.PreserveAspectFit
                         }
                     }
@@ -225,12 +245,13 @@ Rectangle {
                         width: 24
                         height: 24
                         radius: 12
-                        color: "transparent"
-                        border.color: "lightblue"
+                        color: themeManager.outgoingColor
                         clip: true
                         Image {
-                            anchors.fill: parent
-                            //source: groupCreateButtonImage
+                            width: 20
+                            height: 20
+                            anchors.centerIn: parent
+                            source: "../images/createGroupIcon.svg"
                             fillMode: Image.PreserveAspectFit
                         }
                     }
@@ -267,19 +288,64 @@ Rectangle {
                     }
                 }
             }
-            Button{
-                id:setti3
+            Rectangle {
+                id:openDesignChangeButton
+                width: parent.width
                 anchors.top:openGroupCreateButton.bottom
-                text:"Design"
-                onClicked: {
-                    overlay.visible = true
-                    themeSettings.open()
+                color: themeManager.chatBackground
+                height: 30
+
+                Item {
+                    anchors.fill: parent
+                    anchors.leftMargin: 10
+                    anchors.topMargin: 3
+
+                    Rectangle {
+                        id: designChangeImage
+                        width: 24
+                        height: 24
+                        radius: 12
+                        color: themeManager.outgoingColor
+                        clip: true
+                        Image {
+                            width: 20
+                            height: 20
+                            anchors.centerIn: parent
+                            source: "../images/changeDesignIcon.svg"
+                            fillMode: Image.PreserveAspectFit
+                        }
+                    }
+
+                    Text {
+                        text: "Design"
+                        color: "white"
+                        font.pointSize: 10
+                        font.bold: true
+                        anchors.left: designChangeImage.right
+                        anchors.top: parent.top
+                        anchors.topMargin: 3
+                        anchors.leftMargin: 10
+                    }
                 }
-            }
-            Button{
-                id:setti4
-                anchors.top:setti3.bottom
-                text:"Settings4"
+                MouseArea {
+                    id: designChangeButtonMouseArea
+                    anchors.fill: parent
+                    cursorShape: Qt.PointingHandCursor
+                    hoverEnabled: true
+
+                    onClicked: {
+                        overlay.visible = true
+                        themeSettings.open()
+                    }
+
+                    onEntered: {
+                        openDesignChangeButton.color = Qt.lighter(themeManager.chatBackground, 1.75);
+                    }
+
+                    onExited: {
+                        openDesignChangeButton.color = themeManager.chatBackground;
+                    }
+                }
             }
         }
 
