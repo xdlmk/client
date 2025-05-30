@@ -106,6 +106,35 @@ Rectangle{
         Layout.leftMargin: defMargin
         Layout.topMargin: defMargin
 
+        Rectangle {
+            id: btnFileItem
+            width: 50
+            height: 50
+            color: downLine.color
+            Button {
+                id: buttonFileImage
+                anchors.centerIn: parent
+                background: Item { }
+                icon.cache: false
+                icon.source: "../images/attach.svg"
+                icon.width: parent.width/2
+                icon.height: parent.height/2
+                icon.color: themeManager.outgoingColor
+            }
+            MouseArea {
+                anchors.fill: parent
+                onClicked:{
+                    filePath = fileManager.openFile("All");
+                    if (filePath !== "") {
+                        fileLoad = true;
+                        extensionText.text = getExtension(filePath);
+                        fileName.text = shortenText(getFileNameFromPath(filePath),15);
+
+                    }
+                }
+            }
+        }
+
         ScrollView {
             Layout.fillWidth: true
             Layout.fillHeight: true
@@ -150,44 +179,21 @@ Rectangle{
         }
 
         Rectangle {
-            id: btnFileItem
-            width: 50
-            height: 50
-            color: downLine.color
-            Text {
-                id: buttonFileImage
-                text: "\u{1F4CE}"
-                color: "grey"
-                font.pixelSize: 24
-                rotation: 45
-                anchors.centerIn: parent
-            }
-            MouseArea {
-                anchors.fill: parent
-                onClicked:{
-                    filePath = fileManager.openFile("All");
-                    if (filePath !== "") {
-                        fileLoad = true;
-                        extensionText.text = getExtension(filePath);
-                        fileName.text = shortenText(getFileNameFromPath(filePath),15);
-
-                    }
-                }
-            }
-        }
-
-        Rectangle {
             id: btnAddItem
             width: 50
             height: 50
             color: downLine.color
 
-            Image {
+            Button {
                 id: buttonImage
-                visible: edtText.text.trim() !== ""
-                source: "../images/logo.png"
                 anchors.centerIn: parent
-                fillMode: Image.PreserveAspectFit
+                background: Item { }
+                icon.cache: false
+                icon.source: "../images/send1.svg"
+                icon.width: parent.width/2
+                icon.height: parent.height/2
+                icon.color: themeManager.outgoingColor
+                visible: edtText.text.trim() !== ""
             }
 
             Rectangle {
@@ -202,12 +208,17 @@ Rectangle{
                 Behavior on height { NumberAnimation{duration:500} }
                 Behavior on radius { NumberAnimation{duration:500} }
             }
-            Text {
+
+            Button {
                 id: buttonVoice
-                visible: edtText.text.trim() === ""
-                text: "\u{1F3A4}"
-                font.pointSize: 15
                 anchors.centerIn: parent
+                background: Item { }
+                icon.cache: false
+                icon.source: "../images/microphone.svg"
+                icon.width: parent.width/2
+                icon.height: parent.height/2
+                icon.color: isRecording ? themeManager.incomingColor : themeManager.outgoingColor
+                visible: edtText.text.trim() === ""
             }
 
             MouseArea {
@@ -227,11 +238,11 @@ Rectangle{
                 }
 
                 onPressed: {
-                    buttonImage.source = "../images/logo2.png"
+                    buttonImage.icon.color = themeManager.incomingColor;
                 }
 
                 onReleased: {
-                    buttonImage.source = "../images/logo.png"
+                    buttonImage.icon.color = themeManager.outgoingColor;
                 }
             }
 

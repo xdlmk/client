@@ -108,12 +108,13 @@ qt_add_qml_module(regagram
     Managers/MessageManagers/messagestorage.h Managers/MessageManagers/messagestorage.cpp
     Managers/MessageManagers/messagesender.h Managers/MessageManagers/messagesender.cpp
     RESOURCES
-    images/logo.png
-    images/logo2.png
-    images/profile.png
     images/myProfileIcon.svg
     images/createGroupIcon.svg
     images/changeDesignIcon.svg
+    images/send1.svg
+    images/microphone.svg
+    images/profile.svg
+    images/attach.svg
 )
 
 qt6_add_shaders(regagram "Shaders"

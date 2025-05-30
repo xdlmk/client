@@ -52,11 +52,16 @@ Window {
                 visible: false
                 Behavior on opacity { NumberAnimation { duration: 300; easing.type: Easing.OutQuad } }
             }
-            Image {
+
+            Button {
                 id: listImage
-                source: "../images/profile.png"
                 anchors.centerIn: parent
-                fillMode: Image.PreserveAspectFit
+                background: Item { }
+                icon.cache: false
+                icon.source: "../images/profile.svg"
+                icon.width: parent.width/2
+                icon.height: parent.height/2.5
+                icon.color: themeManager.outgoingColor
             }
 
             MouseArea {
