@@ -122,16 +122,19 @@ Rectangle {
                 hoverEnabled: true
 
                 onClicked: {
-                    valueText.visible = false;
-                    upLine.currentState = chatType;
+                    if(upLine.user_id !== user_id && upLine.currentState !== chatType) {
+                        valueText.visible = false;
+                        upLine.currentState = chatType;
 
-                    if(user_id !== 0) {
-                        upLine.user_id = user_id;
-                        nameText.text = userlogin;
-                        client.loadingChat(user_id, chatType);
+                        if(user_id !== 0) {
+                            upLine.user_id = user_id;
+                            nameText.text = userlogin;
+                            downLine.clearData();
+                            client.loadingChat(user_id, chatType);
 
-                        if(chatType === "group") {
-                            client.getGroupMembers(user_id);
+                            if(chatType === "group") {
+                                client.getGroupMembers(user_id);
+                            }
                         }
                     }
                 }

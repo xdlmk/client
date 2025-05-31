@@ -3,7 +3,7 @@ import QtQuick.Controls 2.15
 import QtCore
 import QtQuick.Layouts
 
-Rectangle{
+Rectangle {
     readonly property int defMargin: 10
     property int maxHeight: 150
     color: Qt.lighter(themeManager.chatBackground, 1.50)
@@ -93,7 +93,8 @@ Rectangle{
         }
     }
 
-    RowLayout {
+    Item {
+        id: sendMessageContainer
         anchors{
             top:file.visible ? file.bottom : parent.top
             topMargin: 10
@@ -101,16 +102,17 @@ Rectangle{
             right: parent.right
             bottom: parent.bottom
         }
-        spacing: defMargin
-
-        Layout.leftMargin: defMargin
-        Layout.topMargin: defMargin
 
         Rectangle {
             id: btnFileItem
             width: 50
             height: 50
             color: downLine.color
+            anchors {
+                left: parent.left
+                verticalCenter: parent.verticalCenter
+            }
+
             Button {
                 id: buttonFileImage
                 anchors.centerIn: parent
@@ -136,16 +138,19 @@ Rectangle{
         }
 
         ScrollView {
-            Layout.fillWidth: true
-            Layout.fillHeight: true
-
+            anchors {
+                left: btnFileItem.right
+                right: btnAddItem.left
+                verticalCenter: parent.verticalCenter
+                top: parent.top
+                bottom: parent.bottom
+            }
             clip:true
 
             TextArea {
                 id: edtText
                 selectByMouse: true
-                Layout.fillWidth: true
-                Layout.alignment: Qt.AlignVCenter
+                width: parent.width
                 placeholderText: "Write message..."
                 placeholderTextColor: "grey"
                 font.pointSize: 10
@@ -153,7 +158,6 @@ Rectangle{
                 background: Rectangle {
                     color: downLine.color
                 }
-                Layout.leftMargin: defMargin
                 wrapMode: TextEdit.Wrap
 
                 height: Math.min(implicitHeight, maxHeight)
@@ -183,6 +187,10 @@ Rectangle{
             width: 50
             height: 50
             color: downLine.color
+            anchors {
+                right: parent.right
+                verticalCenter: parent.verticalCenter
+            }
 
             Button {
                 id: buttonImage
@@ -262,5 +270,11 @@ Rectangle{
                 edtText.clear();
             }
         }
+    }
+
+    function clearData() {
+        fileLoad = false;
+        filePath = "";
+        edtText.clear();
     }
 }
