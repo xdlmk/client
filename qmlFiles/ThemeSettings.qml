@@ -8,7 +8,7 @@ Dialog {
     x: (parent.width - width) / 2
     y: (parent.height - height) / 2
     width: Math.min(600, rootWindow.width * 0.9)
-    height: Math.min(chatExample.height + chatBgButton.implicitHeight + chatOutgCButton.implicitHeight + chatIncCButton.implicitHeight + confirmButton.implicitHeight + 200, rootWindow.height * 0.9)
+    height: Math.min(chatExample.height + themeSettingsText.implicitHeight + chatBgButton.implicitHeight + chatOutgCButton.implicitHeight + chatIncCButton.implicitHeight + confirmButton.implicitHeight + 140, rootWindow.height * 0.9)
 
     background: Rectangle {
         color: Qt.lighter(themeManager.chatBackground)
@@ -25,12 +25,12 @@ Dialog {
         boundsBehavior: Flickable.StopAtBounds
         clip: true
         contentWidth: container.width
-        contentHeight: container.height
+        contentHeight: container.height + 140
 
         Rectangle {
             id: container
             width: flickable.width
-            height: chatExample.height + chatBgButton.implicitHeight + chatOutgCButton.implicitHeight + chatIncCButton.implicitHeight + confirmButton.implicitHeight + 200
+            height: chatExample.implicitHeight + themeSettingsText.implicitHeight + chatBgButton.implicitHeight + chatOutgCButton.implicitHeight + chatIncCButton.implicitHeight + confirmButton.implicitHeight
             color: "transparent"
 
             Rectangle {
@@ -90,29 +90,43 @@ Dialog {
                 }
             }
 
-            Rectangle {
-                id: chatBgButton
-                height: 50
-                color: "transparent"
+            Text {
+                id:themeSettingsText
                 anchors {
                     top: chatExample.bottom
+                    topMargin: 10
+                    left: parent.left
+                    rightMargin: 10
+                }
+                text: "Theme color settings"
+                font.pointSize: 11
+                font.bold: true
+                color: outgoingColor
+            }
+
+            Rectangle {
+                id: chatBgButton
+                height: 30
+                color: chatBgButtonMouseArea.containsMouse ? Qt.lighter(chatBackground, 1.75) : Qt.lighter(chatBackground)
+                anchors {
+                    top: themeSettingsText.bottom
                     topMargin: 10
                     left: parent.left
                     right: parent.right
                 }
                 MouseArea {
+                    id: chatBgButtonMouseArea
                     cursorShape: Qt.PointingHandCursor
+                    hoverEnabled: true
                     anchors.fill: parent
                     onClicked: chatBgColorDialog.open()
-                    onEntered: chatBgButton.color = Qt.lighter(themeManager.chatBackground, 1.75);
-                    onExited: chatBgButton.color = "transparent";
                 }
 
                 Text {
                     id: chatLabel
                     text: "Chat background color"
                     color: "white"
-                    font.pointSize: 14
+                    font.pointSize: 11
                     anchors {
                         verticalCenter: parent.verticalCenter
                         left: parent.left
@@ -123,27 +137,26 @@ Dialog {
 
             Rectangle {
                 id: chatOutgCButton
-                height: 50
-                color: "transparent"
+                height: 30
+                color: chatOutgCButtonMouseArea.containsMouse ? Qt.lighter(chatBackground, 1.75) : Qt.lighter(chatBackground)
                 anchors {
                     top: chatBgButton.bottom
-                    topMargin: 10
                     left: parent.left
                     right: parent.right
                 }
                 MouseArea {
+                    id: chatOutgCButtonMouseArea
                     cursorShape: Qt.PointingHandCursor
+                    hoverEnabled: true
                     anchors.fill: parent
                     onClicked: chatOutgColorDialog.open()
-                    onEntered: chatOutgCButton.color = Qt.lighter(themeManager.chatBackground, 1.75);
-                    onExited: chatOutgCButton.color = "transparent";
                 }
 
                 Text {
                     id: outgCLabel
                     text: "Chat outgoing message color"
                     color: "white"
-                    font.pointSize: 14
+                    font.pointSize: 11
                     anchors {
                         verticalCenter: parent.verticalCenter
                         left: parent.left
@@ -154,27 +167,26 @@ Dialog {
 
             Rectangle {
                 id: chatIncCButton
-                height: 50
-                color: "transparent"
+                height: 30
+                color: chatIncCButtonMouseArea.containsMouse ? Qt.lighter(chatBackground, 1.75) : Qt.lighter(chatBackground)
                 anchors {
                     top: chatOutgCButton.bottom
-                    topMargin: 10
                     left: parent.left
                     right: parent.right
                 }
                 MouseArea {
+                    id: chatIncCButtonMouseArea
                     cursorShape: Qt.PointingHandCursor
+                    hoverEnabled: true
                     anchors.fill: parent
                     onClicked: chatIncColorDialog.open()
-                    onEntered: chatIncCButton.color = Qt.lighter(themeManager.chatBackground, 1.75);
-                    onExited: chatIncCButton.color = "transparent";
                 }
 
                 Text {
                     id: incCLabel
                     text: "Chat incoming message color"
                     color: "white"
-                    font.pointSize: 14
+                    font.pointSize: 11
                     anchors {
                         verticalCenter: parent.verticalCenter
                         left: parent.left
@@ -193,7 +205,7 @@ Dialog {
                 }
 
                 text: "Confirm"
-                font.pointSize: 14
+                font.pointSize: 11
                 color: outgoingColor
                 MouseArea {
                     anchors.fill: parent
