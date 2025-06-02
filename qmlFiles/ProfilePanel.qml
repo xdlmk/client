@@ -10,7 +10,7 @@ Rectangle {
     color: themeManager.chatBackground
     anchors.top: parent.top
     anchors.bottom: parent.bottom
-    border.color: "black"
+    border.color: isColorLight(profileWindow.color) ? "white" : "black"
 
     Column {
         anchors.top: parent.top
@@ -36,7 +36,7 @@ Rectangle {
         Text {
             id: userLoginText
             text: userlogin
-            color: "white"
+            color: isColorLight(profileWindow.color) ? "black" : "white"
             font.pointSize: 10
             font.bold: true
             anchors.left: parent.left
@@ -94,13 +94,13 @@ Rectangle {
                                 font.bold: true
                                 text: "+"
                                 font.pointSize: 14
-                                color: "white"
+                                color: isColorLight(addAccountIcon.color) ? "black" : "white"
                             }
                         }
 
                         Text {
                             text: username
-                            color: "white"
+                            color: isColorLight(userChange.color) ? "black" : "white"
                             font.pointSize: 10
                             font.bold: true
                             anchors.left: userAvatar.right
@@ -126,7 +126,7 @@ Rectangle {
                         }
 
                         onEntered: {
-                            userChange.color = Qt.lighter(themeManager.chatBackground, 1.75);
+                            userChange.color = adjustColor(themeManager.chatBackground, 1.75, false);
                         }
 
                         onExited: {
@@ -147,7 +147,7 @@ Rectangle {
                 anchors.right: parent.right
                 anchors.top: parent.top
                 height: 1
-                color: "black"
+                color: isColorLight(usersListContainer.color) ? "white" : "black"
             }
             Rectangle{
                 id:downLine
@@ -155,7 +155,7 @@ Rectangle {
                 anchors.right: parent.right
                 anchors.bottom: parent.bottom
                 height: 1
-                color: "black"
+                color: isColorLight(usersListContainer.color) ? "white" : "black"
             }
         }
 
@@ -197,7 +197,7 @@ Rectangle {
 
                     Text {
                         text: "My profile"
-                        color: "white"
+                        color: isColorLight(openMyProfileButton.color) ? "black" : "white"
                         font.pointSize: 10
                         font.bold: true
                         anchors.left: myProfileImage.right
@@ -220,7 +220,7 @@ Rectangle {
                     }
 
                     onEntered: {
-                        openMyProfileButton.color = Qt.lighter(themeManager.chatBackground, 1.75);
+                        openMyProfileButton.color = adjustColor(themeManager.chatBackground, 1.75, false);
                     }
 
                     onExited: {
@@ -258,7 +258,7 @@ Rectangle {
 
                     Text {
                         text: "Create group"
-                        color: "white"
+                        color: isColorLight(openGroupCreateButton.color) ? "black" : "white"
                         font.pointSize: 10
                         font.bold: true
                         anchors.left: groupCreateImage.right
@@ -280,7 +280,7 @@ Rectangle {
                     }
 
                     onEntered: {
-                        openGroupCreateButton.color = Qt.lighter(themeManager.chatBackground, 1.75);
+                        openGroupCreateButton.color = adjustColor(themeManager.chatBackground, 1.75, false);
                     }
 
                     onExited: {
@@ -318,7 +318,7 @@ Rectangle {
 
                     Text {
                         text: "Design"
-                        color: "white"
+                        color: isColorLight(openDesignChangeButton.color) ? "black" : "white"
                         font.pointSize: 10
                         font.bold: true
                         anchors.left: designChangeImage.right
@@ -339,7 +339,7 @@ Rectangle {
                     }
 
                     onEntered: {
-                        openDesignChangeButton.color = Qt.lighter(themeManager.chatBackground, 1.75);
+                        openDesignChangeButton.color = adjustColor(themeManager.chatBackground, 1.75, false);
                     }
 
                     onExited: {
@@ -380,7 +380,7 @@ Rectangle {
                 }
 
                 onEntered: {
-                    buttonLeave.color = Qt.lighter(themeManager.chatBackground, 1.75);
+                    buttonLeave.color = adjustColor(themeManager.chatBackground, 1.75, false);
                 }
 
                 onExited: {

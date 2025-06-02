@@ -47,7 +47,7 @@ Item {
                 topMargin: fileText.visible ? 5 : 0
             }
             font.pointSize: 10
-            color: "white"
+            color: isColorLight(rectBubble.color) ? "black" : "white"
             font.bold: true
             MouseArea {
                 anchors.fill: parent
@@ -61,7 +61,7 @@ Item {
             }
         }
 
-        Text{
+        Text {
             id: lblText
             anchors{
                 left: parent.left
@@ -75,7 +75,7 @@ Item {
             font.pointSize: 10
             enabled: lblText.text !== ""
             visible: lblText.text !== ""
-            color: "white"
+            color: isColorLight(rectBubble.color) ? "black" : "white"
             wrapMode: Text.WrapAnywhere
         }
 
@@ -105,7 +105,7 @@ Item {
                     text: "▶"
                     font.pointSize: 15
                     anchors.centerIn: parent
-                    color: "white"
+                    color: isColorLight(playButton.color) ? "black" : "white"
                 }
                 MouseArea {
                     anchors.fill: parent
@@ -160,7 +160,7 @@ Item {
                     width: voiceSlider.availableWidth
                     height: implicitHeight
                     radius: 2
-                    color: Qt.lighter(themeManager.outgoingColor)
+                    color: adjustColor(themeManager.outgoingColor, 1.5, false)
 
                     Rectangle {
                         width: voiceSlider.visualPosition * parent.width
@@ -188,7 +188,7 @@ Item {
                     topMargin: -2
                 }
                 text: formatTime(voicePosition)
-                color: "white"
+                color: isColorLight(rectBubble.color) ? "black" : "white"
                 font.pointSize: 8
             }
             Text {
@@ -200,7 +200,7 @@ Item {
                     topMargin: -2
                 }
                 text: "/"
-                color: "white"
+                color: isColorLight(rectBubble.color) ? "black" : "white"
                 font.pointSize: 8
             }
 
@@ -213,7 +213,7 @@ Item {
                     topMargin: -2
                 }
                 text: formatTime(voiceDuration)
-                color: "white"
+                color: isColorLight(rectBubble.color) ? "black" : "white"
                 font.pointSize: 8
             }
         }
@@ -229,7 +229,7 @@ Item {
             text: time
             width: parent.width - 20
             font.pointSize: 8
-            color: isOutgoing ? Qt.lighter(themeManager.outgoingColor) : Qt.lighter(themeManager.incomingColor, 7)
+            color: isOutgoing ? adjustColor(themeManager.outgoingColor, 1.5, false) : adjustColor(themeManager.incomingColor, 7, false)
             horizontalAlignment: Text.AlignRight
         }
 
@@ -244,7 +244,7 @@ Item {
             }
             text: isRead ? "✓✓" : "✓"
             font.pointSize: 8
-            color: isRead ? Qt.lighter(themeManager.outgoingColor) : Qt.lighter(themeManager.incomingColor, 5)
+            color: isRead ? adjustColor(themeManager.outgoingColor, 1.5, false) : adjustColor(themeManager.incomingColor, 5, false)
             horizontalAlignment: Text.AlignRight
         }
     }

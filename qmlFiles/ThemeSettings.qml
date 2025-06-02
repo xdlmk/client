@@ -11,7 +11,7 @@ Dialog {
     height: Math.min(chatExample.height + themeSettingsText.implicitHeight + chatBgButton.implicitHeight + chatOutgCButton.implicitHeight + chatIncCButton.implicitHeight + confirmButton.implicitHeight + 140, rootWindow.height * 0.9)
 
     background: Rectangle {
-        color: Qt.lighter(themeManager.chatBackground)
+        color: adjustColor(chatBackground, 1.5, false)
         radius: 6
     }
 
@@ -25,7 +25,7 @@ Dialog {
         boundsBehavior: Flickable.StopAtBounds
         clip: true
         contentWidth: container.width
-        contentHeight: container.height + 140
+        contentHeight: container.childrenRect.height
 
         Rectangle {
             id: container
@@ -107,7 +107,7 @@ Dialog {
             Rectangle {
                 id: chatBgButton
                 height: 30
-                color: chatBgButtonMouseArea.containsMouse ? Qt.lighter(chatBackground, 1.75) : Qt.lighter(chatBackground)
+                color: chatBgButtonMouseArea.containsMouse ? adjustColor(chatBackground, 1.75, false) : adjustColor(chatBackground, 1.5, false)
                 anchors {
                     top: themeSettingsText.bottom
                     topMargin: 10
@@ -125,7 +125,7 @@ Dialog {
                 Text {
                     id: chatLabel
                     text: "Chat background color"
-                    color: "white"
+                    color: isColorLight(chatBgButton.color) ? "black" : "white"
                     font.pointSize: 11
                     anchors {
                         verticalCenter: parent.verticalCenter
@@ -138,7 +138,7 @@ Dialog {
             Rectangle {
                 id: chatOutgCButton
                 height: 30
-                color: chatOutgCButtonMouseArea.containsMouse ? Qt.lighter(chatBackground, 1.75) : Qt.lighter(chatBackground)
+                color: chatOutgCButtonMouseArea.containsMouse ? adjustColor(chatBackground, 1.75, false) : adjustColor(chatBackground, 1.5, false)
                 anchors {
                     top: chatBgButton.bottom
                     left: parent.left
@@ -155,7 +155,7 @@ Dialog {
                 Text {
                     id: outgCLabel
                     text: "Chat outgoing message color"
-                    color: "white"
+                    color: isColorLight(chatOutgCButton.color) ? "black" : "white"
                     font.pointSize: 11
                     anchors {
                         verticalCenter: parent.verticalCenter
@@ -168,7 +168,7 @@ Dialog {
             Rectangle {
                 id: chatIncCButton
                 height: 30
-                color: chatIncCButtonMouseArea.containsMouse ? Qt.lighter(chatBackground, 1.75) : Qt.lighter(chatBackground)
+                color: chatIncCButtonMouseArea.containsMouse ? adjustColor(chatBackground, 1.75, false) : adjustColor(chatBackground, 1.5, false)
                 anchors {
                     top: chatOutgCButton.bottom
                     left: parent.left
@@ -185,7 +185,7 @@ Dialog {
                 Text {
                     id: incCLabel
                     text: "Chat incoming message color"
-                    color: "white"
+                    color: isColorLight(chatIncCButton.color) ? "black" : "white"
                     font.pointSize: 11
                     anchors {
                         verticalCenter: parent.verticalCenter

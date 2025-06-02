@@ -9,7 +9,7 @@ Dialog {
     y: (parent.height - height) / 2
     opacity: 0
     background: Rectangle {
-        color: Qt.lighter(themeManager.chatBackground)
+        color: adjustColor(themeManager.chatBackground, 1.5, false)
         radius: 6
     }
     width: 400
@@ -20,7 +20,7 @@ Dialog {
     Text{
         id:information
         text: "Information"
-        color: "White"
+        color: isColorLight(myProfileEdit.background.color) ? "black" : "white"
         font.pointSize: 15
         font.bold: true
         anchors{
@@ -34,7 +34,7 @@ Dialog {
     Text{
         id:backButton
         text: "\u27F5"
-        color: "White"
+        color: isColorLight(myProfileEdit.background.color) ? "black" : "white"
         font.pointSize: 15
         font.bold: false
         anchors{
@@ -55,7 +55,7 @@ Dialog {
     Text{
         id:closeButton
         text: "✕"
-        color: "White"
+        color: isColorLight(myProfileEdit.background.color) ? "black" : "white"
         font.pointSize: 15
         font.bold: true
         anchors{
@@ -106,7 +106,7 @@ Dialog {
                 right: userAvatar.right
                 bottom: userAvatar.bottom
             }
-            color: Qt.lighter(themeManager.chatBackground, 1.5)
+            color: adjustColor(themeManager.chatBackground, 1.5, false)
             border.color: themeManager.outgoingColor
             border.width: 1/2
             Text {
@@ -131,7 +131,7 @@ Dialog {
             id:userLoginText
             text: userlogin
             font.pointSize: 12
-            color: "White"
+            color: isColorLight(myProfileEdit.background.color) ? "black" : "white"
             font.bold: true
             anchors{
                 left: userAvatar.left
@@ -148,7 +148,7 @@ Dialog {
         id:defLine
         height: 6
         width:parent.width + 22
-        color:Qt.lighter(themeManager.chatBackground, 1.8)
+        color: adjustColor(themeManager.chatBackground, 1.8, false)
         anchors{
             left: parent.left
             leftMargin: -11
@@ -169,7 +169,7 @@ Dialog {
         delegate: Rectangle {
             id: informationField
             width: informationListView.width
-            color: Qt.lighter(themeManager.chatBackground)
+            color: adjustColor(themeManager.chatBackground, 1.5, false)
             height: 40
             property string iconSource: model.iconSource
             property string informationName: model.informationName
@@ -204,7 +204,7 @@ Dialog {
 
                 Text {
                     text: informationName
-                    color: "white"
+                    color: isColorLight(myProfileEdit.background.color) ? "black" : "white"
                     font.pointSize: 10
                     font.bold: true
                     anchors{
@@ -233,8 +233,8 @@ Dialog {
                     editInformation.infoType = informationName;
                     editInformation.open();
                 }
-                onEntered: { informationField.color = Qt.lighter(themeManager.chatBackground, 1.75); }
-                onExited: { informationField.color = Qt.lighter(themeManager.chatBackground); }
+                onEntered: { informationField.color = adjustColor(themeManager.chatBackground, 1.75, false); }
+                onExited: { informationField.color = adjustColor(themeManager.chatBackground, 1.5, false); }
             }
         }
     }

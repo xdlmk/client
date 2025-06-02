@@ -42,7 +42,7 @@ Rectangle {
         text: message
         width: parent.width - 20
         font.pointSize: 10
-        color: "white"
+        color: isColorLight(rectBubble.color) ? "black" : "white"
         wrapMode: Text.WrapAnywhere
     }
 
@@ -57,7 +57,7 @@ Rectangle {
         text: time
         width: parent.width - 20
         font.pointSize: 8
-        color: isOutgoing ? Qt.lighter(outgoingColor) : Qt.lighter(incomingColor, 7)
+        color: isOutgoing ? adjustColor(outgoingColor, 1.5, false) : adjustColor(incomingColor, 7, false)
         horizontalAlignment: Text.AlignRight
     }
 
@@ -72,7 +72,7 @@ Rectangle {
         }
         text: isRead ? "✓✓" : "✓"
         font.pointSize: 8
-        color: isRead ? Qt.lighter(outgoingColor) : Qt.lighter(incomingColor, 5)
+        color: isRead ? adjustColor(outgoingColor, 1.5, false) : adjustColor(incomingColor, 7, false)
         horizontalAlignment: Text.AlignRight
     }
 

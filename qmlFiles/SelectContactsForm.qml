@@ -10,7 +10,7 @@ Dialog {
     opacity: 0
 
     background: Rectangle {
-        color: Qt.lighter(themeManager.chatBackground, 1.8)
+        color: adjustColor(themeManager.chatBackground, 1.8, false);
         radius: 6
     }
     width: 300
@@ -21,7 +21,7 @@ Dialog {
     Text{
         id:selectContactsText
         text: "Select contacts"
-        color: "White"
+        color: isColorLight(selectContactsForm.background.color) ? "black" : "white"
         font.pointSize: 15
         font.bold: true
         anchors{
@@ -47,6 +47,7 @@ Dialog {
     Component {
         id: contactDelegate
         Rectangle {
+            id:contactRect
             width: contactsListView.width
             height: 40
             color: model.selected ? themeManager.incomingColor : "transparent"
@@ -65,7 +66,7 @@ Dialog {
             }
             Text {
                 text: model.username
-                color: "White"
+                color: contactRect.color === "transparent" ? isColorLight(selectContactsForm.background.color) ? "black" : "white" : isColorLight(contactRect.color) ? "black" : "white"
                 font.pointSize: 14
                 anchors.left: profileImage.right
                 anchors.leftMargin: 10
@@ -84,7 +85,7 @@ Dialog {
     Text{
         id:closeButton
         text: "✕"
-        color: "White"
+        color: isColorLight(selectContactsForm.background.color) ? "black" : "white"
         font.pointSize: 15
         font.bold: true
 
@@ -107,7 +108,7 @@ Dialog {
     Text{
         id:backButton
         text: "Back"
-        color: "White"
+        color: isColorLight(selectContactsForm.background.color) ? "black" : "white"
         font.pointSize: 12
         anchors{
             right: createButton.left
@@ -125,7 +126,7 @@ Dialog {
     Text{
         id:createButton
         text: params === "create" ? "Create" : "Add"
-        color: "White"
+        color: isColorLight(selectContactsForm.background.color) ? "black" : "white"
         font.pointSize: 12
         anchors{
             right: parent.right

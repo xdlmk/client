@@ -3,13 +3,14 @@ import QtQuick.Controls 2.15
 import QtQuick.Layouts
 
 Dialog {
+    id: myProfileDialogRoot
     modal: true
     x: (parent.width - width) / 2
     y: (parent.height - height) / 2
     opacity: 0
 
     background: Rectangle {
-        color: Qt.lighter(themeManager.chatBackground)
+        color: adjustColor(themeManager.chatBackground, 1.5, false)
         radius: 6
     }
     width: 400
@@ -21,7 +22,7 @@ Dialog {
     Text{
         id:myProfileText
         text: "My profile"
-        color: "White"
+        color: isColorLight(myProfileDialogRoot.background.color) ? "black" : "white"
         font.pointSize: 15
         font.bold: true
 
@@ -34,7 +35,7 @@ Dialog {
     Text{
         id:editButton
         text: "\u270E"
-        color: "White"
+        color: isColorLight(myProfileDialogRoot.background.color) ? "black" : "white"
         font.pointSize: 15
         font.bold: false
 
@@ -58,7 +59,7 @@ Dialog {
     Text{
         id:closeButton
         text: "✕"
-        color: "White"
+        color: isColorLight(myProfileDialogRoot.background.color) ? "black" : "white"
         font.pointSize: 15
         font.bold: true
 
@@ -97,7 +98,7 @@ Dialog {
         id:userLoginText
         text: login
         font.pointSize: 12
-        color: "White"
+        color: isColorLight(myProfileDialogRoot.background.color) ? "black" : "white"
         font.bold: true
         anchors.left: userAvatar.right
         anchors.leftMargin: 12
@@ -109,7 +110,7 @@ Dialog {
         id:defLine
         height: 6
         width:parent.width + 22
-        color: Qt.lighter(themeManager.chatBackground, 2.25)
+        color: adjustColor(themeManager.chatBackground, 2.25, false)
         anchors.left: parent.left
         anchors.leftMargin: -11
         anchors.top: userAvatar.bottom
@@ -120,7 +121,7 @@ Dialog {
         id:informationIcon
         text: "ⓘ"
         font.pointSize: 18
-        color: "White"
+        color: isColorLight(myProfileDialogRoot.background.color) ? "black" : "white"
         font.bold: true
         anchors.left: userAvatar.left
         anchors.top: defLine.bottom
@@ -156,7 +157,7 @@ Dialog {
             id:underUserCheckLoginText
             text: "Username"
             font.pointSize: 10
-            color: "white"
+            color: isColorLight(myProfileDialogRoot.background.color) ? "black" : "white"
             anchors.top: userCheckLoginText.bottom
             anchors.topMargin: 3
             anchors.left: userCheckLoginText.left

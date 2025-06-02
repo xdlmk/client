@@ -8,7 +8,7 @@ Window {
     width: 1000
     height: 500
     visible: true
-    color: themeManager.chatBackground // "#0e1621"
+    color: themeManager.chatBackground
     title: qsTr("Regagram")
 
     property bool isProfileExtended: false
@@ -47,7 +47,7 @@ Window {
                 id: colorOverlayProfile
                 anchors.fill: parent
                 anchors.margins: 1
-                color: Qt.darker(themeManager.chatBackground)
+                color: adjustColor(themeManager.chatBackground, 1.5, true)
                 opacity: 0
                 visible: false
                 Behavior on opacity { NumberAnimation { duration: 300; easing.type: Easing.OutQuad } }
@@ -61,7 +61,7 @@ Window {
                 icon.source: "../images/profile.svg"
                 icon.width: parent.width/2
                 icon.height: parent.height/2.5
-                icon.color: themeManager.outgoingColor
+                icon.color: adjustColor(themeManager.outgoingColor, 1.5, false)
             }
 
             MouseArea {
@@ -108,7 +108,7 @@ Window {
         ScrollBar.vertical: ScrollBar {
             visible: upLine.currentState === "default" ? false : true
             background: Rectangle { implicitWidth: 10; color: rootWindow.color }
-            contentItem: Rectangle { implicitWidth: 10; color: "gray"; radius: 5 }
+            contentItem: Rectangle { implicitWidth: 10; color: "grey"; radius: 5 }
         }
 
         highlightFollowsCurrentItem: false
@@ -175,7 +175,7 @@ Window {
 
     Rectangle {
         id: upLine
-        color: Qt.lighter(themeManager.chatBackground, 1.50)
+        color: adjustColor(themeManager.chatBackground, 1.50, false)
         height: 55
         anchors{
             left:  centerLine.right
@@ -190,7 +190,7 @@ Window {
             id: nameText
             text: "Chat"
             font.pointSize: 10
-            color: "white"
+            color: isColorLight(upLine.color) ? "black" : "white"
             anchors{
                 left: parent.left
                 leftMargin: 10
@@ -222,7 +222,7 @@ Window {
             id: valueText
             text: "Offline"
             font.pointSize: 8
-            color: "grey"
+            color: isColorLight(upLine.color) ? "black" : "grey"
             visible: false
             anchors{
                 left: parent.left
@@ -239,7 +239,7 @@ Window {
     Rectangle {
         id: connectRect
         visible: false
-        color: "#9945464f"
+        color: "#95464f"
         height: 25
         anchors{
             left: parent.left
@@ -494,6 +494,30 @@ Window {
             return text.substring(0, maxLength) + "...";
         }
         return text;
+    }
+
+    function adjustColor(colorString, factor, inverse) {
+        var r = Math.round(color.r * 255);
+        var g = Math.round(color.g * 255);
+        var b = Math.round(color.b * 255);
+
+        var brightness = (r * 299 + g * 587 + b * 114) / 1000;
+
+        if (brightness < 128)
+            return inverse ? Qt.darker(colorString, factor) : Qt.lighter(colorString, factor);
+        else
+            return inverse ? Qt.lighter(colorString, factor) : Qt.darker(colorString, factor);
+    }
+
+    function isColorLight(colorString) {
+        var r = Math.round(color.r * 255);
+        var g = Math.round(color.g * 255);
+        var b = Math.round(color.b * 255);
+
+        var brightness = (r * 299 + g * 587 + b * 114) / 1000;
+
+        if (brightness < 128) return false;
+        else return true;
     }
 
     Component.onCompleted: {

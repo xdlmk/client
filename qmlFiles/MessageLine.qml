@@ -4,9 +4,10 @@ import QtCore
 import QtQuick.Layouts
 
 Rectangle {
+    id: messageLineRoot
     readonly property int defMargin: 10
     property int maxHeight: 150
-    color: Qt.lighter(themeManager.chatBackground, 1.50)
+    color: adjustColor(themeManager.chatBackground, 1.50, false)
     height: Math.max(Math.min(edtText.implicitHeight,maxHeight),54) + file.height + (file.visible ? 10 : 0)
     width: parent.width/2 + parent.width/4
 
@@ -38,7 +39,7 @@ Rectangle {
             id: fileIcon
             width: 40
             height: parent.height - 20
-            color: Qt.darker(themeManager.outgoingColor)
+            color: adjustColor(themeManager.outgoingColor, 1, true)
             radius: 5
             anchors {
                 left: parent.left
@@ -51,7 +52,7 @@ Rectangle {
                 anchors.centerIn: parent
                 text: getExtension(filePath)
                 font.pointSize: 10
-                color: "white"
+                color: isColorLight(fileIcon.color) ? "black" : "white"
             }
         }
 
@@ -66,13 +67,13 @@ Rectangle {
             }
 
             font.pointSize: 10
-            color: "white"
+            color: isColorLight(file.color) ? "black" : "white"
             elide: Text.ElideRight
         }
         Text{
             id:closeButton
             text: "✕"
-            color: "White"
+            color: isColorLight(file.color) ? "black" : "white"
             font.pointSize: 9
             font.bold: true
             anchors{
@@ -152,9 +153,9 @@ Rectangle {
                 selectByMouse: true
                 width: parent.width
                 placeholderText: "Write message..."
-                placeholderTextColor: "grey"
+                placeholderTextColor: isColorLight(messageLineRoot.color) ? "darkgrey" : "grey"
                 font.pointSize: 10
-                color: "white"
+                color: isColorLight(messageLineRoot.color) ? "black" : "white"
                 background: Rectangle {
                     color: downLine.color
                 }
