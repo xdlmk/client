@@ -88,11 +88,14 @@ qt_add_qml_module(regagram
     qmlFiles/GroupInfoForm.qml
     qmlFiles/SmartImage.qml
     qmlFiles/FallbackImage.qml
+    qmlFiles/ThemeSettings.qml
+    qmlFiles/ExampleChatBubble.qml
     SOURCES
     Core/client.h Core/client.cpp
     Core/configmanager.h Core/configmanager.cpp
     Utils/logger.h Utils/logger.cpp
     Utils/avatargenerator.h Utils/avatargenerator.cpp
+    Utils/apptheme.h Utils/apptheme.cpp
     Network/networkmanager.h Network/networkmanager.cpp
     Network/filenetworkmanager.h Network/filenetworkmanager.cpp
     Network/messagenetworkmanager.h Network/messagenetworkmanager.cpp
@@ -105,9 +108,13 @@ qt_add_qml_module(regagram
     Managers/MessageManagers/messagestorage.h Managers/MessageManagers/messagestorage.cpp
     Managers/MessageManagers/messagesender.h Managers/MessageManagers/messagesender.cpp
     RESOURCES
-    images/logo.png
-    images/logo2.png
-    images/profile.png
+    images/myProfileIcon.svg
+    images/createGroupIcon.svg
+    images/changeDesignIcon.svg
+    images/send1.svg
+    images/microphone.svg
+    images/profile.svg
+    images/attach.svg
 )
 
 qt6_add_shaders(regagram "Shaders"

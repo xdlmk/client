@@ -3,7 +3,7 @@ import QtQuick.Controls
 import QtQuick.Layouts
 
 Rectangle {
-    color: "#17212b"
+    color: adjustColor(themeManager.chatBackground, 1.5, false)
 
     ListView {
         id: userSearchListView
@@ -17,7 +17,7 @@ Rectangle {
         delegate: Rectangle {
             id:searchUser
             width: userSearchListView.width
-            color: userSearchMouseArea.containsMouse ? "#626a72" : "#1e2a36"
+            color: userSearchMouseArea.containsMouse ? adjustColor(themeManager.chatBackground, 1.75, false) : themeManager.incomingColor
             height: 60
             property int user_id: id
             Item {
@@ -40,7 +40,7 @@ Rectangle {
 
                 Text {
                     text: userlogin
-                    color: "white"
+                    color: isColorLight(searchUser.color) ? "black" : "white"
                     font.pointSize: 10
                     font.bold: true
                     anchors{
@@ -58,13 +58,19 @@ Rectangle {
                 hoverEnabled: true
 
                 onClicked: {
-                    upLine.currentState = "personal";
-                    upLine.user_id = user_id;
-                    nameText.text = userlogin;
-                    listModel.clear();
+                    if(!(upLine.user_id === user_id && upLine.currentState === "personal")) {
+                        valueText.visible = false;
+                        upLine.currentState = "personal";
+
+                        if(user_id !== 0) {
+                            upLine.user_id = user_id;
+                            nameText.text = userlogin;
+                            downLine.clearData();
+                            client.loadingChat(user_id, "personal");
+                        }
+                    }
                     isSearchListExtended = false;
                     searchField.clear();
-                    client.loadingChat(user_id, "personal");
                 }
             }
 

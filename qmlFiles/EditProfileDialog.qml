@@ -9,10 +9,8 @@ Dialog {
     y: (parent.height - height) / 2
     opacity: 0
     background: Rectangle {
-        color: "#1e2a36"
+        color: adjustColor(themeManager.chatBackground, 1.5, false)
         radius: 6
-        border.color: "#626a72"
-        border.width: 0.3
     }
     width: 400
     height: 500
@@ -22,7 +20,7 @@ Dialog {
     Text{
         id:information
         text: "Information"
-        color: "White"
+        color: isColorLight(myProfileEdit.background.color) ? "black" : "white"
         font.pointSize: 15
         font.bold: true
         anchors{
@@ -36,7 +34,7 @@ Dialog {
     Text{
         id:backButton
         text: "\u27F5"
-        color: "White"
+        color: isColorLight(myProfileEdit.background.color) ? "black" : "white"
         font.pointSize: 15
         font.bold: false
         anchors{
@@ -57,7 +55,7 @@ Dialog {
     Text{
         id:closeButton
         text: "✕"
-        color: "White"
+        color: isColorLight(myProfileEdit.background.color) ? "black" : "white"
         font.pointSize: 15
         font.bold: true
         anchors{
@@ -108,11 +106,12 @@ Dialog {
                 right: userAvatar.right
                 bottom: userAvatar.bottom
             }
-            color: "#2b5278"
-            border.color: "#182533"
+            color: adjustColor(themeManager.chatBackground, 1.5, false)
+            border.color: themeManager.outgoingColor
+            border.width: 1/2
             Text {
                 text: "\u270E"
-                color:"#182533"
+                color: themeManager.outgoingColor
                 font.pointSize: 15
                 font.bold: true
                 anchors.centerIn: parent
@@ -132,7 +131,7 @@ Dialog {
             id:userLoginText
             text: userlogin
             font.pointSize: 12
-            color: "White"
+            color: isColorLight(myProfileEdit.background.color) ? "black" : "white"
             font.bold: true
             anchors{
                 left: userAvatar.left
@@ -143,31 +142,17 @@ Dialog {
         }
     }
 
-
-
-    TextField{
-        id:aboutMe
-        width:parent.width
-        selectByMouse: true
-        placeholderText: "About me"
-        placeholderTextColor: "grey"
-        anchors.top: userSourceContainer.bottom
-        font.pointSize: 10
-        color: "white"
-        background: Rectangle { color: root.color }
-    }
-
     EditFiledInformation{ id:editInformation }
 
     Rectangle{
         id:defLine
         height: 6
         width:parent.width + 22
-        color:"#626a72"
+        color: adjustColor(themeManager.chatBackground, 1.8, false)
         anchors{
             left: parent.left
             leftMargin: -11
-            top: aboutMe.bottom
+            top: userSourceContainer.bottom
             topMargin: 24
         }
     }
@@ -184,7 +169,7 @@ Dialog {
         delegate: Rectangle {
             id: informationField
             width: informationListView.width
-            color: "#1e2a36"
+            color: adjustColor(themeManager.chatBackground, 1.5, false)
             height: 40
             property string iconSource: model.iconSource
             property string informationName: model.informationName
@@ -202,7 +187,6 @@ Dialog {
                     height: 24
                     radius: 12
                     color: "transparent"
-                    border.color: "lightblue"
                     clip: true
                     anchors{
                         top: parent.top
@@ -210,8 +194,9 @@ Dialog {
                         left: parent.left
                         leftMargin: 3
                     }
-                    Image {
+                    SmartImage {
                         anchors.fill: parent
+                        textImage: informationName
                         source: iconSource
                         fillMode: Image.PreserveAspectFit
                     }
@@ -219,7 +204,7 @@ Dialog {
 
                 Text {
                     text: informationName
-                    color: "white"
+                    color: isColorLight(myProfileEdit.background.color) ? "black" : "white"
                     font.pointSize: 10
                     font.bold: true
                     anchors{
@@ -248,8 +233,8 @@ Dialog {
                     editInformation.infoType = informationName;
                     editInformation.open();
                 }
-                onEntered: { informationField.color = "#626a72"; }
-                onExited: { informationField.color = "#1e2a36"; }
+                onEntered: { informationField.color = adjustColor(themeManager.chatBackground, 1.75, false); }
+                onExited: { informationField.color = adjustColor(themeManager.chatBackground, 1.5, false); }
             }
         }
     }
@@ -260,8 +245,8 @@ Dialog {
         myProfileWindow.opacity = 0
         myProfileEdit.opacity = 1
         informationListModel.clear();
-        informationListModel.append({ iconSource: "", informationName: "Name", information: "name" });
-        informationListModel.append({ iconSource: "", informationName: "Phone number", information: "+810128919" });
+        //informationListModel.append({ iconSource: "", informationName: "Name", information: "name" });
+        //informationListModel.append({ iconSource: "", informationName: "Phone number", information: "+810128919" });
         informationListModel.append({ iconSource: "", informationName: "Username", information: login });
     }
     onClosed: {

@@ -4,11 +4,11 @@ import QtQuick.Layouts
 import QtMultimedia
 
 Window {
-    id: root
+    id: rootWindow
     width: 1000
     height: 500
     visible: true
-    color: "#0e1621"
+    color: themeManager.chatBackground
     title: qsTr("Regagram")
 
     property bool isProfileExtended: false
@@ -24,8 +24,8 @@ Window {
 
     Rectangle {
         id: leftLine
-        color: "#0e1621"
-        height: root.height
+        color: themeManager.chatBackground
+        height: rootWindow.height
         width: 54
         anchors{
             left:  parent.left
@@ -35,7 +35,7 @@ Window {
 
         Rectangle {
             id: profile
-            color: "#0e1621"
+            color: themeManager.chatBackground
             height: 54
             anchors{
                 left:  parent.left
@@ -47,16 +47,21 @@ Window {
                 id: colorOverlayProfile
                 anchors.fill: parent
                 anchors.margins: 1
-                color: "#262d37"
+                color: adjustColor(themeManager.chatBackground, 1.5, true)
                 opacity: 0
                 visible: false
                 Behavior on opacity { NumberAnimation { duration: 300; easing.type: Easing.OutQuad } }
             }
-            Image {
+
+            Button {
                 id: listImage
-                source: "../images/profile.png"
                 anchors.centerIn: parent
-                fillMode: Image.PreserveAspectFit
+                background: Item { }
+                icon.cache: false
+                icon.source: "../images/profile.svg"
+                icon.width: parent.width/2
+                icon.height: parent.height/2.5
+                icon.color: adjustColor(themeManager.outgoingColor, 1.5, false)
             }
 
             MouseArea {
@@ -81,8 +86,8 @@ Window {
 
     ChatsList {
         id: centerLine
-        height: root.height
-        width: root.width - (root.width / 2 + root.width / 4) - 54
+        height: rootWindow.height
+        width: rootWindow.width - (rootWindow.width / 2 + rootWindow.width / 4) - 54
 
         ListModel {
             id:personalChatsListModel
@@ -102,8 +107,8 @@ Window {
         }
         ScrollBar.vertical: ScrollBar {
             visible: upLine.currentState === "default" ? false : true
-            background: Rectangle { implicitWidth: 10; color: root.color }
-            contentItem: Rectangle { implicitWidth: 10; color: "gray"; radius: 5 }
+            background: Rectangle { implicitWidth: 10; color: rootWindow.color }
+            contentItem: Rectangle { implicitWidth: 10; color: "grey"; radius: 5 }
         }
 
         highlightFollowsCurrentItem: false
@@ -116,7 +121,7 @@ Window {
         delegate: ChatBubble {
             id:chatBubble
             anchors.margins: 20
-            width: Math.min(root.width, listView.width * 0.45)
+            width: Math.min(rootWindow.width, listView.width * 0.45)
             property string message: model.text
             property var message_id: model.message_id
             property string time: model.time
@@ -155,7 +160,7 @@ Window {
         property int savedIndexFromEnd: 0
 
         onAtYBeginningChanged: {
-            if (atYBeginning && upLine.currentState !== "default" && listModel.count !== 0) {
+            if (atYBeginning && upLine.currentState !== "default" && listModel.count !== 0 && !(upLine.currentState == "group" && listModel.count === 1)) {
                 listView.savedIndexFromEnd = listModel.count;
                 client.requestMessageDownload(upLine.user_id, nameText.text, upLine.currentState, listModel.count);
                 activeChatIdBeforeRequest = upLine.user_id;
@@ -170,7 +175,7 @@ Window {
 
     Rectangle {
         id: upLine
-        color: "#17212b"
+        color: adjustColor(themeManager.chatBackground, 1.50, false)
         height: 55
         anchors{
             left:  centerLine.right
@@ -185,7 +190,7 @@ Window {
             id: nameText
             text: "Chat"
             font.pointSize: 10
-            color: "white"
+            color: isColorLight(upLine.color) ? "black" : "white"
             anchors{
                 left: parent.left
                 leftMargin: 10
@@ -217,7 +222,7 @@ Window {
             id: valueText
             text: "Offline"
             font.pointSize: 8
-            color: "grey"
+            color: isColorLight(upLine.color) ? "black" : "grey"
             visible: false
             anchors{
                 left: parent.left
@@ -234,7 +239,7 @@ Window {
     Rectangle {
         id: connectRect
         visible: false
-        color: "#9945464f"
+        color: "#95464f"
         height: 25
         anchors{
             left: parent.left
@@ -310,6 +315,10 @@ Window {
 
     SelectContactsForm {
         id:selectContactsForm
+    }
+
+    ThemeSettings {
+        id:themeSettings
     }
 
     Timer {
@@ -485,6 +494,30 @@ Window {
             return text.substring(0, maxLength) + "...";
         }
         return text;
+    }
+
+    function adjustColor(colorString, factor, inverse) {
+        var r = Math.round(color.r * 255);
+        var g = Math.round(color.g * 255);
+        var b = Math.round(color.b * 255);
+
+        var brightness = (r * 299 + g * 587 + b * 114) / 1000;
+
+        if (brightness < 128)
+            return inverse ? Qt.darker(colorString, factor) : Qt.lighter(colorString, factor);
+        else
+            return inverse ? Qt.lighter(colorString, factor) : Qt.darker(colorString, factor);
+    }
+
+    function isColorLight(colorString) {
+        var r = Math.round(color.r * 255);
+        var g = Math.round(color.g * 255);
+        var b = Math.round(color.b * 255);
+
+        var brightness = (r * 299 + g * 587 + b * 114) / 1000;
+
+        if (brightness < 128) return false;
+        else return true;
     }
 
     Component.onCompleted: {

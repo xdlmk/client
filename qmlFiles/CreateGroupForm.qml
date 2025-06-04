@@ -3,16 +3,15 @@ import QtQuick.Controls 2.15
 import QtQuick.Layouts
 
 Dialog {
+    id: createGroupFormDialogRoot
     modal: true
     x: (parent.width - width) / 2
     y: (parent.height - height) / 2
     opacity: 0
 
     background: Rectangle {
-        color: "#1e2a36"
+        color: adjustColor(themeManager.chatBackground, 1.5, false)
         radius: 6
-        border.color: "#626a72"
-        border.width: 1/2
     }
     width: 400
     height: 350
@@ -23,7 +22,7 @@ Dialog {
     Text{
         id:createGroupText
         text: "Create Group"
-        color: "White"
+        color: isColorLight(createGroupFormDialogRoot.background.color) ? "black" : "white"
         font.pointSize: 15
         font.bold: true
         anchors{
@@ -39,11 +38,11 @@ Dialog {
         width:parent.width
         selectByMouse: true
         placeholderText: "Group name"
-        placeholderTextColor: "grey"
+        placeholderTextColor: isColorLight(createGroupFormDialogRoot.background.color) ? "darkgrey" : "grey"
         anchors.top: createGroupText.bottom
         anchors.topMargin: 10 + height
         font.pointSize: 10
-        color: "white"
+        color: isColorLight(createGroupFormDialogRoot.background.color) ? "black" : "white"
         background: Rectangle { color: "transparent" }
         onTextChanged: {
             if (text.length > 22) {
@@ -54,7 +53,7 @@ Dialog {
     Rectangle
     {
         id:recGroupName
-        color: "#2f6ea5"
+        color: adjustColor(themeManager.chatBackground, 1.8, false)
         width: parent.width
         height: 2
         anchors{
@@ -69,7 +68,7 @@ Dialog {
         width:parent.width
         selectByMouse: false
         placeholderText: "Select image"
-        placeholderTextColor: "grey"
+        placeholderTextColor: isColorLight(createGroupFormDialogRoot.background.color) ? "darkgrey" : "grey"
         text: sourcePath
         anchors{
             left: groupName.left
@@ -77,7 +76,7 @@ Dialog {
             topMargin: 30
         }
         font.pointSize: 10
-        color: "white"
+        color: isColorLight(createGroupFormDialogRoot.background.color) ? "black" : "white"
         background: Rectangle { color: "transparent" }
         MouseArea {
             anchors.fill: parent
@@ -91,7 +90,7 @@ Dialog {
     Rectangle
     {
         id:recavatarPath
-        color: "#2f6ea5"
+        color: adjustColor(themeManager.chatBackground, 1.8, false)
         width: parent.width
         height: 2
         anchors{
@@ -104,7 +103,7 @@ Dialog {
     Text{
         id:closeButton
         text: "✕"
-        color: "White"
+        color: isColorLight(createGroupFormDialogRoot.background.color) ? "black" : "white"
         font.pointSize: 15
         font.bold: true
 
@@ -127,7 +126,7 @@ Dialog {
     Text{
         id:cancel
         text: "Cancel"
-        color: "White"
+        color: isColorLight(createGroupFormDialogRoot.background.color) ? "black" : "white"
         font.pointSize: 12
         anchors{
             right: nextButton.left
@@ -145,7 +144,7 @@ Dialog {
     Text{
         id:nextButton
         text: "Next"
-        color: "White"
+        color: isColorLight(createGroupFormDialogRoot.background.color) ? "black" : "white"
         font.pointSize: 12
         anchors{
             right: parent.right

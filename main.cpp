@@ -13,6 +13,7 @@
 #include "Managers/accountmanager.h"
 #include "Managers/filemanager.h"
 #include "Utils/logger.h"
+#include "Utils/apptheme.h"
 
 int main(int argc, char *argv[])
 {
@@ -32,6 +33,7 @@ int main(int argc, char *argv[])
     Client client;
     Logger logger;
     FileManager* fileManager = client.getFileManager();
+    AppTheme themeManager;
 
     client.setLoggers(&logger);
 
@@ -45,6 +47,7 @@ int main(int argc, char *argv[])
     engine.rootContext()->setContextProperty("client",&client);
     engine.rootContext()->setContextProperty("fileManager",fileManager);
     engine.rootContext()->setContextProperty("audioManager", client.getAudioManager());
+    engine.rootContext()->setContextProperty("themeManager", &themeManager);
     engine.rootContext()->setContextProperty("logger",&logger);
 
     QObject::connect(
@@ -67,7 +70,7 @@ int main(int argc, char *argv[])
         }
     });
 
-    QObject::connect(&client, &Client::loginSuccess, [&engine, mainUrl](QString userLogin, int user_id) {
+    QObject::connect(&client, &Client::loginSuccess, [&engine, mainUrl, &themeManager](QString userLogin, int user_id) {
         QList<QObject*> rootObjects = engine.rootObjects();
         for (QObject *rootObject : rootObjects) {
             if (rootObject) {
@@ -75,6 +78,7 @@ int main(int argc, char *argv[])
             }
         }
         engine.clearComponentCache();
+        themeManager.loadForUser(QString::number(user_id));
         engine.rootContext()->setContextProperty("userlogin", userLogin);
         engine.rootContext()->setContextProperty("activeUserId", user_id);
         engine.rootContext()->setContextProperty("appPath", QCoreApplication::applicationDirPath());
@@ -149,17 +153,14 @@ int main(int argc, char *argv[])
     loop.exec();
 
     int total = settings.value("total",0).toInt();
-    int active_account = settings.value("active_account",0).toInt();
+    quint64 active_account = settings.value("active_account",0).toInt();
     if(total >= 1)
     {
+        themeManager.loadForUser(QString::number(active_account));
         QString success = settings.value("success"+QString::number(active_account),"").toString();
-        if(success == "ok")
-        {
-            QString login = settings.value("login"+QString::number(active_account), "").toString();
-            QString password = settings.value("password"+QString::number(active_account), "").toString();
-
-            accountManager->login(login,password);
-        }
+        QString login = settings.value("login"+QString::number(active_account), "").toString();
+        QString password = settings.value("password"+QString::number(active_account), "").toString();
+        accountManager->login(login,password);
     }
 
     return app.exec();

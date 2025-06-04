@@ -3,10 +3,11 @@ import QtQuick.Controls 2.15
 import QtCore
 import QtQuick.Layouts
 
-Rectangle{
+Rectangle {
+    id: messageLineRoot
     readonly property int defMargin: 10
     property int maxHeight: 150
-    color: "#17212b"
+    color: adjustColor(themeManager.chatBackground, 1.50, false)
     height: Math.max(Math.min(edtText.implicitHeight,maxHeight),54) + file.height + (file.visible ? 10 : 0)
     width: parent.width/2 + parent.width/4
 
@@ -26,7 +27,7 @@ Rectangle{
         enabled: visible
         height: visible ? 60 : 0
         width: visible ? 150 : 0
-        color: "#2b5278"
+        color: themeManager.outgoingColor
         radius: 15
         anchors{
             top:parent.top
@@ -38,7 +39,7 @@ Rectangle{
             id: fileIcon
             width: 40
             height: parent.height - 20
-            color: "#1e3a5f"
+            color: adjustColor(themeManager.outgoingColor, 1, true)
             radius: 5
             anchors {
                 left: parent.left
@@ -51,7 +52,7 @@ Rectangle{
                 anchors.centerIn: parent
                 text: getExtension(filePath)
                 font.pointSize: 10
-                color: "white"
+                color: isColorLight(fileIcon.color) ? "black" : "white"
             }
         }
 
@@ -66,13 +67,13 @@ Rectangle{
             }
 
             font.pointSize: 10
-            color: "white"
+            color: isColorLight(file.color) ? "black" : "white"
             elide: Text.ElideRight
         }
         Text{
             id:closeButton
             text: "✕"
-            color: "White"
+            color: isColorLight(file.color) ? "black" : "white"
             font.pointSize: 9
             font.bold: true
             anchors{
@@ -93,7 +94,8 @@ Rectangle{
         }
     }
 
-    RowLayout {
+    Item {
+        id: sendMessageContainer
         anchors{
             top:file.visible ? file.bottom : parent.top
             topMargin: 10
@@ -101,30 +103,62 @@ Rectangle{
             right: parent.right
             bottom: parent.bottom
         }
-        spacing: defMargin
 
-        Layout.leftMargin: defMargin
-        Layout.topMargin: defMargin
+        Rectangle {
+            id: btnFileItem
+            width: 50
+            height: 50
+            color: downLine.color
+            anchors {
+                left: parent.left
+                verticalCenter: parent.verticalCenter
+            }
+
+            Button {
+                id: buttonFileImage
+                anchors.centerIn: parent
+                background: Item { }
+                icon.cache: false
+                icon.source: "../images/attach.svg"
+                icon.width: parent.width/2
+                icon.height: parent.height/2
+                icon.color: themeManager.outgoingColor
+            }
+            MouseArea {
+                anchors.fill: parent
+                onClicked:{
+                    filePath = fileManager.openFile("All");
+                    if (filePath !== "") {
+                        fileLoad = true;
+                        extensionText.text = getExtension(filePath);
+                        fileName.text = shortenText(getFileNameFromPath(filePath),15);
+
+                    }
+                }
+            }
+        }
 
         ScrollView {
-            Layout.fillWidth: true
-            Layout.fillHeight: true
-
+            anchors {
+                left: btnFileItem.right
+                right: btnAddItem.left
+                verticalCenter: parent.verticalCenter
+                top: parent.top
+                bottom: parent.bottom
+            }
             clip:true
 
             TextArea {
                 id: edtText
                 selectByMouse: true
-                Layout.fillWidth: true
-                Layout.alignment: Qt.AlignVCenter
+                width: parent.width
                 placeholderText: "Write message..."
-                placeholderTextColor: "grey"
+                placeholderTextColor: isColorLight(messageLineRoot.color) ? "darkgrey" : "grey"
                 font.pointSize: 10
-                color: "white"
+                color: isColorLight(messageLineRoot.color) ? "black" : "white"
                 background: Rectangle {
                     color: downLine.color
                 }
-                Layout.leftMargin: defMargin
                 wrapMode: TextEdit.Wrap
 
                 height: Math.min(implicitHeight, maxHeight)
@@ -150,49 +184,30 @@ Rectangle{
         }
 
         Rectangle {
-            id: btnFileItem
-            width: 50
-            height: 50
-            color: downLine.color
-            Text {
-                id: buttonFileImage
-                text: "\u{1F4CE}"
-                color: "grey"
-                font.pixelSize: 24
-                rotation: 45
-                anchors.centerIn: parent
-            }
-            MouseArea {
-                anchors.fill: parent
-                onClicked:{
-                    filePath = fileManager.openFile("All");
-                    if (filePath !== "") {
-                        fileLoad = true;
-                        extensionText.text = getExtension(filePath);
-                        fileName.text = shortenText(getFileNameFromPath(filePath),15);
-
-                    }
-                }
-            }
-        }
-
-        Rectangle {
             id: btnAddItem
             width: 50
             height: 50
             color: downLine.color
+            anchors {
+                right: parent.right
+                verticalCenter: parent.verticalCenter
+            }
 
-            Image {
+            Button {
                 id: buttonImage
-                visible: edtText.text.trim() !== ""
-                source: "../images/logo.png"
                 anchors.centerIn: parent
-                fillMode: Image.PreserveAspectFit
+                background: Item { }
+                icon.cache: false
+                icon.source: "../images/send1.svg"
+                icon.width: parent.width/2
+                icon.height: parent.height/2
+                icon.color: themeManager.outgoingColor
+                visible: edtText.text.trim() !== ""
             }
 
             Rectangle {
                 id:showRecord
-                color: "#2b5278"
+                color: themeManager.outgoingColor
                 visible: isRecording
                 anchors.centerIn: buttonVoice
                 width: isRecording ? 30 : 0
@@ -202,12 +217,17 @@ Rectangle{
                 Behavior on height { NumberAnimation{duration:500} }
                 Behavior on radius { NumberAnimation{duration:500} }
             }
-            Text {
+
+            Button {
                 id: buttonVoice
-                visible: edtText.text.trim() === ""
-                text: "\u{1F3A4}"
-                font.pointSize: 15
                 anchors.centerIn: parent
+                background: Item { }
+                icon.cache: false
+                icon.source: "../images/microphone.svg"
+                icon.width: parent.width/2
+                icon.height: parent.height/2
+                icon.color: isRecording ? themeManager.incomingColor : themeManager.outgoingColor
+                visible: edtText.text.trim() === ""
             }
 
             MouseArea {
@@ -227,11 +247,11 @@ Rectangle{
                 }
 
                 onPressed: {
-                    buttonImage.source = "../images/logo2.png"
+                    buttonImage.icon.color = themeManager.incomingColor;
                 }
 
                 onReleased: {
-                    buttonImage.source = "../images/logo.png"
+                    buttonImage.icon.color = themeManager.outgoingColor;
                 }
             }
 
@@ -251,5 +271,11 @@ Rectangle{
                 edtText.clear();
             }
         }
+    }
+
+    function clearData() {
+        fileLoad = false;
+        filePath = "";
+        edtText.clear();
     }
 }

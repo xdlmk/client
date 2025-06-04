@@ -3,7 +3,7 @@ import QtQuick.Controls
 import QtQuick.Layouts
 
 Rectangle {
-    color: "#17212b"
+    color: adjustColor(themeManager.chatBackground, 1.5, false)
     property alias personalChatsListView: personalChatsListView
 
     ListView {
@@ -19,7 +19,7 @@ Rectangle {
         delegate: Rectangle {
             id:personalChat
             width: personalChatsListView.width
-            color: upLine.user_id === user_id ? "#2b5278" : (personalChatMouseArea.containsMouse ? "#626a72" : "#1e2a36")
+            color: upLine.user_id === user_id ? themeManager.outgoingColor : (personalChatMouseArea.containsMouse ? adjustColor(themeManager.chatBackground, 1.75, false) : themeManager.incomingColor)
             height: 60
             property int user_id: id
             property string chatType: currentChatType
@@ -47,7 +47,7 @@ Rectangle {
                 Text {
                     id: userLogin
                     text: userlogin
-                    color: "white"
+                    color: isColorLight(personalChat.color) ? "black" : "white"
                     font.pointSize: 10
                     font.bold: true
                     anchors {
@@ -75,7 +75,7 @@ Rectangle {
                           : message;
 
                     font.pointSize: 10
-                    color: "white"
+                    color: isColorLight(personalChat.color) ? "black" : "white"
                 }
 
                 Text {
@@ -88,14 +88,14 @@ Rectangle {
                     }
                     text: extractTimeFromTimestamp(timestamp)
                     font.pointSize: 8
-                    color: "#6d7f8f"
+                    color: isColorLight(personalChat.color) ? "darkgrey" : "grey"
                     horizontalAlignment: Text.AlignRight
                 }
 
                 Rectangle {
                     id: lblUnreadCount
                     visible: unreadMessagesCount !== 0
-                    color: "#488dd3"
+                    color: themeManager.outgoingColor
                     width: textItem.implicitWidth + 10
                     height: width
                     radius: width / 2
@@ -111,7 +111,7 @@ Rectangle {
                         text: unreadMessagesCount > 99 ? "99+" : unreadMessagesCount
                         font.pointSize: 8
                         font.bold: true
-                        color: "white"
+                        color: isColorLight(lblUnreadCount.color) ? "black" : "white"
                     }
                 }
             }
@@ -122,16 +122,19 @@ Rectangle {
                 hoverEnabled: true
 
                 onClicked: {
-                    valueText.visible = false;
-                    upLine.currentState = chatType;
+                    if(!(upLine.user_id === user_id && upLine.currentState === chatType)) {
+                        valueText.visible = false;
+                        upLine.currentState = chatType;
 
-                    if(user_id !== 0) {
-                        upLine.user_id = user_id;
-                        nameText.text = userlogin;
-                        client.loadingChat(user_id, chatType);
+                        if(user_id !== 0) {
+                            upLine.user_id = user_id;
+                            nameText.text = userlogin;
+                            downLine.clearData();
+                            client.loadingChat(user_id, chatType);
 
-                        if(chatType === "group") {
-                            client.getGroupMembers(user_id);
+                            if(chatType === "group") {
+                                client.getGroupMembers(user_id);
+                            }
                         }
                     }
                 }

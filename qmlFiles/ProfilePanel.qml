@@ -7,10 +7,10 @@ Rectangle {
     id: profileWindow
     width: 250
     height: parent.height
-    color: "#1e2a36"
-    border.color: "black"
+    color: themeManager.chatBackground
     anchors.top: parent.top
     anchors.bottom: parent.bottom
+    border.color: isColorLight(profileWindow.color) ? "white" : "black"
 
     Column {
         anchors.top: parent.top
@@ -36,7 +36,7 @@ Rectangle {
         Text {
             id: userLoginText
             text: userlogin
-            color: "white"
+            color: isColorLight(profileWindow.color) ? "black" : "white"
             font.pointSize: 10
             font.bold: true
             anchors.left: parent.left
@@ -48,7 +48,7 @@ Rectangle {
             id: usersListContainer
             width: parent.width
             height: Math.min(userListModel.count, 3) * 35 + 10
-            color: "#1e2a36"
+            color: themeManager.chatBackground
 
             ListView {
                 id: userListView
@@ -63,7 +63,7 @@ Rectangle {
                 delegate: Rectangle {
                     id:userChange
                     width: userListView.width
-                    color: "#1e2a36"
+                    color: themeManager.chatBackground
                     height: 30
 
                     Item {
@@ -72,16 +72,35 @@ Rectangle {
                         anchors.topMargin: 3
                         SmartImage {
                             id: userAvatar
+                            visible: !isSpecial
                             width: 24
                             height: 24
                             textImage: username
-                            source: isSpecial ? "" : avatarSource + id + ".png?" + timestamp //add account icon
+                            source: isSpecial ? "" : avatarSource + id + ".png?" + timestamp
                             fillMode: Image.PreserveAspectFit
+                        }
+                        Rectangle {
+                            id:addAccountIcon
+                            visible: isSpecial
+                            width: 24
+                            height: 24
+                            radius: 12
+                            color: themeManager.outgoingColor
+                            Text {
+                                anchors {
+                                    verticalCenter: parent.verticalCenter
+                                    horizontalCenter: parent.horizontalCenter
+                                }
+                                font.bold: true
+                                text: "+"
+                                font.pointSize: 14
+                                color: isColorLight(addAccountIcon.color) ? "black" : "white"
+                            }
                         }
 
                         Text {
                             text: username
-                            color: "white"
+                            color: isColorLight(userChange.color) ? "black" : "white"
                             font.pointSize: 10
                             font.bold: true
                             anchors.left: userAvatar.right
@@ -107,11 +126,11 @@ Rectangle {
                         }
 
                         onEntered: {
-                            userChange.color = "#626a72";
+                            userChange.color = adjustColor(themeManager.chatBackground, 1.75, false);
                         }
 
                         onExited: {
-                            userChange.color = "#1e2a36";
+                            userChange.color = themeManager.chatBackground;
                         }
                     }
                 }
@@ -128,7 +147,7 @@ Rectangle {
                 anchors.right: parent.right
                 anchors.top: parent.top
                 height: 1
-                color: "black"
+                color: isColorLight(usersListContainer.color) ? "white" : "black"
             }
             Rectangle{
                 id:downLine
@@ -136,7 +155,7 @@ Rectangle {
                 anchors.right: parent.right
                 anchors.bottom: parent.bottom
                 height: 1
-                color: "black"
+                color: isColorLight(usersListContainer.color) ? "white" : "black"
             }
         }
 
@@ -147,12 +166,12 @@ Rectangle {
             anchors.right: parent.right
             height:100
             y:100
-            color: "#1e2a36"
+            color: themeManager.chatBackground
 
             Rectangle {
                 id:openMyProfileButton
                 width: parent.width
-                color: "#1e2a36"
+                color: themeManager.chatBackground
                 height: 30
 
                 Item {
@@ -165,19 +184,20 @@ Rectangle {
                         width: 24
                         height: 24
                         radius: 12
-                        color: "transparent"
-                        border.color: "lightblue"
+                        color: themeManager.outgoingColor
                         clip: true
                         Image {
-                            anchors.fill: parent
-                            //source: myProfileButtonImage
+                            width: 20
+                            height: 20
+                            anchors.centerIn: parent
+                            source: "../images/myProfileIcon.svg"
                             fillMode: Image.PreserveAspectFit
                         }
                     }
 
                     Text {
                         text: "My profile"
-                        color: "white"
+                        color: isColorLight(openMyProfileButton.color) ? "black" : "white"
                         font.pointSize: 10
                         font.bold: true
                         anchors.left: myProfileImage.right
@@ -200,11 +220,11 @@ Rectangle {
                     }
 
                     onEntered: {
-                        openMyProfileButton.color = "#626a72";
+                        openMyProfileButton.color = adjustColor(themeManager.chatBackground, 1.75, false);
                     }
 
                     onExited: {
-                        openMyProfileButton.color = "#1e2a36";
+                        openMyProfileButton.color = themeManager.chatBackground;
                     }
                 }
             }
@@ -212,7 +232,7 @@ Rectangle {
                 id:openGroupCreateButton
                 width: parent.width
                 anchors.top:openMyProfileButton.bottom
-                color: "#1e2a36"
+                color: themeManager.chatBackground
                 height: 30
 
                 Item {
@@ -225,19 +245,20 @@ Rectangle {
                         width: 24
                         height: 24
                         radius: 12
-                        color: "transparent"
-                        border.color: "lightblue"
+                        color: themeManager.outgoingColor
                         clip: true
                         Image {
-                            anchors.fill: parent
-                            //source: groupCreateButtonImage
+                            width: 20
+                            height: 20
+                            anchors.centerIn: parent
+                            source: "../images/createGroupIcon.svg"
                             fillMode: Image.PreserveAspectFit
                         }
                     }
 
                     Text {
                         text: "Create group"
-                        color: "white"
+                        color: isColorLight(openGroupCreateButton.color) ? "black" : "white"
                         font.pointSize: 10
                         font.bold: true
                         anchors.left: groupCreateImage.right
@@ -259,29 +280,78 @@ Rectangle {
                     }
 
                     onEntered: {
-                        openGroupCreateButton.color = "#626a72";
+                        openGroupCreateButton.color = adjustColor(themeManager.chatBackground, 1.75, false);
                     }
 
                     onExited: {
-                        openGroupCreateButton.color = "#1e2a36";
+                        openGroupCreateButton.color = themeManager.chatBackground;
                     }
                 }
             }
-            Button{
-                id:setti3
+            Rectangle {
+                id:openDesignChangeButton
+                width: parent.width
                 anchors.top:openGroupCreateButton.bottom
-                text:"Settings3"
-            }
-            Button{
-                id:setti4
-                anchors.top:setti3.bottom
-                text:"Settings4"
+                color: themeManager.chatBackground
+                height: 30
+
+                Item {
+                    anchors.fill: parent
+                    anchors.leftMargin: 10
+                    anchors.topMargin: 3
+
+                    Rectangle {
+                        id: designChangeImage
+                        width: 24
+                        height: 24
+                        radius: 12
+                        color: themeManager.outgoingColor
+                        clip: true
+                        Image {
+                            width: 20
+                            height: 20
+                            anchors.centerIn: parent
+                            source: "../images/changeDesignIcon.svg"
+                            fillMode: Image.PreserveAspectFit
+                        }
+                    }
+
+                    Text {
+                        text: "Design"
+                        color: isColorLight(openDesignChangeButton.color) ? "black" : "white"
+                        font.pointSize: 10
+                        font.bold: true
+                        anchors.left: designChangeImage.right
+                        anchors.top: parent.top
+                        anchors.topMargin: 3
+                        anchors.leftMargin: 10
+                    }
+                }
+                MouseArea {
+                    id: designChangeButtonMouseArea
+                    anchors.fill: parent
+                    cursorShape: Qt.PointingHandCursor
+                    hoverEnabled: true
+
+                    onClicked: {
+                        overlay.visible = true
+                        themeSettings.open()
+                    }
+
+                    onEntered: {
+                        openDesignChangeButton.color = adjustColor(themeManager.chatBackground, 1.75, false);
+                    }
+
+                    onExited: {
+                        openDesignChangeButton.color = themeManager.chatBackground;
+                    }
+                }
             }
         }
 
         Rectangle {
             id: buttonLeave
-            color: "#1e2a36"
+            color: themeManager.chatBackground
             height: 40
             anchors.left:  parent.left
             anchors.right: parent.right
@@ -310,11 +380,11 @@ Rectangle {
                 }
 
                 onEntered: {
-                    buttonLeave.color = "#626a72";
+                    buttonLeave.color = adjustColor(themeManager.chatBackground, 1.75, false);
                 }
 
                 onExited: {
-                    buttonLeave.color = "#1e2a36";
+                    buttonLeave.color = themeManager.chatBackground;
                 }
             }
         }

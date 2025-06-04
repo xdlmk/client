@@ -3,16 +3,15 @@ import QtQuick.Controls
 import QtQuick.Layouts
 
 Dialog {
+    id:groupInfoFormDialogRoot
     modal: true
     x: (parent.width - width) / 2
     y: (parent.height - height) / 2
     opacity: 0
 
     background: Rectangle {
-        color: "#1e2a36"
+        color: adjustColor(themeManager.chatBackground, 1.5, false)
         radius: 6
-        border.color: "#626a72"
-        border.width: 1/2
     }
     width: 400
     height: 500
@@ -27,7 +26,7 @@ Dialog {
     Text{
         id:groupInfoText
         text: "Group info"
-        color: "White"
+        color: isColorLight(groupInfoFormDialogRoot.background.color) ? "black" : "white"
         font.pointSize: 15
         font.bold: true
 
@@ -40,7 +39,7 @@ Dialog {
     Text{
         id:closeButton
         text: "✕"
-        color: "White"
+        color: isColorLight(groupInfoFormDialogRoot.background.color) ? "black" : "white"
         font.pointSize: 15
         font.bold: true
 
@@ -84,11 +83,12 @@ Dialog {
             right: groupAvatar.right
             bottom: groupAvatar.bottom
         }
-        color: "#2b5278"
-        border.color: "#182533"
+        color: adjustColor(themeManager.chatBackground, 1.5, false)
+        border.color: themeManager.outgoingColor
+        border.width: 1/2
         Text {
             text: "\u270E"
-            color:"#182533"
+            color: themeManager.outgoingColor
             font.pointSize: 12
             font.bold: true
             anchors.centerIn: parent
@@ -109,7 +109,7 @@ Dialog {
         id:groupNameText
         text: group_name
         font.pointSize: 12
-        color: "White"
+        color: isColorLight(groupInfoFormDialogRoot.background.color) ? "black" : "white"
         font.bold: true
         anchors.left: groupAvatar.right
         anchors.leftMargin: 12
@@ -121,7 +121,7 @@ Dialog {
         id:defLine
         height: 6
         width:parent.width + 22
-        color:"#626a72"
+        color: adjustColor(themeManager.chatBackground, 1.8, false)
         anchors.left: parent.left
         anchors.leftMargin: -11
         anchors.top: groupAvatar.bottom
@@ -146,7 +146,7 @@ Dialog {
             }
             text: "Add members"
             font.pointSize: 14
-            color: "White"
+            color: isColorLight(groupInfoFormDialogRoot.background.color) ? "black" : "white"
             font.bold: true
         }
         MouseArea {
@@ -157,7 +157,7 @@ Dialog {
                 selectContactsForm.setParams("add");
                 selectContactsForm.open();
             }
-            onEntered: {addMembersButton.color = "#626a72"}
+            onEntered: {addMembersButton.color = adjustColor(themeManager.chatBackground, 1.75, false)}
             onExited: {addMembersButton.color = "transparent"}
         }
 
@@ -178,9 +178,10 @@ Dialog {
         id: memberDelegate
 
         Rectangle {
+            id: memberRect
             width: membersListView.width
             height: 40
-            color: "#626a72"
+            color: adjustColor(themeManager.chatBackground, 1.75, false)
             SmartImage {
                 id:profileImage
                 width: 30
@@ -195,7 +196,7 @@ Dialog {
             }
             Text {
                 text: model.username
-                color: "White"
+                color: isColorLight(memberRect.color) ? "black" : "white"
                 font.pointSize: 14
                 anchors {
                     left: profileImage.right
@@ -214,7 +215,7 @@ Dialog {
                     }
                 }
             }
-            Rectangle{
+            Rectangle {
                 width: 25
                 height: 25
                 anchors.right: parent.right
@@ -225,7 +226,7 @@ Dialog {
                 Text{
                     id:deleteUserButton
                     text: "✕"
-                    color: "White"
+                    color: isColorLight(memberRect.color) ? "black" : "white"
                     font.pointSize: 15
                     font.bold: true
                     visible: activeUserId === creator_id && activeUserId !== model.user_id

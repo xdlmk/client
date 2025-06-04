@@ -9,10 +9,8 @@ Dialog {
     y: (parent.height - height) / 2
     opacity: 0
     background: Rectangle {
-        color: "#1e2a36"
+        color: adjustColor(themeManager.chatBackground, 1.5, false)
         radius: 6
-        border.color: "#626a72"
-        border.width: 0.3
     }
     width: 300
     height: 200
@@ -27,7 +25,7 @@ Dialog {
             else if(editInformation.infoType === "Username") return "Editing username"
             else if(editInformation.infoType === "default") return ""
         }
-        color: "White"
+        color: isColorLight(editInformation.background.color) ? "black" : "white"
         font.pointSize: 15
         font.bold: true
         anchors{
@@ -48,17 +46,17 @@ Dialog {
             else if(editInformation.infoType === "Username") return "Username"
             else if(editInformation.infoType === "default") return ""
         }
-        placeholderTextColor: "grey"
+        placeholderTextColor: isColorLight(editInformation.background.color) ? "darkgrey" : "grey"
         anchors.top: information.bottom
         anchors.topMargin: 10 + height
         font.pointSize: 10
-        color: "white"
+        color: isColorLight(editInformation.background.color) ? "black" : "white"
         background: Rectangle { color: "transparent" }
     }
     Rectangle
     {
         id:recEditField
-        color: "#2f6ea5"
+        color: adjustColor(themeManager.chatBackground, 1.8, false)
         width: parent.width
         height: 2
         anchors{
@@ -77,7 +75,7 @@ Dialog {
             topMargin: 10
             left: recEditField.left
         }
-        color: "#2f6ea5"
+        color: adjustColor(themeManager.chatBackground, 1.8, false)
         opacity: 0
         Behavior on opacity { NumberAnimation { duration: 200 } }
     }
@@ -85,7 +83,7 @@ Dialog {
     Text{
         id:cancel
         text: "Cancel"
-        color: "White"
+        color: isColorLight(editInformation.background.color) ? "black" : "white"
         font.pointSize: 12
         anchors{
             right: save.left
@@ -103,7 +101,7 @@ Dialog {
     Text{
         id:save
         text: "Save"
-        color: "White"
+        color: isColorLight(editInformation.background.color) ? "black" : "white"
         font.pointSize: 12
         anchors{
             right: parent.right
@@ -132,8 +130,8 @@ Dialog {
     onClosed: {
         editableFiled.clear()
         editInformation.opacity = 0
-        recEditField.color = "#2f6ea5"
-        errorMessage.color = "#2f6ea5"
+        recEditField.color = adjustColor(themeManager.chatBackground, 1.8, false)
+        errorMessage.color = adjustColor(themeManager.chatBackground, 1.8, false)
         errorMessage.opacity = 0
     }
 
@@ -142,8 +140,8 @@ Dialog {
         interval: 5000
         repeat: false
         onTriggered: {
-            recEditField.color = "#2f6ea5"
-            errorMessage.color = "#2f6ea5"
+            recEditField.color = adjustColor(themeManager.chatBackground, 1.8, false)
+            errorMessage.color = adjustColor(themeManager.chatBackground, 1.8, false)
         }
     }
 
