@@ -159,12 +159,31 @@ Rectangle {
 
     function extractTimeFromTimestamp(timestamp) {
         var date = new Date(timestamp);
-        var hours = date.getUTCHours();
-        var minutes = date.getUTCMinutes();
+        var now = new Date();
+
+        var hours = date.getHours();
+        var minutes = date.getMinutes();
+
         if (hours < 10)
             hours = "0" + hours;
         if (minutes < 10)
             minutes = "0" + minutes;
-        return hours + ":" + minutes;
+
+        if (date.getDate() === now.getDate() &&
+                date.getMonth() === now.getMonth() &&
+                date.getFullYear() === now.getFullYear()) {
+            return hours + ":" + minutes;
+        }
+
+        var day = date.getDate();
+        var month = date.getMonth() + 1;
+        var year = date.getFullYear();
+
+        if (day < 10)
+            day = "0" + day;
+        if (month < 10)
+            month = "0" + month;
+
+        return day + "." + month + "." + year;
     }
 }

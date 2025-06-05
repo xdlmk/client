@@ -62,10 +62,7 @@ void MessageHandler::processingPersonalMessage(const QByteArray &receivedMessage
     QString content = encryptContentFromMessage(protoMsg);
     messageToLoad["message"] = content;
 
-    QString timestamp = protoMsg.timestamp();
-    QDateTime dt = QDateTime::fromString(timestamp, Qt::ISODate);
-    QString timeStr = dt.isValid() ? dt.toString("hh:mm") : "";
-    messageToLoad["time"] = timeStr;
+    messageToLoad["time"] = protoMsg.timestamp();
 
     messageToLoad["message_id"] = protoMsg.messageId();
     messageToLoad["fileUrl"] = protoMsg.mediaUrl();
@@ -79,7 +76,6 @@ void MessageHandler::processingPersonalMessage(const QByteArray &receivedMessage
     }
     messageToLoad["fileName"] = fileName;
 
-    messageToLoad["FullDate"] = timestamp;
     messageToLoad["special_type"] = protoMsg.specialType();
     messageToLoad["isRead"] = false;
     messageToLoad["audio_duration"] = getAudioDuration(fileName);
@@ -127,10 +123,7 @@ void MessageHandler::processingGroupMessage(const QByteArray &receivedMessageDat
     QVariantMap messageToLoad;
     messageToLoad["message"] = protoMsg.content();
 
-    QString timestamp = protoMsg.timestamp();
-    QDateTime dt = QDateTime::fromString(timestamp, Qt::ISODate);
-    QString timeStr = dt.isValid() ? dt.toString("hh:mm") : "";
-    messageToLoad["time"] = timeStr;
+    messageToLoad["time"] = protoMsg.timestamp();
 
     messageToLoad["message_id"] = protoMsg.messageId();
     messageToLoad["isRead"] = false;
@@ -146,8 +139,6 @@ void MessageHandler::processingGroupMessage(const QByteArray &receivedMessageDat
         }
     }
     messageToLoad["fileName"] = fileName;
-
-    messageToLoad["FullDate"] = timestamp;
 
     messageToLoad["special_type"] = protoMsg.specialType();
 
@@ -252,11 +243,7 @@ void MessageHandler::loadingChat(const quint64& id, const QString &flag)
             }
             messageToDisplay["fileName"] = fileName;
 
-            QString fullDate = msg.timestamp();
-            QDateTime dt = QDateTime::fromString(fullDate, Qt::ISODate);
-            QString time = dt.isValid() ? dt.toString("hh:mm") : "";
-            messageToDisplay["time"] = time;
-            messageToDisplay["timestamp"] = fullDate;
+            messageToDisplay["time"] = msg.timestamp();
             messageToDisplay["special_type"] = msg.specialType();
             messageToDisplay["audio_duration"] = getAudioDuration(fileName);
             emit newMessage(messageToDisplay);
@@ -285,11 +272,7 @@ void MessageHandler::loadingNextMessages(const QByteArray &messagesData)
         if(response.type() == chats::ChatTypeGadget::ChatType::GROUP) messageToLoad["message"] = protoMsg.content();
         else if(response.type() == chats::ChatTypeGadget::ChatType::PERSONAL) messageToLoad["message"] = encryptContentFromMessage(protoMsg);
 
-        QString fullDate = protoMsg.timestamp();
-        QDateTime dt = QDateTime::fromString(fullDate, Qt::ISODate);
-        QString time = dt.isValid() ? dt.toString("hh:mm") : "";
-        messageToLoad["time"] = time;
-        messageToLoad["FullDate"] = fullDate;
+        messageToLoad["time"] = protoMsg.timestamp();
 
         messageToLoad["message_id"] = protoMsg.messageId();
         messageToLoad["login"] = protoMsg.senderLogin();

@@ -22,6 +22,8 @@ Window {
 
     property var currentChatBubble: null
 
+    property string visibleDate: ""
+
     Rectangle {
         id: leftLine
         color: themeManager.chatBackground
@@ -94,6 +96,29 @@ Window {
         }
     }
 
+    Rectangle {
+        id: dateOverlay
+        width: 100
+        height: 20
+        color: adjustColor(themeManager.chatBackground, 1.8, false)
+        radius: 10
+        visible: visibleDate !== ""
+        anchors {
+            top: listView.top
+            topMargin: 10
+            horizontalCenter: listView.horizontalCenter
+        }
+        z: 99
+
+        Text {
+            anchors.centerIn: parent
+            text: visibleDate
+            color: isColorLight(dateOverlay.color) ? "black" : "white"
+            font.pixelSize: 12
+            font.bold: true
+        }
+    }
+
     ListView {
         id: listView
         spacing: 5
@@ -143,14 +168,21 @@ Window {
             let viewBottom = viewTop + listView.height;
             updateUnreadCountForUser();
 
+            let visibleDateSet = false;
+
             for (let i = 0; i < listModel.count; i++) {
                 let item = listView.itemAtIndex(i);
 
-                if (item && !item.isRead) {
+                if (item) {
                     let itemTop = item.y;
                     let itemBottom = itemTop + item.height;
 
-                    if (itemBottom > viewTop && itemTop < viewBottom) {
+                    if (!visibleDateSet && itemBottom > viewTop) {
+                        visibleDate = extractDateFromTimestamp(item.time);
+                        visibleDateSet = true;
+                    }
+
+                    if (itemBottom > viewTop && itemTop < viewBottom && !item.isRead) {
                         item.markAsRead();
                     }
                 }
@@ -160,7 +192,7 @@ Window {
         property int savedIndexFromEnd: 0
 
         onAtYBeginningChanged: {
-            if (atYBeginning && upLine.currentState !== "default" && listModel.count !== 0 && !(upLine.currentState == "group" && listModel.count === 1)) {
+            if (atYBeginning && upLine.currentState !== "default" && listModel.count !== 0 && !(listModel.count === 1)) {
                 listView.savedIndexFromEnd = listModel.count;
                 client.requestMessageDownload(upLine.user_id, nameText.text, upLine.currentState, listModel.count);
                 activeChatIdBeforeRequest = upLine.user_id;
@@ -406,16 +438,13 @@ Window {
                 }
             }
 
-            console.log("Index message: ", index);
             if (index === -1) return;
 
             if (!listModel.get(index).isRead) {
-                console.log("Before setProperty");
                 listModel.setProperty(index, "isRead", true);
 
                 var delegate = listView.itemAtIndex(index);
                 if (delegate) {
-                    console.log("Message with id: ", message_id, " setting status true");
                     delegate.isRead = true;
                 }
             }
@@ -494,6 +523,21 @@ Window {
             return text.substring(0, maxLength) + "...";
         }
         return text;
+    }
+
+    function extractDateFromTimestamp(timestamp) {
+        var date = new Date(timestamp);
+
+        var day = date.getDate();
+        var month = date.getMonth() + 1;
+        var year = date.getFullYear();
+
+        if (day < 10)
+            day = "0" + day;
+        if (month < 10)
+            month = "0" + month;
+
+        return day + "." + month + "." + year;
     }
 
     function adjustColor(colorString, factor, inverse) {

@@ -226,7 +226,7 @@ Item {
                 rightMargin: 5
                 bottomMargin: 5
             }
-            text: time
+            text: extractTimeFromTimestamp(time)
             width: parent.width - 20
             font.pointSize: 8
             color: isOutgoing ? adjustColor(themeManager.outgoingColor, 1.5, false) : adjustColor(themeManager.incomingColor, 7, false)
@@ -249,6 +249,19 @@ Item {
         }
     }
 
+    function extractTimeFromTimestamp(timestamp) {
+        var date = new Date(timestamp);
+
+        var hours = date.getHours();
+        var minutes = date.getMinutes();
+
+        if (hours < 10)
+            hours = "0" + hours;
+        if (minutes < 10)
+            minutes = "0" + minutes;
+
+        return hours + ":" + minutes;
+    }
 
     function markAsRead() {
         if (!isRead && !isOutgoing) {
