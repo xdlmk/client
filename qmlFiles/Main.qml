@@ -6,10 +6,13 @@ import QtMultimedia
 Window {
     id: rootWindow
     width: 1000
-    height: 500
+    height: 500 + header.height
     visible: true
     color: themeManager.chatBackground
-    title: qsTr("Regagram")
+    title: qsTr("Messenger")
+    flags: Qt.Window | Qt.FramelessWindowHint
+
+    property bool maximized: false
 
     property bool isProfileExtended: false
     property bool isSearchListExtended: false
@@ -25,14 +28,131 @@ Window {
     property string visibleDate: ""
 
     Rectangle {
+        id: header
+        height: 20
+        anchors.left: parent.left
+        anchors.right: parent.right
+        color: adjustColor(themeManager.chatBackground, 1.8, false)
+        MouseArea {
+            id: headerDragArea
+            anchors.fill: parent
+            drag.axis: Drag.XAndYAxis
+            cursorShape: Qt.SizeAllCursor
+            enabled: !rootWindow.maximized
+
+            MouseArea {
+                id: headerMouseArea
+                anchors.fill: parent
+                onPressed: {
+                    rootWindow.startSystemMove()
+                }
+            }
+        }
+
+        Button {
+            id:maximizeWindowButton
+            icon.source: rootWindow.maximized ? "../images/restoreW.svg" : "../images/maximize.svg"
+            icon.cache: false
+            icon.width: 30
+            icon.height: 30
+            icon.color: isColorLight(
+                            maximizeWindowButtonMouseArea.containsMouse
+                            ? adjustColor(header.color, 1.75, false)
+                            : header.color
+                            ) ? "black" : "white"
+            anchors {
+                verticalCenter: parent.verticalCenter
+                right: hideAppButton.left
+                rightMargin: 15
+            }
+            background: Rectangle { color: maximizeWindowButtonMouseArea.containsMouse ? adjustColor(header.color, 1.75, false) : "transparent"}
+            width: 30
+            height: 20
+            MouseArea {
+                id: maximizeWindowButtonMouseArea
+                anchors.fill: parent
+                hoverEnabled: true
+                onClicked: {
+                    if (rootWindow.maximized) {
+                        rootWindow.showNormal()
+                        rootWindow.maximized = false
+                    } else {
+                        rootWindow.showMaximized()
+                        rootWindow.maximized = true
+                    }
+                }
+            }
+        }
+
+        Button {
+            id: hideAppButton
+            icon.source: "../images/hide.svg"
+            icon.cache: false
+            icon.width: 30
+            icon.height: 30
+            icon.color: isColorLight(
+                            hideAppButtonMouseArea.containsMouse
+                            ? adjustColor(header.color, 1.75, false)
+                            : header.color
+                            ) ? "black" : "white"
+            anchors {
+                verticalCenter: parent.verticalCenter
+                right: closeAppButton.left
+                rightMargin: 15
+            }
+            background: Rectangle { color: hideAppButtonMouseArea.containsMouse ? adjustColor(header.color, 1.75, false) : "transparent"}
+            width: 30
+            height: 20
+            MouseArea {
+                id: hideAppButtonMouseArea
+                anchors.fill: parent
+                hoverEnabled: true
+                onClicked: rootWindow.showMinimized()
+            }
+        }
+
+        Button {
+            id: closeAppButton
+            anchors {
+                verticalCenter: parent.verticalCenter
+                right: parent.right
+            }
+            contentItem: Text {
+                text: "✕"
+                font.pixelSize: 13
+                color: closeAppButtonMouseArea.containsMouse
+                       ? (isColorLight("#dc2f50") ? "black" : "white")
+                       : "white"
+                anchors {
+                    top: parent.top
+                    horizontalCenter: parent.horizontalCenter
+                }
+            }
+
+            background: Rectangle { color: closeAppButtonMouseArea.containsMouse ? "#dc2f50" : "transparent"}
+            width: 30
+            height: 20
+            MouseArea {
+                id: closeAppButtonMouseArea
+                anchors.fill: parent
+                hoverEnabled: true
+                onClicked: {
+                    Qt.quit()
+                }
+            }
+
+        }
+    }
+
+    Rectangle {
         id: leftLine
         color: themeManager.chatBackground
-        height: rootWindow.height
+        height: rootWindow.height - header.height
         width: 54
         anchors{
             left:  parent.left
             bottom: parent.bottom
-            top: parent.top
+            top: header.bottom
         }
 
         Rectangle {
@@ -88,9 +208,13 @@ Window {
 
     ChatsList {
         id: centerLine
-        height: rootWindow.height
+        height: rootWindow.height - header.height
         width: rootWindow.width - (rootWindow.width / 2 + rootWindow.width / 4) - 54
-
+        anchors{
+            left:  leftLine.right
+            bottom: parent.bottom
+            top: header.bottom
+        }
         ListModel {
             id:personalChatsListModel
         }
@@ -211,7 +335,7 @@ Window {
         height: 55
         anchors{
             left:  centerLine.right
-            top: parent.top
+            top: header.bottom
             right: parent.right
         }
         visible: currentState === "default" ? false : true
@@ -275,7 +399,7 @@ Window {
         height: 25
         anchors{
             left: parent.left
-            top: parent.top
+            top: header.bottom
             right: parent.right
         }
 
@@ -288,33 +412,33 @@ Window {
         }
     }
 
-    ProfilePanel{
+    ProfilePanel {
         id:profileWindow
-        anchors.top: parent.top
+        anchors.top: header.bottom
         anchors.bottom: parent.bottom
         x: isProfileExtended ? 0 : -width
 
         Behavior on x { NumberAnimation { duration: 500; easing.type: Easing.InOutQuad } }
     }
 
-    MouseArea{
+    MouseArea {
         id:leaveProfileArea
         enabled: isProfileExtended
         anchors{
             left: profileWindow.right
             right: parent.right
-            top: parent.top
+            top: header.bottom
             bottom: parent.bottom
         }
         onClicked: isProfileExtended = !isProfileExtended
     }
 
-    MouseArea{
+    MouseArea {
         id:leaveSearchListArea
         anchors{
             left: centerLine.right
             right: parent.right
-            top: parent.top
+            top: header.bottom
             bottom: parent.bottom
         }
         enabled: isSearchListExtended
@@ -361,6 +485,102 @@ Window {
         onTriggered: {
             timestamp = new Date().getTime();
         }
+    }
+
+    MouseArea {
+        anchors {
+            top: parent.top
+            left: parent.left
+            right: parent.right
+        }
+        height: 5
+        hoverEnabled: true
+        cursorShape: Qt.SizeVerCursor
+        onPressed: { rootWindow.startSystemResize(Qt.TopEdge) }
+    }
+
+    MouseArea {
+        anchors {
+            bottom: parent.bottom
+            left: parent.left
+            right: parent.right
+        }
+        height: 5
+        hoverEnabled: true
+        cursorShape: Qt.SizeVerCursor
+        onPressed: { rootWindow.startSystemResize(Qt.BottomEdge) }
+    }
+
+    MouseArea {
+        anchors {
+            left: parent.left
+            top: parent.top
+            bottom: parent.bottom
+        }
+        width: 5
+        hoverEnabled: true
+        cursorShape: Qt.SizeHorCursor
+        onPressed: { rootWindow.startSystemResize(Qt.LeftEdge) }
+    }
+
+    MouseArea {
+        anchors {
+            right: parent.right
+            top: parent.top
+            bottom: parent.bottom
+        }
+        width: 5
+        hoverEnabled: true
+        cursorShape: Qt.SizeHorCursor
+        onPressed: { rootWindow.startSystemResize(Qt.RightEdge) }
+    }
+
+    MouseArea {
+        anchors {
+            top: parent.top
+            left: parent.left
+        }
+        width: 10
+        height: 10
+        hoverEnabled: true
+        cursorShape: Qt.SizeFDiagCursor
+        onPressed: { rootWindow.startSystemResize(Qt.TopEdge | Qt.LeftEdge) }
+    }
+
+    MouseArea {
+        anchors {
+            top: parent.top
+            right: parent.right
+        }
+        width: 10
+        height: 10
+        hoverEnabled: true
+        cursorShape: Qt.SizeBDiagCursor
+        onPressed: { rootWindow.startSystemResize(Qt.TopEdge | Qt.RightEdge) }
+    }
+
+    MouseArea {
+        anchors {
+            bottom: parent.bottom
+            left: parent.left
+        }
+        width: 10
+        height: 10
+        hoverEnabled: true
+        cursorShape: Qt.SizeBDiagCursor
+        onPressed: { rootWindow.startSystemResize(Qt.BottomEdge | Qt.LeftEdge) }
+    }
+
+    MouseArea {
+        anchors {
+            bottom: parent.bottom
+            right: parent.right
+        }
+        width: 10
+        height: 10
+        hoverEnabled: true
+        cursorShape: Qt.SizeFDiagCursor
+        onPressed: { rootWindow.startSystemResize(Qt.BottomEdge | Qt.RightEdge) }
     }
 
     function onMediaPlayerDurationChanged(duration) {

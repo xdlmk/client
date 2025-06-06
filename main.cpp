@@ -5,6 +5,8 @@
 #include <QQmlContext>
 #include <QQuickStyle>
 
+#include <QQuickWindow>
+
 #include <QSettings>
 #include <QEventLoop>
 #include <QDir>
@@ -28,7 +30,6 @@ int main(int argc, char *argv[])
 
     const QUrl mainUrl(QStringLiteral("resources/qmlFiles/Main.qml"));
     const QUrl switchUrl(QStringLiteral("resources/qmlFiles/pageSwitch.qml"));
-    const QUrl loginUrl(QStringLiteral("resources/qmlFiles/LoginPage.qml"));
 
     Client client;
     Logger logger;
@@ -56,6 +57,15 @@ int main(int argc, char *argv[])
         &app,
         []() { QCoreApplication::exit(-1); },
         Qt::QueuedConnection);
+
+    QObject::connect(&engine, &QQmlApplicationEngine::objectCreated,
+                     [&engine](QObject *obj, const QUrl &objUrl) {
+
+                         auto window = qobject_cast<QQuickWindow *>(engine.rootObjects().first());
+                         if (window) {
+                             window->setFlags(window->flags() | Qt::FramelessWindowHint);
+                         }
+                     });
 
     QObject::connect(&client, &Client::connectionSuccess, [&engine, switchUrl]() {
         QList<QObject*> rootObjects = engine.rootObjects();
@@ -123,7 +133,6 @@ int main(int argc, char *argv[])
             rootObject->deleteLater();
         }
         engine.load(switchUrl);
-
     });
 
     QObject::connect(&client, &Client::clientLogout, [&engine, switchUrl,&logger]() {

@@ -1,6 +1,6 @@
 cmake_minimum_required(VERSION 3.16)
 
-project(clientDes VERSION 0.1 LANGUAGES CXX)
+project(Messenger VERSION 0.1 LANGUAGES CXX)
 
 set(CMAKE_CXX_STANDARD_REQUIRED ON)
 
@@ -60,13 +60,13 @@ if(NOT SODIUM_LIB)
 endif()
 message(STATUS "Found libsodium library at: ${SODIUM_LIB}")
 
-qt_add_executable(regagram
+qt_add_executable(Messenger
     main.cpp
 )
 
 qt_policy(SET QTP0001 NEW)
 
-qt_add_qml_module(regagram
+qt_add_qml_module(Messenger
     URI resources
     VERSION 1.0
     QML_FILES
@@ -115,9 +115,12 @@ qt_add_qml_module(regagram
     images/microphone.svg
     images/profile.svg
     images/attach.svg
+    images/hide.svg
+    images/maximize.svg
+    images/restoreW.svg
 )
 
-qt6_add_shaders(regagram "Shaders"
+qt6_add_shaders(Messenger "Shaders"
     GLSL "430"
     HLSL 50
     MSL 12
@@ -131,16 +134,16 @@ qt6_add_shaders(regagram "Shaders"
 # Qt for iOS sets MACOSX_BUNDLE_GUI_IDENTIFIER automatically since Qt 6.1.
 # If you are developing for iOS or macOS you should consider setting an
 # explicit, fixed bundle identifier manually though.
-set_target_properties(regagram PROPERTIES
-    #    MACOSX_BUNDLE_GUI_IDENTIFIER regagram
+set_target_properties(Messenger PROPERTIES
+    #    MACOSX_BUNDLE_GUI_IDENTIFIER Messenger
     MACOSX_BUNDLE_BUNDLE_VERSION ${PROJECT_VERSION}
     MACOSX_BUNDLE_SHORT_VERSION_STRING ${PROJECT_VERSION_MAJOR}.${PROJECT_VERSION_MINOR}
     MACOSX_BUNDLE TRUE
     WIN32_EXECUTABLE TRUE
 )
-add_dependencies(regagram protosource)
+add_dependencies(Messenger protosource)
 
-target_link_libraries(regagram
+target_link_libraries(Messenger
     PRIVATE Qt6::Quick
     Qt6::Core
     Qt6::Network
@@ -154,7 +157,7 @@ target_link_libraries(regagram
 )
 
 include(GNUInstallDirs)
-install(TARGETS regagram
+install(TARGETS Messenger
     BUNDLE DESTINATION .
     LIBRARY DESTINATION ${CMAKE_INSTALL_LIBDIR}
     RUNTIME DESTINATION ${CMAKE_INSTALL_BINDIR}

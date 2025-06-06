@@ -7,11 +7,7 @@ Rectangle {
     id: centerLine
     property alias chatsListView: personalChatsContainer.personalChatsListView
     color: adjustColor(themeManager.chatBackground, 1.5, false)
-    anchors{
-        left:  leftLine.right
-        bottom: parent.bottom
-        top: parent.top
-    }
+
     TextArea{
         id: searchField
         selectByMouse: true
