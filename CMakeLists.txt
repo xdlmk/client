@@ -118,6 +118,7 @@ qt_add_qml_module(Messenger
     images/hide.svg
     images/maximize.svg
     images/restoreW.svg
+    images/trayicon.svg
 )
 
 qt6_add_shaders(Messenger "Shaders"

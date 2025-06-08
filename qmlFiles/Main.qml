@@ -2,6 +2,7 @@ import QtQuick 2.15
 import QtQuick.Controls 2.15
 import QtQuick.Layouts
 import QtMultimedia
+import Qt.labs.platform
 
 Window {
     id: rootWindow
@@ -27,6 +28,44 @@ Window {
 
     property string visibleDate: ""
 
+    SystemTrayIcon {
+        id: trayIcon
+        icon.source: appPath + "/resources/images/trayicon.svg"
+        visible: true
+        tooltip: "Messenger"
+
+        menu: Menu {
+            id:trayMenu
+            title: "Messenger"
+            data: [
+                MenuItem {
+                    id: open
+                    text: qsTr("Open")
+                    onTriggered: {
+                        rootWindow.show();
+                        rootWindow.requestActivate()
+                    }
+                },
+                MenuItem {
+                    id: close
+                    text: qsTr("Close")
+                    onTriggered: Qt.quit()
+                }
+            ]
+        }
+
+        onActivated: (reason) =>  {
+                         if (reason === SystemTrayIcon.Trigger) {
+                             if (!rootWindow.visible) {
+                                 rootWindow.show();
+                                 rootWindow.requestActivate()
+                             }
+                         } else if (reason === SystemTrayIcon.Context) {
+                             trayMenu.open();
+                         }
+                     }
+    }
+
     Rectangle {
         id: header
         height: 20
@@ -37,14 +76,20 @@ Window {
             id: headerDragArea
             anchors.fill: parent
             drag.axis: Drag.XAndYAxis
-            cursorShape: Qt.SizeAllCursor
-            enabled: !rootWindow.maximized
 
-            MouseArea {
-                id: headerMouseArea
-                anchors.fill: parent
-                onPressed: {
+            onPressed: {
+                if(!rootWindow.maximized){
                     rootWindow.startSystemMove()
+                }
+            }
+
+            onDoubleClicked: {
+                if (rootWindow.maximized) {
+                    rootWindow.showNormal()
+                    rootWindow.maximized = false
+                } else {
+                    rootWindow.showMaximized()
+                    rootWindow.maximized = true
                 }
             }
         }
@@ -53,8 +98,8 @@ Window {
             id:maximizeWindowButton
             icon.source: rootWindow.maximized ? "../images/restoreW.svg" : "../images/maximize.svg"
             icon.cache: false
-            icon.width: 30
-            icon.height: 30
+            icon.width: 20
+            icon.height: 20
             icon.color: isColorLight(
                             maximizeWindowButtonMouseArea.containsMouse
                             ? adjustColor(header.color, 1.75, false)
@@ -88,8 +133,8 @@ Window {
             id: hideAppButton
             icon.source: "../images/hide.svg"
             icon.cache: false
-            icon.width: 30
-            icon.height: 30
+            icon.width: 15
+            icon.height: 1
             icon.color: isColorLight(
                             hideAppButtonMouseArea.containsMouse
                             ? adjustColor(header.color, 1.75, false)
@@ -137,7 +182,7 @@ Window {
                 anchors.fill: parent
                 hoverEnabled: true
                 onClicked: {
-                    Qt.quit()
+                    rootWindow.hide(); //Qt.quit()
                 }
             }
 
@@ -495,7 +540,8 @@ Window {
         }
         height: 5
         hoverEnabled: true
-        cursorShape: Qt.SizeVerCursor
+        enabled: !rootWindow.maximized
+        cursorShape: rootWindow.maximized ? Qt.ArrowCursor : Qt.SizeVerCursor
         onPressed: { rootWindow.startSystemResize(Qt.TopEdge) }
     }
 
@@ -507,7 +553,8 @@ Window {
         }
         height: 5
         hoverEnabled: true
-        cursorShape: Qt.SizeVerCursor
+        enabled: !rootWindow.maximized
+        cursorShape: rootWindow.maximized ? Qt.ArrowCursor : Qt.SizeVerCursor
         onPressed: { rootWindow.startSystemResize(Qt.BottomEdge) }
     }
 
@@ -519,7 +566,8 @@ Window {
         }
         width: 5
         hoverEnabled: true
-        cursorShape: Qt.SizeHorCursor
+        enabled: !rootWindow.maximized
+        cursorShape: rootWindow.maximized ? Qt.ArrowCursor : Qt.SizeHorCursor
         onPressed: { rootWindow.startSystemResize(Qt.LeftEdge) }
     }
 
@@ -531,7 +579,8 @@ Window {
         }
         width: 5
         hoverEnabled: true
-        cursorShape: Qt.SizeHorCursor
+        enabled: !rootWindow.maximized
+        cursorShape: rootWindow.maximized ? Qt.ArrowCursor : Qt.SizeHorCursor
         onPressed: { rootWindow.startSystemResize(Qt.RightEdge) }
     }
 
@@ -543,7 +592,8 @@ Window {
         width: 10
         height: 10
         hoverEnabled: true
-        cursorShape: Qt.SizeFDiagCursor
+        enabled: !rootWindow.maximized
+        cursorShape: rootWindow.maximized ? Qt.ArrowCursor : Qt.SizeFDiagCursor
         onPressed: { rootWindow.startSystemResize(Qt.TopEdge | Qt.LeftEdge) }
     }
 
@@ -555,7 +605,8 @@ Window {
         width: 10
         height: 10
         hoverEnabled: true
-        cursorShape: Qt.SizeBDiagCursor
+        enabled: !rootWindow.maximized
+        cursorShape: rootWindow.maximized ? Qt.ArrowCursor : Qt.SizeBDiagCursor
         onPressed: { rootWindow.startSystemResize(Qt.TopEdge | Qt.RightEdge) }
     }
 
@@ -567,7 +618,8 @@ Window {
         width: 10
         height: 10
         hoverEnabled: true
-        cursorShape: Qt.SizeBDiagCursor
+        enabled: !rootWindow.maximized
+        cursorShape: rootWindow.maximized ? Qt.ArrowCursor : Qt.SizeBDiagCursor
         onPressed: { rootWindow.startSystemResize(Qt.BottomEdge | Qt.LeftEdge) }
     }
 
@@ -579,7 +631,8 @@ Window {
         width: 10
         height: 10
         hoverEnabled: true
-        cursorShape: Qt.SizeFDiagCursor
+        enabled: !rootWindow.maximized
+        cursorShape: rootWindow.maximized ? Qt.ArrowCursor : Qt.SizeFDiagCursor
         onPressed: { rootWindow.startSystemResize(Qt.BottomEdge | Qt.RightEdge) }
     }
 

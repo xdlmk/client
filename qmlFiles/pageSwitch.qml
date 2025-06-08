@@ -9,6 +9,8 @@ Window {
     title: qsTr("Messenger")
     flags: Qt.Window | Qt.FramelessWindowHint
 
+    property bool maximized: false
+
     Rectangle {
         id: header
         height: 20
@@ -19,14 +21,20 @@ Window {
             id: headerDragArea
             anchors.fill: parent
             drag.axis: Drag.XAndYAxis
-            cursorShape: Qt.SizeAllCursor
-            enabled: !rootWindow.maximized
 
-            MouseArea {
-                id: headerMouseArea
-                anchors.fill: parent
-                onPressed: {
+            onPressed: {
+                if(!rootWindow.maximized){
                     rootWindow.startSystemMove()
+                }
+            }
+
+            onDoubleClicked: {
+                if (rootWindow.maximized) {
+                    rootWindow.showNormal()
+                    rootWindow.maximized = false
+                } else {
+                    rootWindow.showMaximized()
+                    rootWindow.maximized = true
                 }
             }
         }
@@ -35,8 +43,8 @@ Window {
             id:maximizeWindowButton
             icon.source: rootWindow.maximized ? "../images/restoreW.svg" : "../images/maximize.svg"
             icon.cache: false
-            icon.width: 30
-            icon.height: 30
+            icon.width: 20
+            icon.height: 20
             icon.color: "white"
             anchors {
                 verticalCenter: parent.verticalCenter
@@ -66,8 +74,8 @@ Window {
             id: hideAppButton
             icon.source: "../images/hide.svg"
             icon.cache: false
-            icon.width: 30
-            icon.height: 30
+            icon.width: 15
+            icon.height: 1
             icon.color: "white"
             anchors {
                 verticalCenter: parent.verticalCenter
@@ -133,7 +141,8 @@ Window {
         }
         height: 5
         hoverEnabled: true
-        cursorShape: Qt.SizeVerCursor
+        enabled: !rootWindow.maximized
+        cursorShape: rootWindow.maximized ? Qt.ArrowCursor : Qt.SizeVerCursor
         onPressed: { rootWindow.startSystemResize(Qt.TopEdge) }
     }
 
@@ -145,7 +154,8 @@ Window {
         }
         height: 5
         hoverEnabled: true
-        cursorShape: Qt.SizeVerCursor
+        enabled: !rootWindow.maximized
+        cursorShape: rootWindow.maximized ? Qt.ArrowCursor : Qt.SizeVerCursor
         onPressed: { rootWindow.startSystemResize(Qt.BottomEdge) }
     }
 
@@ -157,7 +167,8 @@ Window {
         }
         width: 5
         hoverEnabled: true
-        cursorShape: Qt.SizeHorCursor
+        enabled: !rootWindow.maximized
+        cursorShape: rootWindow.maximized ? Qt.ArrowCursor : Qt.SizeHorCursor
         onPressed: { rootWindow.startSystemResize(Qt.LeftEdge) }
     }
 
@@ -169,7 +180,8 @@ Window {
         }
         width: 5
         hoverEnabled: true
-        cursorShape: Qt.SizeHorCursor
+        enabled: !rootWindow.maximized
+        cursorShape: rootWindow.maximized ? Qt.ArrowCursor : Qt.SizeHorCursor
         onPressed: { rootWindow.startSystemResize(Qt.RightEdge) }
     }
 
@@ -181,7 +193,8 @@ Window {
         width: 10
         height: 10
         hoverEnabled: true
-        cursorShape: Qt.SizeFDiagCursor
+        enabled: !rootWindow.maximized
+        cursorShape: rootWindow.maximized ? Qt.ArrowCursor : Qt.SizeFDiagCursor
         onPressed: { rootWindow.startSystemResize(Qt.TopEdge | Qt.LeftEdge) }
     }
 
@@ -193,7 +206,8 @@ Window {
         width: 10
         height: 10
         hoverEnabled: true
-        cursorShape: Qt.SizeBDiagCursor
+        enabled: !rootWindow.maximized
+        cursorShape: rootWindow.maximized ? Qt.ArrowCursor : Qt.SizeBDiagCursor
         onPressed: { rootWindow.startSystemResize(Qt.TopEdge | Qt.RightEdge) }
     }
 
@@ -205,7 +219,8 @@ Window {
         width: 10
         height: 10
         hoverEnabled: true
-        cursorShape: Qt.SizeBDiagCursor
+        enabled: !rootWindow.maximized
+        cursorShape: rootWindow.maximized ? Qt.ArrowCursor : Qt.SizeBDiagCursor
         onPressed: { rootWindow.startSystemResize(Qt.BottomEdge | Qt.LeftEdge) }
     }
 
@@ -217,7 +232,8 @@ Window {
         width: 10
         height: 10
         hoverEnabled: true
-        cursorShape: Qt.SizeFDiagCursor
+        enabled: !rootWindow.maximized
+        cursorShape: rootWindow.maximized ? Qt.ArrowCursor : Qt.SizeFDiagCursor
         onPressed: { rootWindow.startSystemResize(Qt.BottomEdge | Qt.RightEdge) }
     }
 }

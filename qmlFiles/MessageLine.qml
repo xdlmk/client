@@ -139,9 +139,10 @@ Rectangle {
         }
 
         ScrollView {
+            id:textScrollView
             anchors {
                 left: btnFileItem.right
-                right: btnAddItem.left
+                right: emojiButton.left
                 verticalCenter: parent.verticalCenter
                 top: parent.top
                 bottom: parent.bottom
@@ -180,6 +181,19 @@ Rectangle {
                         event.accepted = true;
                     }
                 }
+            }
+        }
+
+        Button {
+            id: emojiButton
+            text: "😊"
+            anchors {
+                right: btnAddItem.left
+                verticalCenter: parent.verticalCenter
+            }
+
+            onClicked: {
+                emojiPanel.visible = !emojiPanel.visible
             }
         }
 
@@ -254,7 +268,50 @@ Rectangle {
                     buttonImage.icon.color = themeManager.outgoingColor;
                 }
             }
+        }
 
+        Rectangle {
+            id: emojiPanel
+            visible: false
+            width: parent.width
+            height: 120
+            color: "#f9f9f9"
+            border.color: "#cccccc"
+            radius: 4
+            clip: true
+
+            GridView {
+                anchors.fill: parent
+                anchors.margins: 5
+                model: ["😀", "😂", "😅", "😊", "😍", "😎", "😢", "👍", "🤔", "😇", "🙄", "😉"]
+                cellWidth: 40
+                cellHeight: 40
+                interactive: true
+
+                delegate: Rectangle {
+                    width: 40
+                    height: 40
+                    color: "transparent"
+                    border.width: 1
+                    border.color: "#e0e0e0"
+                    radius: width / 2
+
+                    Text {
+                        anchors.centerIn: parent
+                        text: modelData
+                        font.pointSize: 20
+                    }
+
+                    MouseArea {
+                        anchors.fill: parent
+                        hoverEnabled: true
+                        onClicked: {
+                            edtText.text += modelData;
+                            emojiPanel.visible = false;
+                        }
+                    }
+                }
+            }
         }
     }
 
