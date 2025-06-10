@@ -11,7 +11,7 @@ Rectangle {
     height: Math.max(Math.min(edtText.implicitHeight,maxHeight),54) + file.height + (file.visible ? 10 : 0)
     width: parent.width/2 + parent.width/4
 
-    property alias textColor: edtText.color
+    property alias edtText: edtText
     property bool fileLoad: false
     property bool isRecording: false
     property string filePath: ""
@@ -270,49 +270,6 @@ Rectangle {
             }
         }
 
-        Rectangle {
-            id: emojiPanel
-            visible: false
-            width: parent.width
-            height: 120
-            color: "#f9f9f9"
-            border.color: "#cccccc"
-            radius: 4
-            clip: true
-
-            GridView {
-                anchors.fill: parent
-                anchors.margins: 5
-                model: ["😀", "😂", "😅", "😊", "😍", "😎", "😢", "👍", "🤔", "😇", "🙄", "😉"]
-                cellWidth: 40
-                cellHeight: 40
-                interactive: true
-
-                delegate: Rectangle {
-                    width: 40
-                    height: 40
-                    color: "transparent"
-                    border.width: 1
-                    border.color: "#e0e0e0"
-                    radius: width / 2
-
-                    Text {
-                        anchors.centerIn: parent
-                        text: modelData
-                        font.pointSize: 20
-                    }
-
-                    MouseArea {
-                        anchors.fill: parent
-                        hoverEnabled: true
-                        onClicked: {
-                            edtText.text += modelData;
-                            emojiPanel.visible = false;
-                        }
-                    }
-                }
-            }
-        }
     }
 
     function wordProcessing() {

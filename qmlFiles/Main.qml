@@ -41,6 +41,8 @@ Window {
                 MenuItem {
                     id: open
                     text: qsTr("Open")
+                    icon.source: appPath + "/resources/images/openapp.svg"
+
                     onTriggered: {
                         rootWindow.show();
                         rootWindow.requestActivate()
@@ -49,6 +51,8 @@ Window {
                 MenuItem {
                     id: close
                     text: qsTr("Close")
+                    icon.source: appPath + "/resources/images/closeapp.svg"
+
                     onTriggered: Qt.quit()
                 }
             ]
@@ -529,6 +533,56 @@ Window {
         repeat: true
         onTriggered: {
             timestamp = new Date().getTime();
+        }
+    }
+
+    Rectangle {
+        id: emojiPanel
+        anchors {
+            bottom:downLine.top
+            right: downLine.right
+        }
+        visible: false
+        width: rootWindow.width * 0.2
+        height: rootWindow.height
+        color: "#f9f9f9"
+        border.color: "#cccccc"
+        clip: true
+
+        ListView {
+            id: emojiList
+            anchors.fill: parent
+            spacing: 5
+            boundsBehavior: Flickable.StopAtBounds
+
+            model: ["😀", "😂", "😅", "😊", "😍", "😎", "😢", "👍", "🤔", "😇", "🙄", "😉",
+                "🥳", "🤩", "😜", "🤯", "🤤", "😋", "😷", "🤒", "🤕", "🤑"]
+
+
+            Rectangle {
+                width: 45
+                height: 45
+                color: "transparent"
+                border.width: 1
+                border.color: "#e0e0e0"
+                radius: width / 2
+
+                Text {
+                    anchors.centerIn: parent
+                    text: modelData
+                    font.pixelSize: 24
+                }
+
+                MouseArea {
+                    anchors.fill: parent
+                    hoverEnabled: true
+                    onClicked: {
+                        downLine.edtText.text += modelData;
+                        emojiPanel.visible = false;
+                    }
+                }
+
+            }
         }
     }
 
