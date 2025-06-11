@@ -172,5 +172,13 @@ int main(int argc, char *argv[])
         accountManager->login(login,password);
     }
 
+    QObject::connect(&app, &QApplication::aboutToQuit, []() {
+        QString tempPath = QApplication::applicationDirPath() + "/.tempData";
+        QDir dir(tempPath);
+        if (dir.exists()) {
+            dir.removeRecursively();
+        }
+    });
+
     return app.exec();
 }
