@@ -16,9 +16,6 @@ Rectangle {
     property bool isRecording: false
     property string filePath: ""
 
-    anchors.right:  parent.right
-    anchors.bottom: parent.bottom
-
     visible: upLine.currentState === "default" ? false : true
 
     Rectangle {
@@ -186,13 +183,24 @@ Rectangle {
 
         Button {
             id: emojiButton
-            text: "😊"
+            icon.cache: false
+            background: Item { }
+            icon.source: appPath + "/resources/images/emojiButton.svg"
+            icon.color: emojiPanel.visible ? adjustColor(themeManager.outgoingColor, 1.5, false) : themeManager.outgoingColor
             anchors {
                 right: btnAddItem.left
                 verticalCenter: parent.verticalCenter
             }
 
             onClicked: {
+                if(!rootWindow.maximized) {
+                    if(emojiPanel.visible) {
+                        rootWindow.width -= emojiPanel.width
+                    } else {
+                        rootWindow.width += emojiPanel.width
+                    }
+                }
+
                 emojiPanel.visible = !emojiPanel.visible
             }
         }

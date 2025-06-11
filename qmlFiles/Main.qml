@@ -71,6 +71,458 @@ Window {
     }
 
     Rectangle {
+        id: leftLine
+        color: themeManager.chatBackground
+        height: rootWindow.height - header.height
+        width: 54
+        anchors{
+            left:  parent.left
+            bottom: parent.bottom
+            top: header.bottom
+        }
+
+        Rectangle {
+            id: profile
+            color: themeManager.chatBackground
+            height: 54
+            anchors{
+                left:  parent.left
+                right: parent.right
+                top: parent.top
+            }
+
+            Rectangle {
+                id: colorOverlayProfile
+                anchors.fill: parent
+                anchors.margins: 1
+                color: adjustColor(themeManager.chatBackground, 1.5, true)
+                opacity: 0
+                visible: false
+                Behavior on opacity { NumberAnimation { duration: 300; easing.type: Easing.OutQuad } }
+            }
+
+            Button {
+                id: listImage
+                anchors.centerIn: parent
+                background: Item { }
+                icon.cache: false
+                icon.source: "../images/profile.svg"
+                icon.width: parent.width/2
+                icon.height: parent.height/2.5
+                icon.color: adjustColor(themeManager.outgoingColor, 1.5, false)
+            }
+
+            MouseArea {
+                id: profileMouseArea
+                anchors.fill: parent
+                cursorShape: enabled ? Qt.PointingHandCursor : Qt.ArrowCursor
+                enabled: !isProfileExtended
+
+                onClicked: isProfileExtended = !isProfileExtended
+
+                onPressed: {
+                    colorOverlayProfile.visible = true
+                    colorOverlayProfile.opacity = 1
+                }
+
+                onReleased: {
+                    colorOverlayProfile.opacity = 0
+                }
+            }
+        }
+    }
+
+    ChatsList {
+        id: centerLine
+        height: rootWindow.height - header.height
+        width: rootWindow.width - (rootWindow.width / 2 + rootWindow.width / 4) - 54
+        anchors{
+            left:  leftLine.right
+            bottom: parent.bottom
+            top: header.bottom
+        }
+        ListModel {
+            id:personalChatsListModel
+        }
+    }
+
+    Rectangle {
+        id: dateOverlay
+        width: 100
+        height: 20
+        color: adjustColor(themeManager.chatBackground, 1.8, false)
+        radius: 10
+        visible: visibleDate !== ""
+        anchors {
+            top: listView.top
+            topMargin: 10
+            horizontalCenter: listView.horizontalCenter
+        }
+        z: 99
+
+        Text {
+            anchors.centerIn: parent
+            text: visibleDate
+            color: isColorLight(dateOverlay.color) ? "black" : "white"
+            font.pixelSize: 12
+            font.bold: true
+        }
+    }
+
+    ListView {
+        id: listView
+        spacing: 5
+        anchors{
+            topMargin: 5
+            top : upLine.bottom
+            left: centerLine.right
+            leftMargin: 5
+            right: emojiPanel.visible ? emojiPanel.left : parent.right //
+            bottom: downLine.top
+        }
+        ScrollBar.vertical: ScrollBar {
+            visible: upLine.currentState === "default" ? false : true
+            background: Rectangle { implicitWidth: 10; color: rootWindow.color }
+            contentItem: Rectangle { implicitWidth: 10; color: "grey"; radius: 5 }
+        }
+
+        highlightFollowsCurrentItem: false
+        focus: false
+        cacheBuffer: 10000
+
+        boundsBehavior: Flickable.StopAtBounds
+        model: listModel
+
+        delegate: ChatBubble {
+            id:chatBubble
+            anchors.margins: 20
+            width: Math.min(rootWindow.width, listView.width * 0.45)
+            property string message: model.text
+            property var message_id: model.message_id
+            property string time: model.time
+            property string name: model.name
+            property bool isOutgoing: model.isOutgoing
+            property string fileUrl: model.fileUrl
+            property string fileName: model.fileName
+            property string special_type: model.special_type
+            property real voiceDuration: model.voiceDuration
+            property bool isRead: model.isRead !== undefined ? model.isRead : false
+
+            onPlayRequested: (filePath, position) => {
+                                 handlePlayRequest(chatBubble, filePath, position);
+                             }
+        }
+
+        onContentYChanged: {
+            let viewTop = listView.contentY;
+            let viewBottom = viewTop + listView.height;
+            updateUnreadCountForUser();
+
+            let visibleDateSet = false;
+
+            for (let i = 0; i < listModel.count; i++) {
+                let item = listView.itemAtIndex(i);
+
+                if (item) {
+                    let itemTop = item.y;
+                    let itemBottom = itemTop + item.height;
+
+                    if (!visibleDateSet && itemBottom > viewTop) {
+                        visibleDate = extractDateFromTimestamp(item.time);
+                        visibleDateSet = true;
+                    }
+
+                    if (itemBottom > viewTop && itemTop < viewBottom && !item.isRead) {
+                        item.markAsRead();
+                    }
+                }
+            }
+        }
+
+        property int savedIndexFromEnd: 0
+
+        onAtYBeginningChanged: {
+            if (atYBeginning && upLine.currentState !== "default" && listModel.count !== 0 && !(listModel.count === 1)) {
+                listView.savedIndexFromEnd = listModel.count;
+                client.requestMessageDownload(upLine.user_id, nameText.text, upLine.currentState, listModel.count);
+                activeChatIdBeforeRequest = upLine.user_id;
+                activeChatTypeBeforeRequest = upLine.currentState;
+            }
+        }
+    }
+
+    ListModel {
+        id: listModel
+    }
+
+    Rectangle {
+        id: upLine
+        color: adjustColor(themeManager.chatBackground, 1.50, false)
+        height: 55
+        anchors{
+            left:  centerLine.right
+            top: header.bottom
+            right: emojiPanel.visible ? emojiPanel.left : parent.right //
+        }
+        visible: currentState === "default" ? false : true
+        property string currentState: "default"
+        property int user_id: 0
+
+        Text {
+            id: nameText
+            text: "Chat"
+            font.pointSize: 10
+            color: isColorLight(upLine.color) ? "black" : "white"
+            anchors{
+                left: parent.left
+                leftMargin: 10
+                top: parent.top
+                topMargin: 10
+            }
+            MouseArea {
+                id: openProfileMouseArea
+                anchors.fill: parent
+                hoverEnabled: true
+                cursorShape: Qt.PointingHandCursor
+                onClicked: {
+                    if(upLine.currentState === "personal"){
+                        overlay.visible = true
+                        myProfileWindow.setUserId(upLine.user_id);
+                        myProfileWindow.open()
+                        myProfileWindow.userProfile(nameText.text)
+                    } else if(upLine.currentState === "group") {
+                        overlay.visible = true
+                        groupInfoForm.setGroupId(upLine.user_id);
+                        groupInfoForm.setGroupName(nameText.text);
+                        groupInfoForm.open();
+                    }
+                }
+            }
+        }
+
+        Text {
+            id: valueText
+            text: "Offline"
+            font.pointSize: 8
+            color: isColorLight(upLine.color) ? "black" : "grey"
+            visible: false
+            anchors{
+                left: parent.left
+                leftMargin: 10
+                bottom: parent.bottom
+                bottomMargin: 10
+            }
+        }
+    }
+
+    MessageLine {
+        id: downLine
+        anchors {
+            right:  emojiPanel.visible ? emojiPanel.left : parent.right
+            bottom: parent.bottom
+            left: centerLine.right
+        }
+    }
+
+
+    Rectangle {
+        id: connectRect
+        visible: false
+        color: "#95464f"
+        height: 25
+        anchors{
+            left: parent.left
+            top: header.bottom
+            right: parent.right
+        }
+
+        Text {
+            id: textConnect
+            text: "Connection unsuccessful, try connecting again"
+            color: "#99FFFFFF"
+            anchors.centerIn: parent
+            font.pointSize: 10
+        }
+    }
+
+    ProfilePanel {
+        id:profileWindow
+        anchors.top: header.bottom
+        anchors.bottom: parent.bottom
+        x: isProfileExtended ? 0 : -width
+
+        Behavior on x { NumberAnimation { duration: 500; easing.type: Easing.InOutQuad } }
+    }
+
+    MouseArea {
+        id:leaveProfileArea
+        enabled: isProfileExtended
+        anchors{
+            left: profileWindow.right
+            right: emojiPanel.visible ? emojiPanel.left : parent.right
+            top: header.bottom
+            bottom: parent.bottom
+        }
+        onClicked: isProfileExtended = !isProfileExtended
+    }
+
+    MouseArea {
+        id:leaveSearchListArea
+        anchors{
+            left: centerLine.right
+            right: emojiPanel.visible ? emojiPanel.left : parent.right
+            top: header.bottom
+            bottom: parent.bottom
+        }
+        enabled: isSearchListExtended
+        onClicked: isSearchListExtended = !isSearchListExtended
+    }
+
+    Rectangle {
+        id: overlay
+        anchors.fill: parent
+        color: "#80000000"
+        visible: false
+        opacity: 0
+        Behavior on opacity {
+            NumberAnimation { duration: 200 }
+        }
+    }
+
+    MyProfile{
+        id: myProfileWindow
+        user_id: 0
+    }
+
+    GroupInfoForm {
+        id: groupInfoForm
+    }
+
+    CreateGroupForm {
+        id: createGroupForm
+    }
+
+    SelectContactsForm {
+        id:selectContactsForm
+    }
+
+    ThemeSettings {
+        id:themeSettings
+    }
+
+    Timer {
+        id: updateAvatarsTimer
+        interval: 1000
+        running: true
+        repeat: true
+        onTriggered: {
+            timestamp = new Date().getTime();
+        }
+    }
+
+    Rectangle {
+        id: emojiPanel
+        anchors {
+            top: header.bottom
+            right: parent.right
+        }
+        visible: false
+        width: 245
+        height: rootWindow.height
+        color: adjustColor(themeManager.chatBackground, 1.50, false)
+        clip: true
+
+        Text {
+            id: emojiHeader
+            text: "Emoji"
+            font.pointSize: 14
+            color: themeManager.outgoingColor
+            anchors {
+                top: parent.top
+                topMargin: 10
+                horizontalCenter: parent.horizontalCenter
+            }
+        }
+
+        Flickable {
+            id: flickable
+            anchors {
+                top: emojiHeader.bottom
+                topMargin: 10
+                left: parent.left
+                right: parent.right
+                bottom: parent.bottom
+            }
+            clip: true
+            contentWidth: parent.width
+            contentHeight: emojiFlow.height + 20
+            boundsBehavior: Flickable.StopAtBounds
+
+            Flow {
+                id: emojiFlow
+                anchors {
+                    top: parent.top
+                    left: parent.left
+                    leftMargin: 10
+                }
+                width: parent.width - 10
+                spacing: 5
+
+                Repeater {
+                    model: [
+                        "😀", "😃", "😄", "😁", "😆", "😅", "😂", "🤣", "😊", "😇", "🙂", "🙃",
+                        "😉", "😌", "😍", "🥰", "😘", "😗", "😙", "😚", "😋", "😛", "😝", "😜",
+                        "🤪", "🤨", "🧐", "🤓", "😎", "🤩", "🥳", "😏", "😒", "😞", "😔", "😟",
+                        "😕", "🙁", "😣", "😖", "😫", "😩", "🥺", "😢", "😭", "😤", "😠", "😡",
+                        "🤬", "🤯", "😳", "🥵", "🥶", "😱", "😨", "😰", "😥", "😓", "🤗", "🤔",
+                        "🤭", "🤫", "🤥", "😶", "😐", "😑", "😬", "🙄", "😯", "😦", "😧", "😮",
+                        "😲", "🥱", "😴", "🤤", "😪", "😵", "🤐", "🥴", "🤢", "🤮", "🤧", "😷",
+                        "🤒", "🤕", "🤑", "🤠", "😈", "👿", "👹", "👺", "🤡", "👻", "💀", "👽",
+                        "👾", "🎃", "😺", "😸", "😹", "😻", "😼", "😽", "🙀", "😿", "😾", "🤲",
+                        "👐", "🙌", "👏", "🤝", "👍", "👎", "👊", "✊", "🤛", "🤜", "🤞", "🤟",
+                        "🤘", "👌", "🤏", "👈", "👉", "👆", "👇", "✋", "🤚", "🖐", "🖖", "👋",
+                        "🤙", "💪", "🦾", "🖕", "🙏", "🦶", "🦵", "🦿", "💄", "💋", "👄", "🦷",
+                        "👅", "👂", "🦻", "👃", "👣", "👁", "👀", "🧠", "🗣", "👤", "👥", "👶",
+                        "👧", "🧒", "👦", "👩", "🧑", "👨", "👩‍🦱", "👨‍🦱", "👩‍🦰", "👨‍🦰", "👱", "👩‍🦳",
+                        "👨‍🦳", "👩‍🦲", "👨‍🦲", "🧔", "👵", "🧓", "👴", "👲", "👳", "🧕", "👮", "👷",
+                        "💂", "🕵️", "👩‍⚕️", "👨‍⚕️", "👩‍🌾", "👨‍🌾", "👩‍🍳", "👨‍🍳", "👩‍🎓", "👨‍🎓", "👩‍🎤", "👨‍🎤",
+                        "👩‍🏫", "👨‍🏫", "👩‍🏭", "👨‍🏭", "👩‍💻", "👨‍💻", "👩‍💼", "👨‍💼", "👩‍🔧", "👨‍🔧", "👩‍🔬", "👨‍🔬",
+                        "👩‍🎨", "👨‍🎨", "👩‍🚒", "👨‍🚒", "👩‍🚀", "👨‍🚀", "👩‍⚖️", "👨‍⚖️", "👰", "🤵", "👸", "🤴",
+                        "🦸", "🦹", "🤶", "🎅", "🧙", "🧝", "🧛", "🧟", "🧞", "🧜", "🧚", "👼",
+                        "🤰", "🤱", "🙇", "💁", "🙅", "🙆", "🙎", "🙍", "💇", "💆", "🧖", "💅",
+                        "🤳", "💃", "🕺", "👯", "🕴", "👩‍🦽", "👨‍🦽", "👩‍🦼", "👨‍🦼"
+                    ]
+                    Rectangle {
+                        width: 25
+                        height: 25
+                        color: emojiMouseArea.containsMouse ? adjustColor(emojiPanel, 1.50, false) : "transparent"
+                        radius: 4
+
+                        Text {
+                            anchors.centerIn: parent
+                            text: modelData
+                            font.pixelSize: 16
+                        }
+
+                        MouseArea {
+                            id: emojiMouseArea
+                            anchors.fill: parent
+                            hoverEnabled: true
+                            onClicked: {
+                                var tf = downLine.edtText;
+                                var pos = tf.cursorPosition;
+
+                                tf.text = tf.text.substring(0, pos) + modelData + tf.text.substring(pos);
+                                tf.cursorPosition = pos + modelData.length;
+                            }
+                        }
+                    }
+                }
+            }
+        }
+    }
+
+    Rectangle {
         id: header
         height: 20
         anchors.left: parent.left
@@ -186,403 +638,10 @@ Window {
                 anchors.fill: parent
                 hoverEnabled: true
                 onClicked: {
-                    rootWindow.hide(); //Qt.quit()
+                    rootWindow.hide();
                 }
             }
 
-        }
-    }
-
-    Rectangle {
-        id: leftLine
-        color: themeManager.chatBackground
-        height: rootWindow.height - header.height
-        width: 54
-        anchors{
-            left:  parent.left
-            bottom: parent.bottom
-            top: header.bottom
-        }
-
-        Rectangle {
-            id: profile
-            color: themeManager.chatBackground
-            height: 54
-            anchors{
-                left:  parent.left
-                right: parent.right
-                top: parent.top
-            }
-
-            Rectangle {
-                id: colorOverlayProfile
-                anchors.fill: parent
-                anchors.margins: 1
-                color: adjustColor(themeManager.chatBackground, 1.5, true)
-                opacity: 0
-                visible: false
-                Behavior on opacity { NumberAnimation { duration: 300; easing.type: Easing.OutQuad } }
-            }
-
-            Button {
-                id: listImage
-                anchors.centerIn: parent
-                background: Item { }
-                icon.cache: false
-                icon.source: "../images/profile.svg"
-                icon.width: parent.width/2
-                icon.height: parent.height/2.5
-                icon.color: adjustColor(themeManager.outgoingColor, 1.5, false)
-            }
-
-            MouseArea {
-                id: profileMouseArea
-                anchors.fill: parent
-                cursorShape: enabled ? Qt.PointingHandCursor : Qt.ArrowCursor
-                enabled: !isProfileExtended
-
-                onClicked: isProfileExtended = !isProfileExtended
-
-                onPressed: {
-                    colorOverlayProfile.visible = true
-                    colorOverlayProfile.opacity = 1
-                }
-
-                onReleased: {
-                    colorOverlayProfile.opacity = 0
-                }
-            }
-        }
-    }
-
-    ChatsList {
-        id: centerLine
-        height: rootWindow.height - header.height
-        width: rootWindow.width - (rootWindow.width / 2 + rootWindow.width / 4) - 54
-        anchors{
-            left:  leftLine.right
-            bottom: parent.bottom
-            top: header.bottom
-        }
-        ListModel {
-            id:personalChatsListModel
-        }
-    }
-
-    Rectangle {
-        id: dateOverlay
-        width: 100
-        height: 20
-        color: adjustColor(themeManager.chatBackground, 1.8, false)
-        radius: 10
-        visible: visibleDate !== ""
-        anchors {
-            top: listView.top
-            topMargin: 10
-            horizontalCenter: listView.horizontalCenter
-        }
-        z: 99
-
-        Text {
-            anchors.centerIn: parent
-            text: visibleDate
-            color: isColorLight(dateOverlay.color) ? "black" : "white"
-            font.pixelSize: 12
-            font.bold: true
-        }
-    }
-
-    ListView {
-        id: listView
-        spacing: 5
-        anchors{
-            topMargin: 5
-            top : upLine.bottom
-            left: centerLine.right
-            leftMargin: 5
-            right: parent.right
-            bottom: downLine.top
-        }
-        ScrollBar.vertical: ScrollBar {
-            visible: upLine.currentState === "default" ? false : true
-            background: Rectangle { implicitWidth: 10; color: rootWindow.color }
-            contentItem: Rectangle { implicitWidth: 10; color: "grey"; radius: 5 }
-        }
-
-        highlightFollowsCurrentItem: false
-        focus: false
-        cacheBuffer: 10000
-
-        boundsBehavior: Flickable.StopAtBounds
-        model: listModel
-
-        delegate: ChatBubble {
-            id:chatBubble
-            anchors.margins: 20
-            width: Math.min(rootWindow.width, listView.width * 0.45)
-            property string message: model.text
-            property var message_id: model.message_id
-            property string time: model.time
-            property string name: model.name
-            property bool isOutgoing: model.isOutgoing
-            property string fileUrl: model.fileUrl
-            property string fileName: model.fileName
-            property string special_type: model.special_type
-            property real voiceDuration: model.voiceDuration
-            property bool isRead: model.isRead !== undefined ? model.isRead : false
-
-            onPlayRequested: (filePath, position) => {
-                                 handlePlayRequest(chatBubble, filePath, position);
-                             }
-        }
-
-        onContentYChanged: {
-            let viewTop = listView.contentY;
-            let viewBottom = viewTop + listView.height;
-            updateUnreadCountForUser();
-
-            let visibleDateSet = false;
-
-            for (let i = 0; i < listModel.count; i++) {
-                let item = listView.itemAtIndex(i);
-
-                if (item) {
-                    let itemTop = item.y;
-                    let itemBottom = itemTop + item.height;
-
-                    if (!visibleDateSet && itemBottom > viewTop) {
-                        visibleDate = extractDateFromTimestamp(item.time);
-                        visibleDateSet = true;
-                    }
-
-                    if (itemBottom > viewTop && itemTop < viewBottom && !item.isRead) {
-                        item.markAsRead();
-                    }
-                }
-            }
-        }
-
-        property int savedIndexFromEnd: 0
-
-        onAtYBeginningChanged: {
-            if (atYBeginning && upLine.currentState !== "default" && listModel.count !== 0 && !(listModel.count === 1)) {
-                listView.savedIndexFromEnd = listModel.count;
-                client.requestMessageDownload(upLine.user_id, nameText.text, upLine.currentState, listModel.count);
-                activeChatIdBeforeRequest = upLine.user_id;
-                activeChatTypeBeforeRequest = upLine.currentState;
-            }
-        }
-    }
-
-    ListModel {
-        id: listModel
-    }
-
-    Rectangle {
-        id: upLine
-        color: adjustColor(themeManager.chatBackground, 1.50, false)
-        height: 55
-        anchors{
-            left:  centerLine.right
-            top: header.bottom
-            right: parent.right
-        }
-        visible: currentState === "default" ? false : true
-        property string currentState: "default"
-        property int user_id: 0
-
-        Text {
-            id: nameText
-            text: "Chat"
-            font.pointSize: 10
-            color: isColorLight(upLine.color) ? "black" : "white"
-            anchors{
-                left: parent.left
-                leftMargin: 10
-                top: parent.top
-                topMargin: 10
-            }
-            MouseArea {
-                id: openProfileMouseArea
-                anchors.fill: parent
-                hoverEnabled: true
-                cursorShape: Qt.PointingHandCursor
-                onClicked: {
-                    if(upLine.currentState === "personal"){
-                        overlay.visible = true
-                        myProfileWindow.setUserId(upLine.user_id);
-                        myProfileWindow.open()
-                        myProfileWindow.userProfile(nameText.text)
-                    } else if(upLine.currentState === "group") {
-                        overlay.visible = true
-                        groupInfoForm.setGroupId(upLine.user_id);
-                        groupInfoForm.setGroupName(nameText.text);
-                        groupInfoForm.open();
-                    }
-                }
-            }
-        }
-
-        Text {
-            id: valueText
-            text: "Offline"
-            font.pointSize: 8
-            color: isColorLight(upLine.color) ? "black" : "grey"
-            visible: false
-            anchors{
-                left: parent.left
-                leftMargin: 10
-                bottom: parent.bottom
-                bottomMargin: 10
-            }
-        }
-    }
-
-    MessageLine { id: downLine }
-
-
-    Rectangle {
-        id: connectRect
-        visible: false
-        color: "#95464f"
-        height: 25
-        anchors{
-            left: parent.left
-            top: header.bottom
-            right: parent.right
-        }
-
-        Text {
-            id: textConnect
-            text: "Connection unsuccessful, try connecting again"
-            color: "#99FFFFFF"
-            anchors.centerIn: parent
-            font.pointSize: 10
-        }
-    }
-
-    ProfilePanel {
-        id:profileWindow
-        anchors.top: header.bottom
-        anchors.bottom: parent.bottom
-        x: isProfileExtended ? 0 : -width
-
-        Behavior on x { NumberAnimation { duration: 500; easing.type: Easing.InOutQuad } }
-    }
-
-    MouseArea {
-        id:leaveProfileArea
-        enabled: isProfileExtended
-        anchors{
-            left: profileWindow.right
-            right: parent.right
-            top: header.bottom
-            bottom: parent.bottom
-        }
-        onClicked: isProfileExtended = !isProfileExtended
-    }
-
-    MouseArea {
-        id:leaveSearchListArea
-        anchors{
-            left: centerLine.right
-            right: parent.right
-            top: header.bottom
-            bottom: parent.bottom
-        }
-        enabled: isSearchListExtended
-        onClicked: isSearchListExtended = !isSearchListExtended
-    }
-
-    Rectangle {
-        id: overlay
-        anchors.fill: parent
-        color: "#80000000"
-        visible: false
-        opacity: 0
-        Behavior on opacity {
-            NumberAnimation { duration: 200 }
-        }
-    }
-
-    MyProfile{
-        id: myProfileWindow
-        user_id: 0
-    }
-
-    GroupInfoForm {
-        id: groupInfoForm
-    }
-
-    CreateGroupForm {
-        id: createGroupForm
-    }
-
-    SelectContactsForm {
-        id:selectContactsForm
-    }
-
-    ThemeSettings {
-        id:themeSettings
-    }
-
-    Timer {
-        id: updateAvatarsTimer
-        interval: 1000
-        running: true
-        repeat: true
-        onTriggered: {
-            timestamp = new Date().getTime();
-        }
-    }
-
-    Rectangle {
-        id: emojiPanel
-        anchors {
-            bottom:downLine.top
-            right: downLine.right
-        }
-        visible: false
-        width: rootWindow.width * 0.2
-        height: rootWindow.height
-        color: "#f9f9f9"
-        border.color: "#cccccc"
-        clip: true
-
-        ListView {
-            id: emojiList
-            anchors.fill: parent
-            spacing: 5
-            boundsBehavior: Flickable.StopAtBounds
-
-            model: ["😀", "😂", "😅", "😊", "😍", "😎", "😢", "👍", "🤔", "😇", "🙄", "😉",
-                "🥳", "🤩", "😜", "🤯", "🤤", "😋", "😷", "🤒", "🤕", "🤑"]
-
-
-            Rectangle {
-                width: 45
-                height: 45
-                color: "transparent"
-                border.width: 1
-                border.color: "#e0e0e0"
-                radius: width / 2
-
-                Text {
-                    anchors.centerIn: parent
-                    text: modelData
-                    font.pixelSize: 24
-                }
-
-                MouseArea {
-                    anchors.fill: parent
-                    hoverEnabled: true
-                    onClicked: {
-                        downLine.edtText.text += modelData;
-                        emojiPanel.visible = false;
-                    }
-                }
-
-            }
         }
     }
 
