@@ -11,13 +11,10 @@ Rectangle {
     height: Math.max(Math.min(edtText.implicitHeight,maxHeight),54) + file.height + (file.visible ? 10 : 0)
     width: parent.width/2 + parent.width/4
 
-    property alias textColor: edtText.color
+    property alias edtText: edtText
     property bool fileLoad: false
     property bool isRecording: false
     property string filePath: ""
-
-    anchors.right:  parent.right
-    anchors.bottom: parent.bottom
 
     visible: upLine.currentState === "default" ? false : true
 
@@ -139,9 +136,10 @@ Rectangle {
         }
 
         ScrollView {
+            id:textScrollView
             anchors {
                 left: btnFileItem.right
-                right: btnAddItem.left
+                right: emojiButton.left
                 verticalCenter: parent.verticalCenter
                 top: parent.top
                 bottom: parent.bottom
@@ -180,6 +178,30 @@ Rectangle {
                         event.accepted = true;
                     }
                 }
+            }
+        }
+
+        Button {
+            id: emojiButton
+            icon.cache: false
+            background: Item { }
+            icon.source: appPath + "/resources/images/emojiButton.svg"
+            icon.color: emojiPanel.visible ? adjustColor(themeManager.outgoingColor, 1.5, false) : themeManager.outgoingColor
+            anchors {
+                right: btnAddItem.left
+                verticalCenter: parent.verticalCenter
+            }
+
+            onClicked: {
+                if(!rootWindow.maximized) {
+                    if(emojiPanel.visible) {
+                        rootWindow.width -= emojiPanel.width
+                    } else {
+                        rootWindow.width += emojiPanel.width
+                    }
+                }
+
+                emojiPanel.visible = !emojiPanel.visible
             }
         }
 
@@ -254,8 +276,8 @@ Rectangle {
                     buttonImage.icon.color = themeManager.outgoingColor;
                 }
             }
-
         }
+
     }
 
     function wordProcessing() {
