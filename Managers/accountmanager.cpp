@@ -265,6 +265,10 @@ void AccountManager::createDialogProcessing(const QByteArray &createDialogData)
         fileDataMsg.setFileName(fileInfo.baseName());
         fileDataMsg.setFileExtension(fileInfo.suffix());
         fileDataMsg.setFileData(encryptedFileData);
+
+        if(QFile::exists(metaVoiceFilePath)) {
+            QFile::remove(metaVoiceFilePath);
+        }
     }
     QString message;
     if(!withVoiceFile) {
