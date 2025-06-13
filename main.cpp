@@ -37,6 +37,7 @@ int main(int argc, char *argv[])
     AppTheme themeManager;
 
     client.setLoggers(&logger);
+    engine.rootContext()->setContextProperty("appPath", "file:///" + QCoreApplication::applicationDirPath());
 
     AccountManager* accountManager = client.getAccountManager();
 
@@ -91,7 +92,6 @@ int main(int argc, char *argv[])
         themeManager.loadForUser(QString::number(user_id));
         engine.rootContext()->setContextProperty("userlogin", userLogin);
         engine.rootContext()->setContextProperty("activeUserId", user_id);
-        engine.rootContext()->setContextProperty("appPath", QCoreApplication::applicationDirPath());
         engine.load(mainUrl);
     });
 
@@ -171,6 +171,14 @@ int main(int argc, char *argv[])
         QString password = settings.value("password"+QString::number(active_account), "").toString();
         accountManager->login(login,password);
     }
+
+    QObject::connect(&app, &QApplication::aboutToQuit, []() {
+        QString tempPath = QApplication::applicationDirPath() + "/.tempData";
+        QDir dir(tempPath);
+        if (dir.exists()) {
+            dir.removeRecursively();
+        }
+    });
 
     return app.exec();
 }

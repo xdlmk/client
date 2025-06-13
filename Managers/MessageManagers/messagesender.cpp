@@ -270,12 +270,10 @@ void MessageSender::sendVoiceMessage(const int &receiver_id, const QString &flag
 
         emit sendMessageFileData(flag + "_voice_message", chatMsg.serialize(&serializer)); // personal_voice_message group_voice_message
     }
-<<<<<<< HEAD
-=======
+
     if (QFile::exists(filePath)){
         QFile::remove(filePath);
     }
->>>>>>> a56b9c7 (voice message bugfix)
 }
 
 void MessageSender::markMessageAsRead(const quint64 &message_id)
