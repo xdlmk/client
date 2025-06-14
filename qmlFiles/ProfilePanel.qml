@@ -87,10 +87,7 @@ Rectangle {
                             radius: 12
                             color: themeManager.outgoingColor
                             Text {
-                                anchors {
-                                    verticalCenter: parent.verticalCenter
-                                    horizontalCenter: parent.horizontalCenter
-                                }
+                                anchors.centerIn: parent
                                 font.bold: true
                                 text: "+"
                                 font.pointSize: 14

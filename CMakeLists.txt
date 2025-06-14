@@ -122,6 +122,8 @@ qt_add_qml_module(Messenger
     images/openapp.svg
     images/closeapp.svg
     images/emojiButton.svg
+    images/play.svg
+    images/pause.svg
 )
 
 qt6_add_shaders(Messenger "Shaders"

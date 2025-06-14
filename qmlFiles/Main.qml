@@ -764,15 +764,15 @@ Window {
             if (audioManager.getMediaPlayerPosition() >= audioManager.getMediaPlayerDuration()) {
                 audioManager.setPosition(0);
                 if (currentChatBubble.isActive) {
-                    currentChatBubble.playButtonText.text = "▶";
+                    currentChatBubble.playButtonText.icon.source = "../images/play.svg";
                     currentChatBubble.voicePosition = 0;
                 }
             }
         } else if (state === MediaPlayer.PlayingState) {
-            currentChatBubble.playButtonText.text = "⏸";
+            currentChatBubble.playButtonText.icon.source = "../images/pause.svg"
         } else if (state === MediaPlayer.PausedState) {
             currentChatBubble.voicePosition = audioManager.getMediaPlayerPosition();
-            currentChatBubble.playButtonText.text = "▶";
+            currentChatBubble.playButtonText.icon.source = "../images/play.svg"
         }
     }
 

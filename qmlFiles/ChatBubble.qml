@@ -99,13 +99,18 @@ Item {
                 width: 30
                 height: 30
                 radius: 15
-                color: themeManager.outgoingColor
-                Text {
+                color: adjustColor(themeManager.outgoingColor, 1.5, true)
+                Button {
                     id:playButtonText
-                    text: "▶"
-                    font.pointSize: 15
                     anchors.centerIn: parent
-                    color: isColorLight(playButton.color) ? "black" : "white"
+                    width: parent.width
+                    height: parent.height
+                    background: Item { }
+                    icon.cache: false
+                    icon.source: "../images/play.svg"
+                    icon.width: parent.width/2
+                    icon.height: parent.height/2
+                    icon.color: isColorLight(playButton.color) ? "black" : "white"
                 }
                 MouseArea {
                     anchors.fill: parent
